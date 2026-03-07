@@ -2,7 +2,6 @@
 import { useState } from "react";
 import MobileShell from "../../../components/layout/MobileShell";
 import AppHeader from "../../../components/layout/AppHeader";
-import { text } from "../../../i18n/en";
 
 export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
@@ -14,45 +13,46 @@ export default function ForgotPasswordPage() {
 
   return (
     <MobileShell>
-      <AppHeader title={text.forgotPassword} showBack />
+      <AppHeader title="Road to HAPPY BALANCE" showBack />
 
       <div className="px-5 py-6">
-        <p className="mb-5 text-sm leading-6 text-slate-500">
-          Enter your email address and we will send you a reset link.
-        </p>
+        <div className="mb-6 text-center">
+          <h2 className="text-3xl font-bold text-slate-900">ลืมรหัสผ่าน</h2>
+          <p className="mt-2 text-sm text-slate-500">รหัสผ่านใหม่</p>
+        </div>
 
         {submitted ? (
           <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm text-slate-700">
-              Reset request submitted. Please check your email.
+            <p className="text-sm leading-6 text-slate-700">
+              ระบบได้ส่งข้อมูลสำหรับเปลี่ยนรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว
             </p>
 
             <Link
               to="/login"
-              className="block w-full rounded-2xl bg-slate-900 px-4 py-3 text-center font-medium text-white"
+              className="block w-full rounded-2xl bg-rose-300 px-4 py-3 text-center font-medium text-white hover:bg-rose-400"
             >
-              {text.backToLogin}
+              กลับไปเข้าสู่ระบบ
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                {text.email}
+                อีเมล
               </label>
               <input
                 type="email"
                 required
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="name@example.com"
+                placeholder="openheart@gmail.com"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-slate-900 px-4 py-3 font-medium text-white"
+              className="w-full rounded-2xl bg-rose-300 px-4 py-3 font-medium text-white hover:bg-rose-400"
             >
-              {text.sendResetLink}
+              ส่ง
             </button>
           </form>
         )}

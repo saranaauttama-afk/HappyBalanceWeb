@@ -7,11 +7,11 @@ import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
 
 const menuItems = [
-  "Personal Info",
-  "Counseling Record",
-  "Wellness Result",
-  "Settings",
-  "Help",
+  "ข้อมูลส่วนตัว",
+  "บันทึกการให้การปรึกษา",
+  "ผลประเมินภาวะสุขสมดุล",
+  "การตั้งค่า",
+  "ช่วยเหลือ",
 ];
 
 export default function ProfilePage() {
@@ -27,12 +27,12 @@ export default function ProfilePage() {
       const response = await profileService.getUser();
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to load profile");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบัญชีผู้ใช้งานได้");
       }
 
       setUser(response.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -48,16 +48,16 @@ export default function ProfilePage() {
       .map((part) => part[0])
       .join("")
       .slice(0, 2)
-      .toUpperCase() || "DU";
+      .toUpperCase() || "HB";
 
   return (
     <MobileShell withBottomNav>
-      <AppHeader title="Profile" />
+      <AppHeader title="บัญชี" showBell />
 
       <main className="space-y-4 px-4 py-4">
         {loading ? (
           <InfoCard>
-            <p className="text-sm text-slate-500">Loading profile...</p>
+            <p className="text-sm text-slate-500">กำลังโหลดข้อมูลบัญชี...</p>
           </InfoCard>
         ) : error ? (
           <InfoCard>
@@ -68,39 +68,44 @@ export default function ProfilePage() {
                 onClick={() => void loadUser()}
                 className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
               >
-                Retry
+                ลองใหม่
               </button>
             </div>
           </InfoCard>
         ) : user ? (
           <InfoCard>
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold text-slate-700">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold text-slate-700">
                 {initials}
               </div>
 
-              <div>
-                <h2 className="font-semibold text-slate-900">
-                  {user.full_name}
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {user.full_name || "บัญชีผู้ใช้งาน"}
                 </h2>
-                <p className="text-sm text-slate-500">{user.email}</p>
-                <p className="text-sm text-slate-500">{user.phone}</p>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  {user.phone || "-"}
+                </p>
               </div>
             </div>
           </InfoCard>
         ) : (
           <InfoCard>
-            <p className="text-sm text-slate-500">No profile data found.</p>
+            <p className="text-sm text-slate-500">ไม่พบข้อมูลบัญชีผู้ใช้งาน</p>
           </InfoCard>
         )}
 
         <div className="space-y-3">
           {menuItems.map((item) => (
             <InfoCard key={item}>
-              <div className="flex items-center justify-between">
+              <button
+                type="button"
+                className="flex w-full items-center justify-between text-left"
+              >
                 <span className="font-medium text-slate-800">{item}</span>
                 <span className="text-sm text-slate-400">›</span>
-              </div>
+              </button>
             </InfoCard>
           ))}
         </div>

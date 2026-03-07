@@ -1,54 +1,102 @@
-﻿import { Link } from "react-router-dom";
-import MobileShell from "../../../components/layout/MobileShell";
+﻿import { useNavigate } from "react-router-dom";
 
-export default function WelcomePage() {
+export default function Welcome() {
+  const navigate = useNavigate();
+
   return (
-    <MobileShell>
-      <div className="flex min-h-screen flex-col justify-center px-6 py-10">
-        <div className="space-y-4 text-center">
-          <div className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-medium text-slate-600">
-            Happy Balance
-          </div>
-
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Find your balance in everyday life
-          </h1>
-
-          <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
-            Track your wellness goals, reflect on your daily mood, and stay
-            connected with support when you need it.
-          </p>
-
-          <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
-            Small steps every day can lead to a healthier and happier life.
-          </p>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#F4F7F8",
+        fontFamily: "sans-serif",
+      }}
+    >
+      <div
+        style={{
+          width: "360px",
+          padding: "32px 24px",
+          textAlign: "center",
+          background: "white",
+          borderRadius: "16px",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+        }}
+      >
+        {/* ชื่อโครงการวิจัย */}
+        <div
+          style={{
+            fontSize: "14px",
+            color: "#555",
+            marginBottom: "16px",
+            lineHeight: "1.6",
+          }}
+        >
+          นวัตกรรมการปรึกษาเชิงจิตวิทยา
+          <br />
+          เพื่อเสริมสร้างภาวะสุขสมดุล
+          <br />
+          ของบุคคลวัยทำงาน
         </div>
 
-        <div className="mt-10 space-y-3">
-          <Link
-            to="/login"
-            className="block w-full rounded-2xl bg-slate-900 px-4 py-3 text-center font-medium text-white"
-          >
-            Log In
-          </Link>
+        {/* ชื่อแอป */}
+        <h1
+          style={{
+            fontSize: "26px",
+            marginBottom: "28px",
+            fontWeight: "700",
+          }}
+        >
+          Road to HAPPY BALANCE
+        </h1>
 
-          <Link
-            to="/register"
-            className="block w-full rounded-2xl border border-slate-300 px-4 py-3 text-center font-medium text-slate-700"
-          >
-            Create Account
-          </Link>
-        </div>
+        {/* คำถาม */}
+        <p
+          style={{
+            marginBottom: "24px",
+            color: "#444",
+            fontSize: "16px",
+          }}
+        >
+          คุณมีบัญชีแล้วหรือยัง?
+        </p>
 
-        <div className="mt-6 text-center">
-          <Link
-            to="/terms"
-            className="text-sm text-slate-400 hover:text-slate-600"
-          >
-            By continuing you agree to our Terms and Privacy Policy
-          </Link>
-        </div>
+        {/* ปุ่มเข้าสู่ระบบ */}
+        <button
+          onClick={() => navigate("/login")}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "10px",
+            border: "none",
+            background: "#D68B8B",
+            color: "white",
+            fontSize: "16px",
+            cursor: "pointer",
+            marginBottom: "12px",
+          }}
+        >
+          เข้าสู่ระบบ
+        </button>
+
+        {/* ปุ่มสร้างบัญชี */}
+        <button
+          onClick={() => navigate("/terms")}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #D68B8B",
+            background: "white",
+            color: "#D68B8B",
+            fontSize: "16px",
+            cursor: "pointer",
+          }}
+        >
+          สร้างบัญชีใหม่
+        </button>
       </div>
-    </MobileShell>
+    </div>
   );
 }

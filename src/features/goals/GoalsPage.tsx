@@ -8,18 +8,44 @@ import { goalsService } from "../../services/goals.service";
 import type { Goal } from "../../types/models";
 
 const categoryConfig = [
-  { key: "physical", label: "Physical Wellness" },
-  { key: "mental", label: "Mental Wellness" },
-  { key: "social", label: "Social Wellness" },
-  { key: "balance", label: "Work-Life Balance" },
+  {
+    key: "physical",
+    label: "สุขภาวะทางกาย",
+    subtitle: "การดูแลร่างกายและกิจวัตรประจำวัน",
+  },
+  {
+    key: "mental",
+    label: "สุขภาวะทางใจ",
+    subtitle: "การดูแลอารมณ์และความรู้สึก",
+  },
+  {
+    key: "social",
+    label: "สุขภาวะทางสังคม",
+    subtitle: "ความสัมพันธ์และการอยู่ร่วมกับผู้อื่น",
+  },
+  {
+    key: "balance",
+    label: "ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว",
+    subtitle: "ความสมดุลของบทบาทต่าง ๆ ในชีวิต",
+  },
 ];
 
 type CategorySummary = {
   key: string;
   label: string;
+  subtitle: string;
   count: number;
   progress: number;
+  statusText: string;
 };
+
+function getStatusText(score: number) {
+  if (score >= 80) return "ดีมาก";
+  if (score >= 60) return "ดี";
+  if (score >= 40) return "ปานกลาง";
+  if (score > 0) return "ควรพัฒนา";
+  return "ยังไม่มีข้อมูล";
+}
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -34,12 +60,12 @@ export default function GoalsPage() {
       const response = await goalsService.listGoals();
 
       if (!response.success) {
-        throw new Error(response.error || "Failed to load goals");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
       }
 
       setGoals(response.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -70,28 +96,22 @@ export default function GoalsPage() {
       return {
         key: category.key,
         label: category.label,
+        subtitle: category.subtitle,
         count: items.length,
         progress,
+        statusText: getStatusText(progress),
       };
     });
   }, [goals]);
 
-  const overallProgress =
-    summaries.length > 0
-      ? Math.round(
-          summaries.reduce((sum, item) => sum + item.progress, 0) /
-            summaries.length
-        )
-      : 0;
-
   return (
     <MobileShell withBottomNav>
-      <AppHeader title="Goals" showBell />
+      <AppHeader title="เป้าหมาย" showBell />
 
       <main className="space-y-4 px-4 py-4">
         {loading ? (
           <InfoCard>
-            <p className="text-sm text-slate-500">Loading goals...</p>
+            <p className="text-sm text-slate-500">กำลังโหลดข้อมูลเป้าหมาย...</p>
           </InfoCard>
         ) : error ? (
           <InfoCard>
@@ -102,41 +122,30 @@ export default function GoalsPage() {
                 onClick={() => void loadGoals()}
                 className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
               >
-                Retry
+                ลองใหม่
               </button>
             </div>
           </InfoCard>
         ) : (
           <>
             <InfoCard>
-              <div className="flex items-start justify-between gap-4">
+              <div className="space-y-3">
                 <div>
-                  <h2 className="text-base font-semibold text-slate-900">
-                    Balance Summary
+                  <p className="text-sm text-slate-500">Your Balance Wellbeing Status</p>
+                  <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                    สถานะภาวะสุขสมดุลของคุณ
                   </h2>
-                  <p className="mt-2 text-sm text-slate-500">
-                    Progress across your wellness categories.
-                  </p>
                 </div>
 
-                <Link
-                  to="/goals/create"
-                  className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white"
-                >
-                  Create Goal
-                </Link>
+                <div className="rounded-2xl bg-slate-50 p-4 text-center">
+                  <p className="text-sm leading-6 text-slate-500">
+                    ส่วนแสดงภาพรวมสถานะภาวะสุขสมดุล
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    สามารถเปลี่ยนเป็น spider graph ได้ภายหลังเมื่อมีข้อมูลจริง
+                  </p>
+                </div>
               </div>
-
-              <div className="mt-4 h-3 rounded-full bg-slate-100">
-                <div
-                  className="h-3 rounded-full bg-slate-900 transition-all"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
-
-              <p className="mt-2 text-sm text-slate-600">
-                Overall progress: {overallProgress}%
-              </p>
             </InfoCard>
 
             {summaries.map((category) => (
@@ -146,14 +155,14 @@ export default function GoalsPage() {
                 className="block"
               >
                 <InfoCard>
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-slate-900">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-base font-semibold leading-6 text-slate-900">
                         {category.label}
                       </h3>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {category.count} activities • {category.progress}%
-                        progress
+
+                      <p className="mt-1 text-sm leading-6 text-slate-500">
+                        {category.subtitle}
                       </p>
 
                       <div className="mt-3 h-2 rounded-full bg-slate-100">
@@ -162,10 +171,14 @@ export default function GoalsPage() {
                           style={{ width: `${category.progress}%` }}
                         />
                       </div>
+
+                      <p className="mt-2 text-sm text-slate-500">
+                        {category.count} กิจกรรม • {category.progress}% • {category.statusText}
+                      </p>
                     </div>
 
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                      View
+                      ดูรายละเอียด
                     </span>
                   </div>
                 </InfoCard>
@@ -174,8 +187,8 @@ export default function GoalsPage() {
 
             {goals.length === 0 ? (
               <InfoCard>
-                <p className="text-sm text-slate-500">
-                  No goals yet. Create your first goal to get started.
+                <p className="text-sm leading-6 text-slate-500">
+                  ยังไม่มีข้อมูลเป้าหมายในระบบ
                 </p>
               </InfoCard>
             ) : null}
