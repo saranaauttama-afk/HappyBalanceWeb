@@ -83,22 +83,22 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
     title: "สุขภาวะทางสังคม",
     statusTitle: "สถานะสุขภาวะทางสังคม",
     description:
-      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาความสัมพันธ์และแรงสนับสนุนทางสังคมได้จากรายการด้านล่าง",
+      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางสังคมของตนเองได้จากรายการด้านล่าง",
     activities: [
       {
-        label: "ความสัมพันธ์ในครอบครัว",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านครอบครัว",
+        label: "ความสัมพันธ์ระหว่างสมาชิกในครอบครัว",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านความสัมพันธ์ในครอบครัว",
         slug: "family-relationship",
       },
       {
-        label: "มิตรภาพและเพื่อน",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านมิตรภาพ",
-        slug: "friendship",
+        label: "การมีส่วนร่วมในชุมชนและสังคมรอบข้าง",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการมีส่วนร่วมในสังคม",
+        slug: "community-participation",
       },
       {
-        label: "แรงสนับสนุนทางสังคม",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านแรงสนับสนุนทางสังคม",
-        slug: "social-support",
+        label: "ความสัมพันธ์ในที่ทำงาน",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านความสัมพันธ์ในที่ทำงาน",
+        slug: "workplace-relationship",
       },
     ],
   },
@@ -157,7 +157,9 @@ export default function GoalCategoryPage() {
 
         setGoals(response.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+        setError(
+          err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ"
+        );
       } finally {
         setLoading(false);
       }
@@ -167,36 +169,16 @@ export default function GoalCategoryPage() {
   }, []);
 
   const chartItems = useMemo(() => {
-    if (category === "physical") {
-      return config.activities.map((activity) => {
-        const matched = goals.find(
-          (goal) => goal.category === category && goal.activity === activity.slug
-        );
+    return config.activities.map((activity) => {
+      const matched = goals.find(
+        (goal) => goal.category === category && goal.activity === activity.slug
+      );
 
-        return {
-          label: activity.label,
-          score: matched ? getActivityScore(matched) : 0,
-        };
-      });
-    }
-
-    if (category === "mental") {
-      return config.activities.map((activity) => {
-        const matched = goals.find(
-          (goal) => goal.category === category && goal.activity === activity.slug
-        );
-
-        return {
-          label: activity.label,
-          score: matched ? getActivityScore(matched) : 0,
-        };
-      });
-    }
-
-    return config.activities.map((activity) => ({
-      label: activity.label,
-      score: 0,
-    }));
+      return {
+        label: activity.label,
+        score: matched ? getActivityScore(matched) : 0,
+      };
+    });
   }, [config.activities, goals, category]);
 
   return (

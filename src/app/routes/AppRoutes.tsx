@@ -21,6 +21,13 @@ import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSett
 import MentalTaskPage from "../../features/goals/task-detail/MentalTaskPage";
 import PositiveThinkingTaskPage from "../../features/goals/task-detail/PositiveThinkingTaskPage";
 import SmileTaskPage from "../../features/goals/task-detail/SmileTaskPage";
+import StressTaskPage from "../../features/goals/task-detail/StressTaskPage";
+import SunlightTaskPage from "../../features/goals/task-detail/SunlightTaskPage";
+import SocialTaskPage from "../../features/goals/task-detail/SocialTaskPage";
+import FamilyRelationshipTaskPage from "../../features/goals/task-detail/FamilyRelationshipTaskPage";
+import ListenAcceptTaskPage from "../../features/goals/task-detail/ListenAcceptTaskPage";
+import WorkplaceRelationshipTaskPage from "../../features/goals/task-detail/WorkplaceRelationshipTaskPage";
+import ShareItemsTaskPage from "../../features/goals/task-detail/ShareItemsTaskPage";
 
 
 export default function AppRoutes() {
@@ -72,6 +79,33 @@ export default function AppRoutes() {
   path="/goals/mental/positive-thinking/smile-when-disappointed"
   element={<SmileTaskPage />}
 />
+<Route
+  path="/goals/mental/stress-level/:task"
+  element={<StressTaskPage />}
+/>
+<Route
+  path="/goals/mental/stress-level/get-sunlight"
+  element={<SunlightTaskPage />}
+/>
+<Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
+    <Route
+  path="/goals/social/family-relationship/:task"
+  element={<FamilyRelationshipTaskPage />}
+/>
+    <Route
+  path="/goals/social/family-relationship/listen-and-accept"
+  element={<ListenAcceptTaskPage />}
+/>
+    <Route
+  path="/goals/social/workplace-relationship/:task"
+  element={<WorkplaceRelationshipTaskPage />}
+/>
+    <Route
+  path="/goals/social/workplace-relationship/share-items-with-colleagues"
+  element={<ShareItemsTaskPage />}
+/>
+    
+    
     </Routes>
   );
 }
