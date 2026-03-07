@@ -1,149 +1,82 @@
-﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
-import { goalsService } from "../../../services/goals.service";
 
 export default function CreateGoalPage() {
   const navigate = useNavigate();
 
   const [category, setCategory] = useState("physical");
-  const [activity, setActivity] = useState("sleep");
-  const [currentValue, setCurrentValue] = useState("0");
-  const [targetValue, setTargetValue] = useState("8");
-  const [status, setStatus] = useState("active");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [activity, setActivity] = useState("");
+  const [target, setTarget] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    try {
-      setSaving(true);
-      setError(null);
-
-      const response = await goalsService.createGoal({
-        category,
-        activity,
-        current_value: Number(currentValue),
-        target_value: Number(targetValue),
-        status,
-      });
-
-      if (!response.success) {
-        throw new Error(response.error || "Failed to create goal");
-      }
-
-      navigate("/goals");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setSaving(false);
-    }
+    console.log({ category, activity, target });
+    navigate("/goals");
   }
 
   return (
     <MobileShell>
-      <AppHeader title="Create Goal" showBack />
+      <AppHeader title="เพิ่มเป้าหมาย" showBack />
 
       <main className="space-y-4 px-4 py-4">
         <InfoCard>
-          <h2 className="text-base font-semibold text-slate-900">
-            New Goal
-          </h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Create a goal entry for a wellness activity.
-          </p>
-        </InfoCard>
-
-        <InfoCard>
           <form onSubmit={handleSubmit} className="space-y-4">
+
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Category
+              <label className="text-sm font-medium text-slate-700">
+                หมวดหมู่
               </label>
+
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
+                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               >
-                <option value="physical">physical</option>
-                <option value="mental">mental</option>
-                <option value="social">social</option>
-                <option value="balance">balance</option>
+                <option value="physical">สุขภาวะทางกาย</option>
+                <option value="mental">สุขภาวะทางใจ</option>
+                <option value="social">สุขภาวะทางสังคม</option>
+                <option value="balance">สมดุลชีวิต</option>
               </select>
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Activity
+              <label className="text-sm font-medium text-slate-700">
+                กิจกรรม
               </label>
+
               <input
-                type="text"
                 value={activity}
                 onChange={(e) => setActivity(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="sleep"
+                placeholder="เช่น การออกกำลังกาย"
+                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Current Value
+              <label className="text-sm font-medium text-slate-700">
+                เป้าหมาย
               </label>
+
               <input
-                type="number"
-                value={currentValue}
-                onChange={(e) => setCurrentValue(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder="เช่น 3 ครั้งต่อสัปดาห์"
+                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Target Value
-              </label>
-              <input
-                type="number"
-                value={targetValue}
-                onChange={(e) => setTargetValue(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-              >
-                <option value="active">active</option>
-                <option value="completed">completed</option>
-                <option value="paused">paused</option>
-              </select>
             </div>
 
             <button
               type="submit"
-              disabled={saving}
-              className={`w-full rounded-2xl px-4 py-3 font-medium text-white ${
-                saving ? "bg-slate-400" : "bg-slate-900"
-              }`}
+              className="w-full rounded-2xl bg-rose-300 py-3 font-medium text-white hover:bg-rose-400"
             >
-              {saving ? "Creating..." : "Create Goal"}
+              บันทึกเป้าหมาย
             </button>
+
           </form>
         </InfoCard>
-
-        {error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {error}
-          </div>
-        ) : null}
       </main>
     </MobileShell>
   );

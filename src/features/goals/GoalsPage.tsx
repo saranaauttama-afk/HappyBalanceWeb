@@ -6,6 +6,12 @@ import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { goalsService } from "../../services/goals.service";
 import type { Goal } from "../../types/models";
+import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
+import { calculateWellbeingScores } from "../../utils/wellbeing";
+
+const [goals, setGoals] = useState<Goal[]>([]);
+const [loading, setLoading] = useState(true);
+const scores = calculateWellbeingScores(goals);
 
 const categoryConfig = [
   {
@@ -83,15 +89,15 @@ export default function GoalsPage() {
         items.length === 0
           ? 0
           : Math.round(
-              (items.reduce((sum, item) => {
-                const current = Number(item.current_value) || 0;
-                const target = Number(item.target_value) || 0;
-                if (target <= 0) return sum;
-                return sum + Math.min(current / target, 1);
-              }, 0) /
-                items.length) *
-                100
-            );
+            (items.reduce((sum, item) => {
+              const current = Number(item.current_value) || 0;
+              const target = Number(item.target_value) || 0;
+              if (target <= 0) return sum;
+              return sum + Math.min(current / target, 1);
+            }, 0) /
+              items.length) *
+            100
+          );
 
       return {
         key: category.key,
@@ -137,14 +143,20 @@ export default function GoalsPage() {
                   </h2>
                 </div>
 
-                <div className="rounded-2xl bg-slate-50 p-4 text-center">
+                <WellbeingRadarChart
+  physical={scores.physical}
+  mental={scores.mental}
+  social={scores.social}
+  balance={scores.balance}
+/>
+                {/* <div className="rounded-2xl bg-slate-50 p-4 text-center">
                   <p className="text-sm leading-6 text-slate-500">
                     ส่วนแสดงภาพรวมสถานะภาวะสุขสมดุล
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
                     สามารถเปลี่ยนเป็น spider graph ได้ภายหลังเมื่อมีข้อมูลจริง
                   </p>
-                </div>
+                </div> */}
               </div>
             </InfoCard>
 

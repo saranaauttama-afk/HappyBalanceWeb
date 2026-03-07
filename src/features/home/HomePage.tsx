@@ -6,6 +6,13 @@ import InfoCard from "../../components/ui/InfoCard";
 import { goalsService } from "../../services/goals.service";
 import { profileService } from "../../services/profile.service";
 import type { Goal, User } from "../../types/models";
+import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
+import { calculateWellbeingScores } from "../../utils/wellbeing";
+
+const [goals, setGoals] = useState<Goal[]>([]);
+const [loading, setLoading] = useState(true);
+
+const scores = calculateWellbeingScores(goals);
 
 const categories = [
   {
@@ -83,15 +90,15 @@ export default function HomePage() {
         items.length === 0
           ? 0
           : Math.round(
-              (items.reduce((sum, item) => {
-                const current = Number(item.current_value) || 0;
-                const target = Number(item.target_value) || 0;
-                if (target <= 0) return sum;
-                return sum + Math.min(current / target, 1);
-              }, 0) /
-                items.length) *
-                100
-            );
+            (items.reduce((sum, item) => {
+              const current = Number(item.current_value) || 0;
+              const target = Number(item.target_value) || 0;
+              if (target <= 0) return sum;
+              return sum + Math.min(current / target, 1);
+            }, 0) /
+              items.length) *
+            100
+          );
 
       return {
         ...category,
@@ -122,8 +129,8 @@ export default function HomePage() {
           loading
             ? "กำลังโหลดข้อมูล..."
             : user
-            ? `สวัสดี, ${user.full_name}`
-            : "สวัสดี"
+              ? `สวัสดี, ${user.full_name}`
+              : "สวัสดี"
         }
         showBell
       />
@@ -152,12 +159,17 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div>
                   <p className="text-sm text-slate-500">สถานะภาวะสุขสมดุลของคุณ</p>
-                  <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                  {/* <h2 className="mt-1 text-lg font-semibold text-slate-900">
                     Your Balance Wellbeing Status
-                  </h2>
+                  </h2> */}
                 </div>
-
-                <div className="rounded-2xl bg-slate-50 p-4">
+                <WellbeingRadarChart
+  physical={scores.physical}
+  mental={scores.mental}
+  social={scores.social}
+  balance={scores.balance}
+/>
+                {/* <div className="rounded-2xl bg-slate-50 p-4">
                   <div className="grid grid-cols-2 gap-3">
                     {categoryStats.map((item) => (
                       <div
@@ -176,7 +188,7 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </div> */}
               </div>
             </InfoCard>
 
