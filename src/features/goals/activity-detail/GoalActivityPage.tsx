@@ -8,6 +8,9 @@ import { STRESS_TASKS } from "../tasks/stressTasks";
 import { SOCIAL_TASKS } from "../tasks/socialTasks";
 import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
 import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
+import { BALANCE_TASKS } from "../tasks/balanceTasks";
+import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
+import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 
 function getMentalTitle(activity?: string) {
   if (activity === "positive-thinking") return "การมองโลกในแง่บวก";
@@ -233,6 +236,124 @@ export default function GoalActivityPage() {
                 </Link>
               );
             })}
+          </div>
+        </main>
+      </MobileShell>
+    );
+  }
+
+  if (category === "balance" && activity === "family-social-balance") {
+    return (
+      <MobileShell>
+        <AppHeader title="สมดุลระหว่างครอบครัวและสังคม" showBack showBell />
+        <main className="space-y-4 px-4 py-4">
+          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">👨‍👩‍👧</span>
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
+                9
+              </div>
+              <span className="text-4xl">🌍</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {FAMILY_SOCIAL_BALANCE_TASKS.map((task) => {
+              const path =
+                task.slug === "say-thanks-or-sorry"
+                  ? "/goals/balance/family-social-balance/say-thanks-or-sorry"
+                  : `/goals/balance/family-social-balance/${task.slug}`;
+
+              return (
+                <Link
+                  key={task.slug}
+                  to={path}
+                  className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
+                    task.completed
+                      ? "border-green-400 bg-green-50 text-slate-900"
+                      : "border-slate-200 bg-white text-slate-600"
+                  }`}
+                >
+                  {task.label}
+                </Link>
+              );
+            })}
+          </div>
+        </main>
+      </MobileShell>
+    );
+  }
+
+  if (category === "balance" && activity === "work-balance") {
+    return (
+      <MobileShell>
+        <AppHeader title="สมดุลระหว่างการทำงาน" showBack showBell />
+        <main className="space-y-4 px-4 py-4">
+          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">📝</span>
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
+                5
+              </div>
+              <span className="text-4xl">💻</span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {WORK_BALANCE_TASKS.map((task) => (
+              <Link
+                key={task.slug}
+                to={`/goals/balance/work-balance/${task.slug}`}
+                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
+                  task.completed
+                    ? "border-green-400 bg-green-50 text-slate-900"
+                    : "border-slate-200 bg-white text-slate-600"
+                }`}
+              >
+                {task.label}
+              </Link>
+            ))}
+          </div>
+        </main>
+      </MobileShell>
+    );
+  }
+
+  if (category === "balance") {
+    return (
+      <MobileShell>
+        <AppHeader
+          title="ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว"
+          showBack
+          showBell
+        />
+        <main className="space-y-4 px-4 py-4">
+          <div className="rounded-3xl bg-white p-5 shadow-sm">
+            <h2 className="text-center text-lg font-semibold leading-7 text-slate-900">
+              ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว
+            </h2>
+
+            <div className="mt-4 flex justify-center">
+              <div className="w-full max-w-xs rounded-2xl bg-green-50 p-4 text-center text-sm text-slate-500">
+                พื้นที่แสดงกราฟสมดุลของผู้ใช้งาน
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {BALANCE_TASKS.map((task) => (
+              <Link
+                key={task.slug}
+                to={`/goals/balance/${task.slug}/task`}
+                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
+                  task.completed
+                    ? "border-green-400 bg-green-50 text-slate-900"
+                    : "border-slate-200 bg-white text-slate-600"
+                }`}
+              >
+                {task.label}
+              </Link>
+            ))}
           </div>
         </main>
       </MobileShell>

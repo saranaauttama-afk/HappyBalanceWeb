@@ -28,7 +28,10 @@ import FamilyRelationshipTaskPage from "../../features/goals/task-detail/FamilyR
 import ListenAcceptTaskPage from "../../features/goals/task-detail/ListenAcceptTaskPage";
 import WorkplaceRelationshipTaskPage from "../../features/goals/task-detail/WorkplaceRelationshipTaskPage";
 import ShareItemsTaskPage from "../../features/goals/task-detail/ShareItemsTaskPage";
-
+import BalanceTaskPage from "../../features/goals/task-detail/BalanceTaskPage";
+import FamilySocialBalanceTaskPage from "../../features/goals/task-detail/FamilySocialBalanceTaskPage";
+import ThanksSorryTaskPage from "../../features/goals/task-detail/ThanksSorryTaskPage";
+import WorkBalanceTaskPage from "../../features/goals/task-detail/WorkBalanceTaskPage";
 
 export default function AppRoutes() {
   return (
@@ -71,41 +74,55 @@ export default function AppRoutes() {
         element={<WaterGoalSettingsPage />}
       />
       <Route path="/goals/mental/:activity/task" element={<MentalTaskPage />} />
-    <Route
-  path="/goals/mental/positive-thinking/:task"
-  element={<PositiveThinkingTaskPage />}
+      <Route
+        path="/goals/mental/positive-thinking/:task"
+        element={<PositiveThinkingTaskPage />}
+      />
+      <Route
+        path="/goals/mental/positive-thinking/smile-when-disappointed"
+        element={<SmileTaskPage />}
+      />
+      <Route
+        path="/goals/mental/stress-level/:task"
+        element={<StressTaskPage />}
+      />
+      <Route
+        path="/goals/mental/stress-level/get-sunlight"
+        element={<SunlightTaskPage />}
+      />
+      <Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
+      <Route
+        path="/goals/social/family-relationship/:task"
+        element={<FamilyRelationshipTaskPage />}
+      />
+      <Route
+        path="/goals/social/family-relationship/listen-and-accept"
+        element={<ListenAcceptTaskPage />}
+      />
+      <Route
+        path="/goals/social/workplace-relationship/:task"
+        element={<WorkplaceRelationshipTaskPage />}
+      />
+      <Route
+        path="/goals/social/workplace-relationship/share-items-with-colleagues"
+        element={<ShareItemsTaskPage />}
+      />
+      <Route
+        path="/goals/balance/:activity/task"
+        element={<BalanceTaskPage />}
+      />
+      <Route
+        path="/goals/balance/family-social-balance/:task"
+        element={<FamilySocialBalanceTaskPage />}
+      />
+      <Route
+  path="/goals/balance/family-social-balance/say-thanks-or-sorry"
+  element={<ThanksSorryTaskPage />}
 />
 <Route
-  path="/goals/mental/positive-thinking/smile-when-disappointed"
-  element={<SmileTaskPage />}
+  path="/goals/balance/work-balance/:task"
+  element={<WorkBalanceTaskPage />}
 />
-<Route
-  path="/goals/mental/stress-level/:task"
-  element={<StressTaskPage />}
-/>
-<Route
-  path="/goals/mental/stress-level/get-sunlight"
-  element={<SunlightTaskPage />}
-/>
-<Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
-    <Route
-  path="/goals/social/family-relationship/:task"
-  element={<FamilyRelationshipTaskPage />}
-/>
-    <Route
-  path="/goals/social/family-relationship/listen-and-accept"
-  element={<ListenAcceptTaskPage />}
-/>
-    <Route
-  path="/goals/social/workplace-relationship/:task"
-  element={<WorkplaceRelationshipTaskPage />}
-/>
-    <Route
-  path="/goals/social/workplace-relationship/share-items-with-colleagues"
-  element={<ShareItemsTaskPage />}
-/>
-    
-    
     </Routes>
   );
 }
