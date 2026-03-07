@@ -12,6 +12,12 @@ import CreateGoalPage from "../../features/goals/create/CreateGoalPage";
 import AppointmentsPage from "../../features/appointments/AppointmentsPage";
 import ProfilePage from "../../features/profile/ProfilePage";
 import DailyLogPage from "../../features/daily-log/DailyLogPage";
+import GoalSettingPage from "../../features/goals/activity-goal/GoalSettingPage";
+import ActivityTaskPage from "../../features/goals/task-detail/ActivityTaskPage";
+import SleepGoalPage from "../../features/goals/task-detail/SleepGoalPage";
+import SettingsPage from "../../features/profile/settings/SettingsPage";
+import SleepGoalSettingsPage from "../../features/profile/settings/SleepGoalSettingsPage";
+import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSettingsPage";
 
 export default function AppRoutes() {
   return (
@@ -26,15 +32,33 @@ export default function AppRoutes() {
       <Route path="/goals" element={<GoalsPage />} />
       <Route path="/goals/create" element={<CreateGoalPage />} />
       <Route path="/goals/:category" element={<GoalCategoryPage />} />
+      <Route path="/goals/:category/:activity" element={<GoalActivityPage />} />
       <Route
-        path="/goals/:category/:activity"
-        element={<GoalActivityPage />}
+        path="/goals/:category/:activity/goal"
+        element={<GoalSettingPage />}
       />
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/daily-log" element={<DailyLogPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="/goals/:category/:activity/:task"
+        element={<ActivityTaskPage />}
+      />
+      <Route
+        path="/goals/:category/:activity/sleep/goal"
+        element={<SleepGoalPage />}
+      />
+      <Route path="/profile/settings" element={<SettingsPage />} />
+      <Route
+        path="/profile/settings/sleep-goal"
+        element={<SleepGoalSettingsPage />}
+      />
+      <Route
+        path="/profile/settings/water-goal"
+        element={<WaterGoalSettingsPage />}
+      />
     </Routes>
   );
 }

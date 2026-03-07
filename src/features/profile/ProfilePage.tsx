@@ -1,4 +1,5 @@
-﻿import { useEffect, useState } from "react";
+﻿import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
 import BottomNav from "../../components/layout/BottomNav";
 import MobileShell from "../../components/layout/MobileShell";
@@ -7,11 +8,11 @@ import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
 
 const menuItems = [
-  "ข้อมูลส่วนตัว",
-  "บันทึกการให้การปรึกษา",
-  "ผลประเมินภาวะสุขสมดุล",
-  "การตั้งค่า",
-  "ช่วยเหลือ",
+  { label: "ข้อมูลส่วนตัว", to: "/profile/personal-info" },
+  { label: "บันทึกการให้การปรึกษา", to: "/profile/counseling-record" },
+  { label: "ผลประเมินภาวะสุขสมดุล", to: "/profile/evaluation-result" },
+  { label: "การตั้งค่า", to: "/profile/settings" },
+  { label: "ช่วยเหลือ", to: "/profile/help" },
 ];
 
 export default function ProfilePage() {
@@ -98,15 +99,14 @@ export default function ProfilePage() {
 
         <div className="space-y-3">
           {menuItems.map((item) => (
-            <InfoCard key={item}>
-              <button
-                type="button"
-                className="flex w-full items-center justify-between text-left"
-              >
-                <span className="font-medium text-slate-800">{item}</span>
-                <span className="text-sm text-slate-400">›</span>
-              </button>
-            </InfoCard>
+            <Link key={item.to} to={item.to} className="block">
+              <InfoCard>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-800">{item.label}</span>
+                  <span className="text-sm text-slate-400">›</span>
+                </div>
+              </InfoCard>
+            </Link>
           ))}
         </div>
       </main>

@@ -9,10 +9,6 @@ import type { Goal } from "../../types/models";
 import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
 import { calculateWellbeingScores } from "../../utils/wellbeing";
 
-const [goals, setGoals] = useState<Goal[]>([]);
-const [loading, setLoading] = useState(true);
-const scores = calculateWellbeingScores(goals);
-
 const categoryConfig = [
   {
     key: "physical",
@@ -57,6 +53,7 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scores = useMemo(() => calculateWellbeingScores(goals), [goals]);
 
   async function loadGoals() {
     try {
@@ -137,26 +134,17 @@ export default function GoalsPage() {
             <InfoCard>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-slate-500">Your Balance Wellbeing Status</p>
                   <h2 className="mt-1 text-lg font-semibold text-slate-900">
                     สถานะภาวะสุขสมดุลของคุณ
                   </h2>
                 </div>
 
                 <WellbeingRadarChart
-  physical={scores.physical}
-  mental={scores.mental}
-  social={scores.social}
-  balance={scores.balance}
-/>
-                {/* <div className="rounded-2xl bg-slate-50 p-4 text-center">
-                  <p className="text-sm leading-6 text-slate-500">
-                    ส่วนแสดงภาพรวมสถานะภาวะสุขสมดุล
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    สามารถเปลี่ยนเป็น spider graph ได้ภายหลังเมื่อมีข้อมูลจริง
-                  </p>
-                </div> */}
+                  physical={scores.physical}
+                  mental={scores.mental}
+                  social={scores.social}
+                  balance={scores.balance}
+                />
               </div>
             </InfoCard>
 

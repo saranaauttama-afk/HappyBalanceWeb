@@ -1,124 +1,192 @@
 ﻿import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
+import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
+import { goalsService } from "../../../services/goals.service";
+import type { Goal } from "../../../types/models";
+
+type ActivityItem = {
+  label: string;
+  subtitle: string;
+  slug: string;
+};
 
 type CategoryConfig = {
   title: string;
   statusTitle: string;
   description: string;
-  activities: Array<{
-    label: string;
-    subtitle: string;
-    slug: string;
-  }>;
+  activities: ActivityItem[];
 };
 
 const CATEGORY_MAP: Record<string, CategoryConfig> = {
   physical: {
     title: "สุขภาวะทางกาย",
     statusTitle: "สถานะสุขภาวะทางกาย",
-    description: "กิจกรรมที่เกี่ยวข้องกับการดูแลร่างกายและสุขภาพในชีวิตประจำวัน",
+    description:
+      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางกายของตนเองได้จากรายการด้านล่าง",
     activities: [
       {
-        label: "การรับประทานอาหาร",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการรับประทานอาหาร",
-        slug: "food-intake",
-      },
-      {
         label: "การพักผ่อน",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการพักผ่อน",
+        subtitle: "ดูรายละเอียดกิจกรรมการนอนหลับและตั้งเป้าหมายการพักผ่อน",
         slug: "rest",
       },
       {
+        label: "การรับประทานอาหาร",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการรับประทานอาหาร",
+        slug: "food-intake",
+      },
+      {
         label: "การออกกำลังกาย",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการออกกำลังกาย",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการออกกำลังกาย",
         slug: "exercise",
       },
       {
         label: "การดูแลรักษาความสะอาดของร่างกาย",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการดูแลร่างกาย",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการดูแลสุขอนามัย",
         slug: "body-hygiene",
       },
     ],
   },
+
   mental: {
     title: "สุขภาวะทางใจ",
     statusTitle: "สถานะสุขภาวะทางใจ",
-    description: "กิจกรรมที่เกี่ยวข้องกับอารมณ์ ความคิด และการดูแลใจของตนเอง",
+    description:
+      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางใจของตนเองได้จากรายการด้านล่าง",
     activities: [
       {
         label: "การรับรู้อารมณ์",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการรับรู้อารมณ์",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการรับรู้อารมณ์",
         slug: "emotional-awareness",
       },
       {
         label: "การจัดการความเครียด",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการจัดการความเครียด",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการจัดการความเครียด",
         slug: "stress-management",
       },
       {
         label: "การดูแลใจตนเอง",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านการดูแลใจตนเอง",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการดูแลใจตนเอง",
         slug: "self-care",
       },
     ],
   },
+
   social: {
     title: "สุขภาวะทางสังคม",
     statusTitle: "สถานะสุขภาวะทางสังคม",
-    description: "กิจกรรมที่เกี่ยวข้องกับความสัมพันธ์ การสื่อสาร และการได้รับแรงสนับสนุน",
+    description:
+      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาความสัมพันธ์และแรงสนับสนุนทางสังคมได้จากรายการด้านล่าง",
     activities: [
       {
         label: "ความสัมพันธ์ในครอบครัว",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านครอบครัว",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านครอบครัว",
         slug: "family-relationship",
       },
       {
         label: "มิตรภาพและเพื่อน",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านความสัมพันธ์กับเพื่อน",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านมิตรภาพ",
         slug: "friendship",
       },
       {
         label: "แรงสนับสนุนทางสังคม",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านแรงสนับสนุนทางสังคม",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านแรงสนับสนุนทางสังคม",
         slug: "social-support",
       },
     ],
   },
+
   balance: {
     title: "ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว",
     statusTitle: "สถานะความพอใจในสุขสมดุล",
-    description: "กิจกรรมที่เกี่ยวข้องกับความสมดุลของบทบาทต่าง ๆ ในชีวิต",
+    description:
+      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาความสมดุลของบทบาทต่าง ๆ ในชีวิตได้จากรายการด้านล่าง",
     activities: [
       {
         label: "การจัดสมดุลชีวิต",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านสมดุลชีวิต",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านสมดุลชีวิต",
         slug: "life-balance",
       },
       {
         label: "เวลาส่วนตัว",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านเวลาส่วนตัว",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านเวลาส่วนตัว",
         slug: "personal-time",
       },
       {
         label: "สมดุลบทบาทชีวิต",
-        subtitle: "ดูรายละเอียดและติดตามเป้าหมายด้านบทบาทชีวิต",
+        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านบทบาทชีวิต",
         slug: "role-balance",
       },
     ],
   },
 };
 
+function getActivityScore(goal: Goal) {
+  const current = Number(goal.current_value) || 0;
+  const target = Number(goal.target_value) || 0;
+  if (target <= 0) return 0;
+  return Math.round(Math.min(current / target, 1) * 100);
+}
+
 export default function GoalCategoryPage() {
   const { category } = useParams<{ category: string }>();
   const config = CATEGORY_MAP[category ?? "physical"] ?? CATEGORY_MAP.physical;
+
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadGoals() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await goalsService.listGoals();
+
+        if (!response.success) {
+          throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
+        }
+
+        setGoals(response.data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadGoals();
+  }, []);
+
+  const chartItems = useMemo(() => {
+    return config.activities.map((activity) => {
+      const matched = goals.find(
+  (goal) =>
+    goal.category === category &&
+    goal.activity === activity.slug
+);
+
+      return {
+        label: activity.label,
+        score: matched ? getActivityScore(matched) : 0,
+      };
+    });
+  }, [config.activities, goals, category]);
 
   return (
     <MobileShell>
       <AppHeader title={config.title} showBack showBell />
 
       <main className="space-y-4 px-4 py-4">
+        {error ? (
+          <InfoCard>
+            <p className="text-sm text-rose-600">{error}</p>
+          </InfoCard>
+        ) : null}
+
         <InfoCard>
           <div className="space-y-3">
             <div>
@@ -130,14 +198,13 @@ export default function GoalCategoryPage() {
               </p>
             </div>
 
-            <div className="rounded-2xl bg-slate-50 p-4">
-              <div className="h-3 rounded-full bg-slate-200">
-                <div className="h-3 w-[58%] rounded-full bg-slate-900" />
+            {loading ? (
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                กำลังโหลดข้อมูลสุขภาวะ...
               </div>
-              <p className="mt-2 text-sm text-slate-500">
-                แสดงภาพรวมความก้าวหน้าของกิจกรรมในหมวดนี้
-              </p>
-            </div>
+            ) : (
+              <CategoryRadarChart title={config.statusTitle} items={chartItems} />
+            )}
           </div>
         </InfoCard>
 
