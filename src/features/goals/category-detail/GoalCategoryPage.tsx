@@ -29,22 +29,22 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
     activities: [
       {
         label: "การพักผ่อน",
-        subtitle: "ดูรายละเอียดกิจกรรมการนอนหลับและตั้งเป้าหมายการพักผ่อน",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการพักผ่อน",
         slug: "rest",
       },
       {
         label: "การรับประทานอาหาร",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการรับประทานอาหาร",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการรับประทานอาหาร",
         slug: "food-intake",
       },
       {
         label: "การออกกำลังกาย",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการออกกำลังกาย",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการออกกำลังกาย",
         slug: "exercise",
       },
       {
         label: "การดูแลรักษาความสะอาดของร่างกาย",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการดูแลสุขอนามัย",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการดูแลสุขอนามัย",
         slug: "body-hygiene",
       },
     ],
@@ -57,19 +57,24 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
       "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางใจของตนเองได้จากรายการด้านล่าง",
     activities: [
       {
-        label: "การรับรู้อารมณ์",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการรับรู้อารมณ์",
-        slug: "emotional-awareness",
+        label: "การมองโลกในแง่บวก",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านการมองโลกในแง่บวก",
+        slug: "positive-thinking",
       },
       {
-        label: "การจัดการความเครียด",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการจัดการความเครียด",
-        slug: "stress-management",
+        label: "ระดับความเครียด",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านความเครียด",
+        slug: "stress-level",
       },
       {
-        label: "การดูแลใจตนเอง",
-        subtitle: "ดูรายละเอียดและตั้งเป้าหมายด้านการดูแลใจตนเอง",
-        slug: "self-care",
+        label: "ระดับความพึงพอใจในชีวิต",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านความพึงพอใจในชีวิต",
+        slug: "life-satisfaction",
+      },
+      {
+        label: "การรู้สึกมีคุณค่าในตนเอง",
+        subtitle: "ดูรายละเอียดกิจกรรมด้านคุณค่าในตนเอง",
+        slug: "self-worth",
       },
     ],
   },
@@ -162,18 +167,36 @@ export default function GoalCategoryPage() {
   }, []);
 
   const chartItems = useMemo(() => {
-    return config.activities.map((activity) => {
-      const matched = goals.find(
-  (goal) =>
-    goal.category === category &&
-    goal.activity === activity.slug
-);
+    if (category === "physical") {
+      return config.activities.map((activity) => {
+        const matched = goals.find(
+          (goal) => goal.category === category && goal.activity === activity.slug
+        );
 
-      return {
-        label: activity.label,
-        score: matched ? getActivityScore(matched) : 0,
-      };
-    });
+        return {
+          label: activity.label,
+          score: matched ? getActivityScore(matched) : 0,
+        };
+      });
+    }
+
+    if (category === "mental") {
+      return config.activities.map((activity) => {
+        const matched = goals.find(
+          (goal) => goal.category === category && goal.activity === activity.slug
+        );
+
+        return {
+          label: activity.label,
+          score: matched ? getActivityScore(matched) : 0,
+        };
+      });
+    }
+
+    return config.activities.map((activity) => ({
+      label: activity.label,
+      score: 0,
+    }));
   }, [config.activities, goals, category]);
 
   return (

@@ -18,6 +18,10 @@ import SleepGoalPage from "../../features/goals/task-detail/SleepGoalPage";
 import SettingsPage from "../../features/profile/settings/SettingsPage";
 import SleepGoalSettingsPage from "../../features/profile/settings/SleepGoalSettingsPage";
 import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSettingsPage";
+import MentalTaskPage from "../../features/goals/task-detail/MentalTaskPage";
+import PositiveThinkingTaskPage from "../../features/goals/task-detail/PositiveThinkingTaskPage";
+import SmileTaskPage from "../../features/goals/task-detail/SmileTaskPage";
+
 
 export default function AppRoutes() {
   return (
@@ -59,6 +63,15 @@ export default function AppRoutes() {
         path="/profile/settings/water-goal"
         element={<WaterGoalSettingsPage />}
       />
+      <Route path="/goals/mental/:activity/task" element={<MentalTaskPage />} />
+    <Route
+  path="/goals/mental/positive-thinking/:task"
+  element={<PositiveThinkingTaskPage />}
+/>
+<Route
+  path="/goals/mental/positive-thinking/smile-when-disappointed"
+  element={<SmileTaskPage />}
+/>
     </Routes>
   );
 }
