@@ -3,6 +3,7 @@ import { useState } from "react";
 import MobileShell from "../../../components/layout/MobileShell";
 import AppHeader from "../../../components/layout/AppHeader";
 import { authService } from "../../../services/auth.service";
+import { setCurrentUser } from "../../../utils/authSession";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function RegisterPage() {
         throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
+      setCurrentUser(response.data);
       navigate("/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");

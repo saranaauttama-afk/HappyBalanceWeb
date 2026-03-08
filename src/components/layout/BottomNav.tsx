@@ -1,29 +1,28 @@
 ﻿import { NavLink } from "react-router-dom";
+import { CalendarDays, CircleUserRound, House, Target } from "lucide-react";
 
 const items = [
-  { to: "/home", label: "หน้าหลัก", icon: "🏠" },
-  { to: "/goals", label: "เป้าหมาย", icon: "🎯" },
-  { to: "/appointments", label: "การนัดหมาย", icon: "📅" },
-  { to: "/profile", label: "บัญชี", icon: "👤" },
+  { to: "/home", label: "หน้าหลัก", Icon: House },
+  { to: "/goals", label: "เป้าหมาย", Icon: Target },
+  { to: "/appointments", label: "การนัดหมาย", Icon: CalendarDays },
+  { to: "/profile", label: "บัญชี", Icon: CircleUserRound },
 ];
 
 export default function BottomNav() {
   return (
-    <nav className="border-t border-slate-200 bg-white">
+    <nav className="border-t border-slate-200 bg-white/95 backdrop-blur">
       <div className="grid grid-cols-4">
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-1 py-3 text-xs ${
-                isActive
-                  ? "text-rose-400 font-medium"
-                  : "text-slate-400"
+              `flex flex-col items-center gap-1 py-3 text-xs transition ${
+                isActive ? "font-semibold text-[#d88d80]" : "text-slate-400"
               }`
             }
           >
-            <span className="text-lg">{item.icon}</span>
+            <item.Icon size={18} strokeWidth={2.2} />
             {item.label}
           </NavLink>
         ))}

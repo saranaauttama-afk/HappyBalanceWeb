@@ -5,6 +5,7 @@ import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { appointmentsService } from "../../services/appointments.service";
 import type { Appointment } from "../../types/models";
+import { getCurrentUserId } from "../../utils/authSession";
 
 function getDefaultAppointmentDateTime() {
   const now = new Date();
@@ -65,6 +66,7 @@ function getMonthGrid(baseDate: Date) {
 }
 
 export default function AppointmentsPage() {
+  const userId = getCurrentUserId();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -83,7 +85,7 @@ export default function AppointmentsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await appointmentsService.listAppointments();
+      const response = await appointmentsService.listAppointments(userId ?? undefined);
 
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลการนัดหมายได้");
@@ -99,7 +101,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     void loadAppointments();
-  }, []);
+  }, [userId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -110,6 +112,7 @@ export default function AppointmentsPage() {
       setSuccessMessage("");
 
       const response = await appointmentsService.createAppointment({
+        user_id: userId ?? undefined,
         appointment_date: new Date(appointmentDate).toISOString(),
         type,
         status: "pending",

@@ -6,6 +6,7 @@ import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
+import { getCurrentUserId } from "../../utils/authSession";
 
 const menuItems = [
   { label: "ข้อมูลส่วนตัว", to: "/profile/personal-info" },
@@ -16,6 +17,7 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
+  const userId = getCurrentUserId();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function ProfilePage() {
       setLoading(true);
       setError(null);
 
-      const response = await profileService.getUser();
+      const response = await profileService.getUser(userId ?? undefined);
 
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบัญชีผู้ใช้งานได้");
@@ -41,7 +43,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     void loadUser();
-  }, []);
+  }, [userId]);
 
   const initials =
     user?.full_name

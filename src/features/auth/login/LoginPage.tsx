@@ -3,6 +3,7 @@ import { useState } from "react";
 import MobileShell from "../../../components/layout/MobileShell";
 import AppHeader from "../../../components/layout/AppHeader";
 import { authService } from "../../../services/auth.service";
+import { setCurrentUser } from "../../../utils/authSession";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function LoginPage() {
         throw new Error(response.error || "เข้าสู่ระบบไม่สำเร็จ");
       }
 
+      setCurrentUser(response.data);
       navigate("/home");
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");

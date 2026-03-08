@@ -8,6 +8,7 @@ import { goalsService } from "../../services/goals.service";
 import type { Goal } from "../../types/models";
 import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
 import { calculateWellbeingScores } from "../../utils/wellbeing";
+import { getCurrentUserId } from "../../utils/authSession";
 
 const categoryConfig = [
   {
@@ -50,6 +51,7 @@ function getStatusText(score: number) {
 }
 
 export default function GoalsPage() {
+  const userId = getCurrentUserId();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +62,7 @@ export default function GoalsPage() {
       setLoading(true);
       setError(null);
 
-      const response = await goalsService.listGoals();
+      const response = await goalsService.listGoals(userId ?? undefined);
 
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
@@ -76,7 +78,7 @@ export default function GoalsPage() {
 
   useEffect(() => {
     void loadGoals();
-  }, []);
+  }, [userId]);
 
   const summaries = useMemo<CategorySummary[]>(() => {
     return categoryConfig.map((category) => {

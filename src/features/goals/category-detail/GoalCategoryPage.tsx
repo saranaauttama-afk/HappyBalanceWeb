@@ -6,6 +6,7 @@ import InfoCard from "../../../components/ui/InfoCard";
 import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
 import { goalsService } from "../../../services/goals.service";
 import type { Goal } from "../../../types/models";
+import { getCurrentUserId } from "../../../utils/authSession";
 
 type ActivityItem = {
   label: string;
@@ -139,6 +140,7 @@ function getActivityScore(goal: Goal) {
 export default function GoalCategoryPage() {
   const { category } = useParams<{ category: string }>();
   const config = CATEGORY_MAP[category ?? "physical"] ?? CATEGORY_MAP.physical;
+  const userId = getCurrentUserId();
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +152,7 @@ export default function GoalCategoryPage() {
         setLoading(true);
         setError(null);
 
-        const response = await goalsService.listGoals();
+        const response = await goalsService.listGoals(userId ?? undefined);
 
         if (!response.success) {
           throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
@@ -167,7 +169,7 @@ export default function GoalCategoryPage() {
     }
 
     void loadGoals();
-  }, []);
+  }, [userId]);
 
   const chartItems = useMemo(() => {
     return config.activities.map((activity) => {
