@@ -1,4 +1,12 @@
-import { Camera } from "lucide-react";
+import {
+  Camera,
+  ChevronRight,
+  ChartColumn,
+  CircleHelp,
+  NotebookPen,
+  SlidersHorizontal,
+  UserRound,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
@@ -17,26 +25,46 @@ const menuItems = [
     label: "ข้อมูลส่วนตัว",
     subtitle: "จัดการข้อมูลพื้นฐานของบัญชีผู้ใช้งาน",
     to: "/profile/personal-info",
+    Icon: UserRound,
+    accent: "from-[#f2dbc7] via-[#f9ecd9] to-[#f4f8ff]",
+    iconBg: "bg-[#fff3e7]",
+    iconColor: "text-[#b9774e]",
   },
   {
     label: "บันทึกการให้การปรึกษา",
     subtitle: "ดูประวัติและรายละเอียดการรับคำปรึกษา",
     to: "/profile/counseling-record",
+    Icon: NotebookPen,
+    accent: "from-[#d9e6fb] via-[#eaf2ff] to-[#f8fbff]",
+    iconBg: "bg-[#edf3ff]",
+    iconColor: "text-[#5674a5]",
   },
   {
     label: "ผลประเมินภาวะสุขสมดุล",
     subtitle: "ติดตามผลประเมินและพัฒนาการของคุณ",
     to: "/profile/evaluation-result",
+    Icon: ChartColumn,
+    accent: "from-[#d6f2e7] via-[#ebfaf4] to-[#f8fffc]",
+    iconBg: "bg-[#e7f8f1]",
+    iconColor: "text-[#2f7b63]",
   },
   {
     label: "การตั้งค่า",
     subtitle: "กำหนดเป้าหมายและการใช้งานแอป",
     to: "/profile/settings",
+    Icon: SlidersHorizontal,
+    accent: "from-[#f8dfcf] via-[#fdf0e4] to-[#fff7f1]",
+    iconBg: "bg-[#fff1e7]",
+    iconColor: "text-[#b46e44]",
   },
   {
     label: "ช่วยเหลือ",
     subtitle: "คำถามที่พบบ่อยและช่องทางติดต่อ",
     to: "/profile/help",
+    Icon: CircleHelp,
+    accent: "from-[#dbeaf9] via-[#edf6ff] to-[#f8fcff]",
+    iconBg: "bg-[#e9f4ff]",
+    iconColor: "text-[#4f78a3]",
   },
 ];
 
@@ -277,13 +305,29 @@ export default function ProfilePage() {
           <div className="space-y-3">
             {menuItems.map((item) => (
               <Link key={item.to} to={item.to} className="group block">
-                <InfoCard className={cardClassName}>
+                <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl`}>
+                  <div
+                    className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`}
+                  />
+
                   <div className="flex items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-semibold text-slate-800">{item.label}</span>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">{item.subtitle}</p>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div
+                        className={`mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}
+                      >
+                        <item.Icon size={18} />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-semibold text-slate-800">{item.label}</span>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">{item.subtitle}</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-slate-400 transition group-hover:translate-x-0.5">›</span>
+
+                    <ChevronRight
+                      size={18}
+                      className="text-slate-400 transition group-hover:translate-x-0.5"
+                    />
                   </div>
                 </InfoCard>
               </Link>
