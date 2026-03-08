@@ -20,10 +20,12 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function toDatetimeLocalValue(date: Date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours()
-  )}:${pad(date.getMinutes())}`;
+function toDateInputValue(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toTimeInputValue(date: Date) {
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
 function toDateKey(date: Date) {
@@ -52,11 +54,14 @@ function getStartOfToday() {
   return new Date(today.getFullYear(), today.getMonth(), today.getDate());
 }
 
-function getDefaultAppointmentDateTime() {
+function getDefaultAppointmentSelection() {
   const now = new Date();
   now.setDate(now.getDate() + 1);
   now.setHours(10, 0, 0, 0);
-  return toDatetimeLocalValue(now);
+  return {
+    date: toDateInputValue(now),
+    time: toTimeInputValue(now),
+  };
 }
 
 function formatThaiDate(date: Date) {
@@ -76,6 +81,8 @@ function formatThaiDateTime(value: string) {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
   });
 }
 
@@ -134,6 +141,9 @@ function getMonthGrid(baseDate: Date) {
 
 const cardClassName =
   "border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(31,47,61,0.12)] backdrop-blur";
+const quickAppointmentTimes = ["09:00", "13:00", "16:00", "19:00"];
+const appointmentHourOptions = Array.from({ length: 24 }, (_, index) => pad(index));
+const appointmentMinuteOptions = ["00", "15", "30", "45"];
 
 export default function AppointmentsPage() {
   const userId = getCurrentUserId();
@@ -150,10 +160,16 @@ export default function AppointmentsPage() {
   const [monthDate, setMonthDate] = useState(() => getStartOfToday());
   const [selectedDate, setSelectedDate] = useState(() => getStartOfToday());
 
-  const [appointmentDate, setAppointmentDate] = useState(getDefaultAppointmentDateTime());
+  const defaultAppointmentSelection = useMemo(() => getDefaultAppointmentSelection(), []);
+  const [appointmentDate, setAppointmentDate] = useState(defaultAppointmentSelection.date);
+  const [appointmentTime, setAppointmentTime] = useState(defaultAppointmentSelection.time);
   const [type, setType] = useState("consultation");
   const [note, setNote] = useState("");
   const [dailyNote, setDailyNote] = useState("");
+  const [appointmentHour, appointmentMinute] = useMemo(() => {
+    const [hour = "10", minute = "00"] = appointmentTime.split(":");
+    return [hour, minute];
+  }, [appointmentTime]);
 
   const loadData = useCallback(async () => {
     try {
@@ -215,7 +231,12 @@ export default function AppointmentsPage() {
     setError(null);
     setSuccessMessage("");
 
-    const parsedDate = new Date(appointmentDate);
+    if (!appointmentDate || !appointmentTime) {
+      setError("กรุณาเลือกวันและเวลาให้ครบ");
+      return;
+    }
+
+    const parsedDate = new Date(`${appointmentDate}T${appointmentTime}`);
     if (Number.isNaN(parsedDate.getTime())) {
       setError("กรุณาเลือกวันเวลาให้ถูกต้อง");
       return;
@@ -347,6 +368,14 @@ export default function AppointmentsPage() {
 
   function handleSelectDate(day: number) {
     setSelectedDate(new Date(monthDate.getFullYear(), monthDate.getMonth(), day));
+  }
+
+  function handleAppointmentHourChange(hour: string) {
+    setAppointmentTime(`${hour}:${appointmentMinute}`);
+  }
+
+  function handleAppointmentMinuteChange(minute: string) {
+    setAppointmentTime(`${appointmentHour}:${minute}`);
   }
 
   return (
@@ -557,14 +586,60 @@ export default function AppointmentsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">วันและเวลา</label>
-                <input
-                  type="datetime-local"
-                  value={appointmentDate}
-                  onChange={(e) => setAppointmentDate(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">วันที่นัดหมาย</label>
+                  <input
+                    type="date"
+                    value={appointmentDate}
+                    onChange={(e) => setAppointmentDate(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">เวลา (24 ชั่วโมง)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={appointmentHour}
+                      onChange={(e) => handleAppointmentHourChange(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
+                    >
+                      {appointmentHourOptions.map((hour) => (
+                        <option key={hour} value={hour}>
+                          {hour}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={appointmentMinute}
+                      onChange={(e) => handleAppointmentMinuteChange(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
+                    >
+                      {appointmentMinuteOptions.map((minute) => (
+                        <option key={minute} value={minute}>
+                          {minute}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {quickAppointmentTimes.map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={() => setAppointmentTime(time)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                      appointmentTime === time
+                        ? "border-[#d88d80] bg-[#fff1e9] text-[#b46e44]"
+                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {time}
+                  </button>
+                ))}
               </div>
 
               <div>
