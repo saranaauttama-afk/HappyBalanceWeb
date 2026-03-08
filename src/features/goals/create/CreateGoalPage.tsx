@@ -3,78 +3,118 @@ import { useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
+import { goalsService } from "../../../services/goals.service";
 
 export default function CreateGoalPage() {
   const navigate = useNavigate();
 
   const [category, setCategory] = useState("physical");
   const [activity, setActivity] = useState("");
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState("8");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log({ category, activity, target });
-    navigate("/goals");
+    setError(null);
+
+    const normalizedActivity = activity.trim();
+    const targetValue = Number(target);
+
+    if (!normalizedActivity) {
+      setError("Please enter an activity");
+      return;
+    }
+
+    if (!Number.isFinite(targetValue) || targetValue <= 0) {
+      setError("Target must be a number greater than 0");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await goalsService.createGoal({
+        category,
+        activity: normalizedActivity,
+        current_value: 0,
+        target_value: targetValue,
+        status: "active",
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "Could not save goal");
+      }
+
+      navigate("/goals");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <MobileShell>
-      <AppHeader title="เพิ่มเป้าหมาย" showBack />
+      <AppHeader title="Create Goal" showBack />
 
       <main className="space-y-4 px-4 py-4">
         <InfoCard>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error ? (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {error}
+              </div>
+            ) : null}
 
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                หมวดหมู่
-              </label>
+              <label className="text-sm font-medium text-slate-700">Category</label>
 
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               >
-                <option value="physical">สุขภาวะทางกาย</option>
-                <option value="mental">สุขภาวะทางใจ</option>
-                <option value="social">สุขภาวะทางสังคม</option>
-                <option value="balance">สมดุลชีวิต</option>
+                <option value="physical">Physical</option>
+                <option value="mental">Mental</option>
+                <option value="social">Social</option>
+                <option value="balance">Balance</option>
               </select>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                กิจกรรม
-              </label>
+              <label className="text-sm font-medium text-slate-700">Activity</label>
 
               <input
                 value={activity}
                 onChange={(e) => setActivity(e.target.value)}
-                placeholder="เช่น การออกกำลังกาย"
+                placeholder="Example: exercise"
                 className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                เป้าหมาย
-              </label>
+              <label className="text-sm font-medium text-slate-700">Target</label>
 
               <input
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                placeholder="เช่น 3 ครั้งต่อสัปดาห์"
+                type="number"
+                min={1}
+                step="0.5"
+                placeholder="Example: 8"
                 className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-2xl bg-rose-300 py-3 font-medium text-white hover:bg-rose-400"
+              disabled={saving}
+              className={`w-full rounded-2xl py-3 font-medium text-white ${
+                saving ? "bg-slate-400" : "bg-rose-300 hover:bg-rose-400"
+              }`}
             >
-              บันทึกเป้าหมาย
+              {saving ? "Saving..." : "Save Goal"}
             </button>
-
           </form>
         </InfoCard>
       </main>
