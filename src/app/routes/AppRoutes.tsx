@@ -18,6 +18,10 @@ import SleepGoalPage from "../../features/goals/task-detail/SleepGoalPage";
 import SettingsPage from "../../features/profile/settings/SettingsPage";
 import SleepGoalSettingsPage from "../../features/profile/settings/SleepGoalSettingsPage";
 import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSettingsPage";
+import PersonalInfoPage from "../../features/profile/personal-info/PersonalInfoPage";
+import CounselingRecordPage from "../../features/profile/counseling-record/CounselingRecordPage";
+import EvaluationResultPage from "../../features/profile/evaluation-result/EvaluationResultPage";
+import HelpPage from "../../features/profile/help/HelpPage";
 import MentalTaskPage from "../../features/goals/task-detail/MentalTaskPage";
 import PositiveThinkingTaskPage from "../../features/goals/task-detail/PositiveThinkingTaskPage";
 import SmileTaskPage from "../../features/goals/task-detail/SmileTaskPage";
@@ -54,6 +58,10 @@ export default function AppRoutes() {
       />
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/profile/personal-info" element={<PersonalInfoPage />} />
+      <Route path="/profile/counseling-record" element={<CounselingRecordPage />} />
+      <Route path="/profile/evaluation-result" element={<EvaluationResultPage />} />
+      <Route path="/profile/help" element={<HelpPage />} />
       <Route path="/daily-log" element={<DailyLogPage />} />
       <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
 

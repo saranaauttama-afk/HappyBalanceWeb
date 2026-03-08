@@ -9,6 +9,9 @@ Columns:
 - email (string)
 - full_name (string)
 - phone (string)
+- avatar_url (string, nullable)
+- sleep_goal_minutes (number, nullable)
+- water_goal_ml (number, nullable)
 - password_hash (string)
 - auth_provider (enum: password|google|facebook|apple)
 - provider_user_id (string, nullable)
@@ -20,7 +23,8 @@ Actions:
 - getUser(id)
 - registerUser(full_name, email, phone, password, auth_provider?)
 - loginUser(email, password)
-- updateProfile(id, full_name, email, phone)
+- updateProfile(id, full_name?, email?, phone?, sleep_goal_minutes?, water_goal_ml?, avatar_url?)
+- uploadProfileAvatar(id, image_base64, file_name?, mime_type?)
 
 ## Sheet 2: goals
 Columns:
@@ -70,7 +74,19 @@ Actions:
 - listAppointments(userId)
 - createAppointment(user_id, appointment_date, type, status, note)
 
-## Optional Sheet 5: task_logs (next phase)
+## Sheet 5: articles
+Columns:
+- id (string, PK)
+- title (string)
+- description (string)
+- image_url (string, nullable)
+- published_at (ISO datetime)
+- created_at (ISO datetime)
+
+Actions:
+- listArticles(limit?)
+
+## Optional Sheet 6: task_logs (next phase)
 Use this when task-detail pages need dedicated analytics instead of storing summaries in daily_logs.note.
 
 Columns:
@@ -94,3 +110,5 @@ Recommended actions:
 - Core pages now save to goals and daily_logs actions directly.
 - Some task-detail pages currently save via createDailyLog as an interim approach.
 - Next migration step: switch those pages to createTaskLog once Apps Script supports task_logs.
+- Profile avatar upload now uses `uploadProfileAvatar` and stores file on Google Drive.
+- Optional Apps Script property: `PROFILE_AVATAR_FOLDER_ID` (if not set, files go to Drive root).

@@ -3,6 +3,9 @@ export interface User {
   email: string;
   full_name: string;
   phone: string;
+  avatar_url?: string;
+  sleep_goal_minutes?: number | string;
+  water_goal_ml?: number | string;
 }
 
 export interface Goal {

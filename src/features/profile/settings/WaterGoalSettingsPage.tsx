@@ -1,6 +1,10 @@
-import { useMemo, useState } from "react";
+import { Droplets } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import InfoCard from "../../../components/ui/InfoCard";
+import { profileService } from "../../../services/profile.service";
+import { getCurrentUserId } from "../../../utils/authSession";
 
 function calculateWaterGoal(weightKg: number) {
   if (!weightKg || Number.isNaN(weightKg) || weightKg <= 0) {
@@ -10,85 +14,173 @@ function calculateWaterGoal(weightKg: number) {
   return Math.round(weightKg * 2.2 * 30);
 }
 
+function toPositiveNumber(value: unknown) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return parsed;
+}
+
 export default function WaterGoalSettingsPage() {
+  const userId = getCurrentUserId();
   const [weight, setWeight] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const waterGoalMl = useMemo(() => {
     return calculateWaterGoal(Number(weight));
   }, [weight]);
 
-  function handleSave() {
-    console.log("save water goal", {
-      weightKg: Number(weight),
-      waterGoalMl,
-    });
+  const waterGoalLiter = useMemo(() => {
+    if (waterGoalMl <= 0) return "";
+    return (waterGoalMl / 1000).toFixed(1);
+  }, [waterGoalMl]);
+
+  useEffect(() => {
+    async function loadSetting() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await profileService.getUser(userId ?? undefined);
+        if (!response.success) {
+          throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายการดื่มน้ำได้");
+        }
+
+        const storedMl = toPositiveNumber(response.data?.water_goal_ml);
+        if (storedMl > 0) {
+          const estimatedWeight = storedMl / (2.2 * 30);
+          setWeight(estimatedWeight.toFixed(1));
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadSetting();
+  }, [userId]);
+
+  async function handleSave() {
+    setError(null);
+    setSuccessMessage("");
+
+    if (waterGoalMl <= 0) {
+      setError("กรุณากรอกน้ำหนักเพื่อคำนวณเป้าหมายการดื่มน้ำ");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const response = await profileService.updateProfile({
+        id: userId ?? undefined,
+        water_goal_ml: waterGoalMl,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายการดื่มน้ำได้");
+      }
+
+      setSuccessMessage("บันทึกเป้าหมายการดื่มน้ำเรียบร้อยแล้ว");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <MobileShell>
-      <AppHeader title="เป้าหมายการดื่มน้ำ" showBack showBell />
+      <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+        <div className="pointer-events-none absolute -left-20 top-10 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-24 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/45 to-transparent" />
 
-      <main className="space-y-6 px-4 py-6">
-        <div className="space-y-1 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">การดื่มน้ำ</h1>
-          <p className="text-sm text-slate-600">
-            คำนวณปริมาณการดื่มน้ำต่อวันของคุณ
-          </p>
-        </div>
+        <AppHeader
+          title="เป้าหมายการดื่มน้ำ"
+          subtitle="คำนวณปริมาณน้ำที่เหมาะสมต่อวัน"
+          showBack
+          showBell
+          variant="soft"
+        />
 
-        <div className="rounded-3xl bg-[#b9dbea] p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-slate-800">
-            <span className="rounded-full bg-white px-3 py-2 font-medium">
-              น้ำหนักตัว
-            </span>
+        <main className="relative z-10 space-y-4 px-4 py-6">
+          {error ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              {error}
+            </div>
+          ) : null}
 
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              placeholder="กิโลกรัม"
-              className="w-24 rounded-full border border-transparent bg-white px-3 py-2 text-center outline-none"
-            />
+          {successMessage ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+              {successMessage}
+            </div>
+          ) : null}
 
-            <span className="font-semibold">x 2.2 x 30 =</span>
+          <InfoCard className="rounded-3xl border-white/70 bg-white/85 shadow-[0_18px_50px_rgba(31,47,61,0.12)] backdrop-blur">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8f7ff] text-[#3f7a96]">
+                  <Droplets size={18} />
+                </span>
 
-            <span className="rounded-full bg-white px-3 py-2 font-medium">
-              มิลลิลิตร
-            </span>
-          </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-slate-900">คำนวณเป้าหมายการดื่มน้ำ</h1>
+                  <p className="text-sm text-slate-500">ใส่น้ำหนักตัวเพื่อคำนวณปริมาณน้ำที่เหมาะสม</p>
+                </div>
+              </div>
 
-          <p className="mt-4 text-center text-xs text-slate-700">
-            * 1,000 มิลลิลิตร = 1 ลิตร
-          </p>
-        </div>
+              <div className="rounded-3xl bg-[linear-gradient(180deg,#eef8ff_0%,#f7fcff_100%)] p-4">
+                <label htmlFor="weight-input" className="mb-2 block text-sm font-medium text-slate-700">
+                  น้ำหนักตัว (กิโลกรัม)
+                </label>
+                <input
+                  id="weight-input"
+                  type="number"
+                  min="1"
+                  disabled={loading}
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="เช่น 60"
+                  className={`w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-[#73a8c3] ${
+                    loading ? "cursor-not-allowed bg-slate-100 text-slate-400" : ""
+                  }`}
+                />
+                <p className="mt-2 text-xs text-slate-500">สูตรคำนวณ: น้ำหนัก x 2.2 x 30</p>
+              </div>
 
-        <div className="space-y-3 text-center">
-          <p className="text-lg font-medium text-slate-900">
-            คุณควรดื่มน้ำในปริมาณที่ไม่น้อยกว่า
-          </p>
+              <div className="rounded-2xl bg-white/80 px-4 py-4 text-center">
+                <p className="text-xs text-slate-500">เป้าหมายรายวัน</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">
+                  {waterGoalMl > 0 ? `${waterGoalMl.toLocaleString()} มิลลิลิตร` : "-"}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {loading
+                    ? "กำลังโหลดเป้าหมาย..."
+                    : waterGoalLiter
+                    ? `ประมาณ ${waterGoalLiter} ลิตร`
+                    : "กรอกน้ำหนักเพื่อคำนวณ"}
+                </p>
+              </div>
+            </div>
+          </InfoCard>
 
-          <div className="mx-auto flex w-56 items-center justify-center rounded-3xl bg-white px-4 py-5 shadow-sm">
-            <span className="text-2xl font-bold text-slate-900">
-              {waterGoalMl > 0 ? `${waterGoalMl} มิลลิลิตร` : "มิลลิลิตร"}
-            </span>
-          </div>
-
-          <p className="text-lg text-slate-900">ใน 1 วัน</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={waterGoalMl <= 0}
-          className={`w-full rounded-2xl py-4 font-semibold text-white ${
-            waterGoalMl > 0
-              ? "bg-[#c6968c]"
-              : "cursor-not-allowed bg-slate-300"
-          }`}
-        >
-          บันทึก
-        </button>
-      </main>
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={loading || saving || waterGoalMl <= 0}
+            className={`w-full rounded-2xl py-4 font-semibold text-white transition ${
+              loading || saving || waterGoalMl <= 0
+                ? "cursor-not-allowed bg-slate-300"
+                : "bg-[#d88d80] shadow-[0_14px_30px_rgba(216,141,128,0.35)] hover:brightness-105"
+            }`}
+          >
+            {saving ? "กำลังบันทึก..." : "บันทึกเป้าหมายการดื่มน้ำ"}
+          </button>
+        </main>
+      </div>
     </MobileShell>
   );
 }

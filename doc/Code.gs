@@ -3,6 +3,7 @@ const SHEET_NAMES = {
   goals: "goals",
   dailyLogs: "daily_logs",
   appointments: "appointments",
+  articles: "articles",
 };
 
 function doGet(e) {
@@ -20,6 +21,8 @@ function doGet(e) {
         return jsonOutput_(listDailyLogs_(getParam_(e, "userId")));
       case "listAppointments":
         return jsonOutput_(listAppointments_(getParam_(e, "userId")));
+      case "listArticles":
+        return jsonOutput_(listArticles_(getParam_(e, "limit")));
       default:
         return jsonOutput_({
           success: false,
@@ -50,6 +53,8 @@ function doPost(e) {
         return jsonOutput_(createDailyLog_(body));
       case "updateProfile":
         return jsonOutput_(updateProfile_(body));
+      case "uploadProfileAvatar":
+        return jsonOutput_(uploadProfileAvatar_(body));
       case "createAppointment":
         return jsonOutput_(createAppointment_(body));
       default:
@@ -96,11 +101,28 @@ function updateProfile_(payload) {
     throw new Error(`User not found: ${id}`);
   }
 
+  const sleepGoalMinutes =
+    payload.sleep_goal_minutes !== undefined &&
+    payload.sleep_goal_minutes !== null &&
+    payload.sleep_goal_minutes !== ""
+      ? Number(payload.sleep_goal_minutes)
+      : rows[index].sleep_goal_minutes;
+
+  const waterGoalMl =
+    payload.water_goal_ml !== undefined &&
+    payload.water_goal_ml !== null &&
+    payload.water_goal_ml !== ""
+      ? Number(payload.water_goal_ml)
+      : rows[index].water_goal_ml;
+
   const updated = {
     ...rows[index],
     full_name: payload.full_name || rows[index].full_name,
     email: payload.email || rows[index].email,
     phone: payload.phone || rows[index].phone,
+    avatar_url: payload.avatar_url || rows[index].avatar_url || "",
+    sleep_goal_minutes: sleepGoalMinutes,
+    water_goal_ml: waterGoalMl,
     updated_at: nowIso_(),
   };
 
@@ -109,6 +131,62 @@ function updateProfile_(payload) {
   return {
     success: true,
     data: updated,
+  };
+}
+
+function uploadProfileAvatar_(payload) {
+  const id = String(payload.id || "").trim();
+  const imageBase64 = String(payload.image_base64 || "").trim();
+  const fileName = String(payload.file_name || "avatar.jpg");
+  const mimeType = String(payload.mime_type || "image/jpeg");
+
+  if (!id) {
+    throw new Error("Missing user id");
+  }
+
+  if (!imageBase64) {
+    throw new Error("Missing image_base64");
+  }
+
+  const sheet = getSheet_(SHEET_NAMES.users);
+  const headers = getHeaders_(sheet);
+  const avatarColumnIndex = headers.indexOf("avatar_url");
+  if (avatarColumnIndex === -1) {
+    throw new Error("Missing avatar_url column in users sheet");
+  }
+
+  const rows = getAllObjects_(SHEET_NAMES.users);
+  const index = rows.findIndex((row) => row.id === id);
+  if (index === -1) {
+    throw new Error(`User not found: ${id}`);
+  }
+
+  const parsedImage = parseImagePayload_(imageBase64, mimeType);
+  const blob = Utilities.newBlob(
+    Utilities.base64Decode(parsedImage.base64),
+    parsedImage.mimeType,
+    buildAvatarFileName_(id, fileName, parsedImage.mimeType)
+  );
+
+  const folder = getAvatarFolder_();
+  const file = folder.createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  const avatarUrl = `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+
+  const updated = {
+    ...rows[index],
+    avatar_url: avatarUrl,
+    updated_at: nowIso_(),
+  };
+
+  updateRowByIndex_(sheet, index + 2, updated);
+
+  return {
+    success: true,
+    data: {
+      ...updated,
+      password_hash: undefined,
+    },
   };
 }
 
@@ -295,6 +373,27 @@ function createAppointment_(payload) {
 }
 
 /* =========================
+   ARTICLES
+========================= */
+
+function listArticles_(limitParam) {
+  const limit = Number(limitParam) > 0 ? Number(limitParam) : 5;
+
+  const rows = getAllObjects_(SHEET_NAMES.articles)
+    .sort((a, b) => {
+      const aDate = String(a.published_at || a.created_at || "");
+      const bDate = String(b.published_at || b.created_at || "");
+      return bDate.localeCompare(aDate);
+    })
+    .slice(0, limit);
+
+  return {
+    success: true,
+    data: rows,
+  };
+}
+
+/* =========================
    HELPERS
 ========================= */
 
@@ -466,6 +565,48 @@ function registerUser_(params) {
     success: true,
     data: { id, email, full_name: fullName, phone, auth_provider: authProvider, status: "active", created_at: now, updated_at: now }
   };
+}
+
+function parseImagePayload_(imageBase64, fallbackMimeType) {
+  const value = String(imageBase64 || "").trim();
+  const matched = value.match(/^data:([^;]+);base64,(.+)$/);
+
+  if (matched) {
+    return {
+      mimeType: matched[1],
+      base64: matched[2],
+    };
+  }
+
+  return {
+    mimeType: fallbackMimeType || "image/jpeg",
+    base64: value,
+  };
+}
+
+function buildAvatarFileName_(userId, originalName, mimeType) {
+  const extByMime = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  const ext = extByMime[mimeType] || "jpg";
+  const safeName = String(originalName || "avatar")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/\.[^.]+$/, "");
+
+  return `avatar_${userId}_${safeName}_${new Date().getTime()}.${ext}`;
+}
+
+function getAvatarFolder_() {
+  const folderId = PropertiesService.getScriptProperties().getProperty(
+    "PROFILE_AVATAR_FOLDER_ID"
+  );
+  if (!folderId) {
+    return DriveApp.getRootFolder();
+  }
+
+  return DriveApp.getFolderById(folderId);
 }
 
 function loginUser_(params) {
