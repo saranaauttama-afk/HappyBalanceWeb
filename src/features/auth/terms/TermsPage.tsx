@@ -15,137 +15,128 @@ export default function TermsPage() {
 
   return (
     <MobileShell>
-      <AppHeader title="ข้อกำหนดการใช้งาน" showBack />
+      <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+        <div className="pointer-events-none absolute -left-20 top-20 h-60 w-60 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-16 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-      <div className="px-5 py-6 space-y-4">
+        <AppHeader title="ข้อกำหนดการใช้งาน" showBack />
 
-        {/* Tabs */}
-        <div className="flex rounded-xl border border-slate-200 overflow-hidden">
-          <button
-            onClick={() => setTab("terms")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              tab === "terms"
-                ? "bg-rose-300 text-white"
-                : "bg-white text-slate-600"
-            }`}
-          >
-            ข้อกำหนดและเงื่อนไข
-          </button>
+        <main className="relative z-10 space-y-4 px-4 py-4">
+          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
+            <p className="text-xs font-semibold tracking-[0.12em] text-[#1f6658]">HAPPY BALANCE POLICY</p>
+            <h1 className="mt-2 text-xl font-extrabold text-[#1d3140]">ก่อนเริ่มใช้งาน กรุณาอ่านและยอมรับเงื่อนไข</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              ข้อมูลของคุณจะถูกใช้เพื่อวัตถุประสงค์ด้านการวิจัยและพัฒนาการให้คำปรึกษาเท่านั้น
+            </p>
+          </section>
 
-          <button
-            onClick={() => setTab("privacy")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              tab === "privacy"
-                ? "bg-rose-300 text-white"
-                : "bg-white text-slate-600"
-            }`}
-          >
-            นโยบายความเป็นส่วนตัว
-          </button>
-        </div>
+          <section className="rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => setTab("terms")}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  tab === "terms"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                ข้อกำหนดและเงื่อนไข
+              </button>
 
-        {/* Content */}
-        <div className="max-h-[420px] overflow-y-auto rounded-2xl border border-slate-200 p-4 text-sm leading-7 text-slate-700 space-y-3">
+              <button
+                type="button"
+                onClick={() => setTab("privacy")}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  tab === "privacy"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                นโยบายความเป็นส่วนตัว
+              </button>
+            </div>
 
-          {tab === "terms" && (
-            <>
-              <p>
-                แอปพลิเคชันนี้มีจุดมุ่งหมายเพื่อใช้ในการศึกษาภายใต้งานวิจัย
-                เรื่องนวัตกรรมการปรึกษาเชิงจิตวิทยาเพื่อเสริมสร้างภาวะสุขสมดุล
-                ของบุคคลวัยทำงาน
-              </p>
+            <div className="mt-3 max-h-[48vh] space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+              {tab === "terms" && (
+                <>
+                  <p>
+                    แอปพลิเคชันนี้มีจุดมุ่งหมายเพื่อใช้ในการศึกษาภายใต้งานวิจัย เรื่องนวัตกรรมการปรึกษาเชิง
+                    จิตวิทยาเพื่อเสริมสร้างภาวะสุขสมดุลของบุคคลวัยทำงาน
+                  </p>
 
-              <p>
-                คำตอบของท่านจะเป็นประโยชน์และมีความสำคัญอย่างยิ่งต่อการศึกษาและการวิจัย
-              </p>
+                  <p>คำตอบของท่านมีความสำคัญอย่างยิ่งต่อการศึกษาและการพัฒนารูปแบบการดูแลสุขภาวะ</p>
 
-              <p>
-                คำตอบที่ท่านตอบไม่มีถูกหรือผิด ผู้วิจัยขอความกรุณาให้ท่านทำกิจกรรม
-                ตามความเป็นจริงและตรงกับความคิดความรู้สึกมากที่สุด
-              </p>
+                  <p>แบบประเมินและกิจกรรมไม่มีถูกหรือผิด กรุณาตอบตามความเป็นจริงของท่านมากที่สุด</p>
 
-              <p>
-                ข้อมูลที่ได้จากแอปพลิเคชันนี้จะถูกเก็บเป็นความลับ
-                ไม่มีการเผยแพร่เป็นรายบุคคล
-                และจะรายงานผลในภาพรวมเท่านั้น
-              </p>
+                  <p>
+                    ข้อมูลที่ได้จากการใช้งานจะถูกเก็บเป็นความลับ ไม่มีการเผยแพร่เป็นรายบุคคล และรายงานผลใน
+                    ภาพรวมเท่านั้น
+                  </p>
 
-              <p>
-                งานวิจัยดำเนินการโดย  
-                <br />
-                นางสาวชนินาฏ วัฒนา
-                <br />
-                นิสิตระดับปริญญาเอก สาขาวิชาจิตวิทยาการปรึกษา
-                มหาวิทยาลัยบูรพา
-              </p>
+                  <p>
+                    งานวิจัยดำเนินการโดย นางสาวชนินาฏ วัฒนา นิสิตระดับปริญญาเอก สาขาวิชาจิตวิทยาการปรึกษา
+                    มหาวิทยาลัยบูรพา
+                  </p>
 
-              <p>
-                อาจารย์ที่ปรึกษา
-                <br />
-                รองศาสตราจารย์ ดร.เพ็ญนภา กุลนภาดล
-                <br />
-                รองศาสตราจารย์ ดร.ภรภัทร์ เฮงอุดมทรัพย์
-              </p>
-            </>
-          )}
+                  <p>
+                    อาจารย์ที่ปรึกษา: รองศาสตราจารย์ ดร.เพ็ญนภา กุลนภาดล และ รองศาสตราจารย์ ดร.ภรภัทร์ เฮงอุดมทรัพย์
+                  </p>
+                </>
+              )}
 
-          {tab === "privacy" && (
-            <>
-              <p>
-                นโยบายความเป็นส่วนตัวนี้สอดคล้องกับพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล
-                พ.ศ. 2565
-              </p>
+              {tab === "privacy" && (
+                <>
+                  <p>
+                    นโยบายความเป็นส่วนตัวนี้สอดคล้องกับพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2565 และใช้กับ
+                    แอปพลิเคชัน Happy Balance รวมถึงบริการที่เกี่ยวข้อง
+                  </p>
 
-              <p>
-                นโยบายนี้ใช้กับแอปพลิเคชัน Happy Balance
-                และบริการที่เกี่ยวข้องกับการสื่อสารระหว่างผู้ใช้และผู้วิจัย
-              </p>
+                  <p>
+                    ระบบอาจเก็บรวบรวมข้อมูลส่วนตัว ข้อมูลสุขภาวะ และข้อมูลการใช้งาน เพื่อใช้ในการวิเคราะห์และ
+                    พัฒนากระบวนการให้คำปรึกษา
+                  </p>
 
-              <p>
-                ผู้วิจัยอาจมีการเก็บรวบรวมข้อมูลส่วนตัวและข้อมูลด้านสุขภาพของผู้ใช้
-                ระหว่างการใช้งานแอปพลิเคชัน
-              </p>
+                  <p>
+                    ข้อมูลดังกล่าวจะถูกจัดเก็บ ดูแล และปกปิดตามมาตรฐานความปลอดภัย โดยจำกัดการเข้าถึงเฉพาะผู้มี
+                    ส่วนเกี่ยวข้องกับงานวิจัยเท่านั้น
+                  </p>
 
-              <p>
-                ข้อมูลดังกล่าวจะถูกจัดเก็บ ดูแล และปกปิดตามหลักการคุ้มครองข้อมูล
-                เพื่อประโยชน์ในการวิจัยเท่านั้น
-              </p>
+                  <p>
+                    หากผู้ใช้งานไม่ยอมรับนโยบายความเป็นส่วนตัวนี้ ไม่ควรใช้งานแอปพลิเคชันต่อไป
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
 
-              <p>
-                หากผู้ใช้งานไม่ยอมรับนโยบายความเป็นส่วนตัวนี้
-                ไม่ควรใช้งานแอปพลิเคชันต่อไป
-              </p>
-            </>
-          )}
-        </div>
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <label className="flex items-start gap-3 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#d88d80]"
+                checked={accepted}
+                onChange={() => setAccepted((prev) => !prev)}
+              />
 
-        {/* Accept */}
-        <label className="flex items-start gap-3 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={accepted}
-            onChange={() => setAccepted(!accepted)}
-          />
+              <span>
+                ฉันยอมรับข้อกำหนดและเงื่อนไขในการใช้บริการ “Happy Balance” รวมถึงนโยบายความเป็นส่วนตัว
+              </span>
+            </label>
 
-          <span>
-            ฉันยอมรับข้อกำหนดและเงื่อนไขในการใช้บริการ
-            “Happy Balance” รวมถึงนโยบายความเป็นส่วนตัว
-          </span>
-        </label>
-
-        {/* Continue */}
-        <button
-          onClick={handleContinue}
-          disabled={!accepted}
-          className={`w-full rounded-2xl px-4 py-3 font-medium text-white ${
-            accepted
-              ? "bg-rose-300 hover:bg-rose-400"
-              : "bg-slate-300 cursor-not-allowed"
-          }`}
-        >
-          ต่อไป
-        </button>
+            <button
+              onClick={handleContinue}
+              disabled={!accepted}
+              className={`mt-4 w-full rounded-2xl px-4 py-3 text-base font-semibold text-white transition ${
+                accepted
+                  ? "bg-[#d88d80] hover:brightness-105"
+                  : "cursor-not-allowed bg-slate-300"
+              }`}
+            >
+              ต่อไป
+            </button>
+          </section>
+        </main>
       </div>
     </MobileShell>
   );

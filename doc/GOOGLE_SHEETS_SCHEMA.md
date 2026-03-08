@@ -9,11 +9,17 @@ Columns:
 - email (string)
 - full_name (string)
 - phone (string)
+- password_hash (string)
+- auth_provider (enum: password|google|facebook|apple)
+- provider_user_id (string, nullable)
+- status (enum: active|disabled)
 - created_at (ISO datetime)
 - updated_at (ISO datetime)
 
 Actions:
 - getUser(id)
+- registerUser(full_name, email, phone, password, auth_provider?)
+- loginUser(email, password)
 - updateProfile(id, full_name, email, phone)
 
 ## Sheet 2: goals
