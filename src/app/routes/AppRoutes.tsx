@@ -32,6 +32,7 @@ import BalanceTaskPage from "../../features/goals/task-detail/BalanceTaskPage";
 import FamilySocialBalanceTaskPage from "../../features/goals/task-detail/FamilySocialBalanceTaskPage";
 import ThanksSorryTaskPage from "../../features/goals/task-detail/ThanksSorryTaskPage";
 import WorkBalanceTaskPage from "../../features/goals/task-detail/WorkBalanceTaskPage";
+import ArticleDetailPage from "../../features/articles/ArticleDetailPage";
 
 export default function AppRoutes() {
   return (
@@ -54,6 +55,7 @@ export default function AppRoutes() {
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/daily-log" element={<DailyLogPage />} />
+      <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route

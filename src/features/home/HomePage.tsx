@@ -1,19 +1,49 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
 import BottomNav from "../../components/layout/BottomNav";
 import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { goalsService } from "../../services/goals.service";
 import { profileService } from "../../services/profile.service";
-import type { Goal, User } from "../../types/models";
+import { articlesService } from "../../services/articles.service";
+import type { Article, Goal, User } from "../../types/models";
 import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
 import { calculateWellbeingScores } from "../../utils/wellbeing";
 import { getCurrentUserId } from "../../utils/authSession";
+
+const FALLBACK_ARTICLES: Article[] = [
+  {
+    id: "fallback-1",
+    title: "แนวทางสร้างสุข",
+    description: "แนวทางการดูแลสุขภาวะและความสมดุลในการใช้ชีวิตประจำวัน",
+  },
+  {
+    id: "fallback-2",
+    title: "ข่าวสาร และบทความ",
+    description: "บทความด้านจิตวิทยาและการพัฒนาตนเองสำหรับผู้ใช้งาน",
+  },
+];
+
+const ARTICLE_AUTOPLAY_MS = 4200;
+
+function formatPublishedDate(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 export default function HomePage() {
   const userId = getCurrentUserId();
   const [user, setUser] = useState<User | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [activeArticleIndex, setActiveArticleIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scores = useMemo(() => calculateWellbeingScores(goals), [goals]);
@@ -45,9 +75,39 @@ export default function HomePage() {
     }
   }
 
+  async function loadArticles() {
+    const response = await articlesService.listArticles(5);
+    if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+      setArticles(response.data);
+      return;
+    }
+
+    setArticles(FALLBACK_ARTICLES);
+  }
+
   useEffect(() => {
     void loadHomeData();
+    void loadArticles();
   }, [userId]);
+
+  const topArticles = useMemo(
+    () => (articles.length > 0 ? articles.slice(0, 5) : FALLBACK_ARTICLES),
+    [articles]
+  );
+
+  useEffect(() => {
+    setActiveArticleIndex((prev) => (prev >= topArticles.length ? 0 : prev));
+  }, [topArticles.length]);
+
+  useEffect(() => {
+    if (topArticles.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setActiveArticleIndex((prev) => (prev + 1) % topArticles.length);
+    }, ARTICLE_AUTOPLAY_MS);
+
+    return () => window.clearInterval(timer);
+  }, [topArticles]);
 
   const goalSummary = useMemo(() => {
     const active = goals.filter((goal) => goal.status === "active").length;
@@ -59,19 +119,6 @@ export default function HomePage() {
       completed,
     };
   }, [goals]);
-
-  const topArticles = [
-    {
-      id: 1,
-      title: "แนวทางสร้างสุข",
-      description: "แนวทางการดูแลสุขภาวะและความสมดุลในการใช้ชีวิตประจำวัน",
-    },
-    {
-      id: 2,
-      title: "ข่าวสาร และบทความ",
-      description: "บทความด้านจิตวิทยาและการพัฒนาตนเองสำหรับผู้ใช้งาน",
-    },
-  ];
 
   const scoreItems = [
     { label: "กาย", value: scores.physical, color: "bg-[#f6fbff] text-[#214e68]" },
@@ -164,19 +211,64 @@ export default function HomePage() {
                 <div className="space-y-3">
                   <div>
                     <h3 className="text-base font-semibold text-slate-900">ข่าวสาร และบทความ</h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      บทความด้านจิตวิทยาและแนวทางการพัฒนาสุขภาวะของผู้ใช้งาน
-                    </p>
+                    <p className="mt-1 text-sm text-slate-500">อ่าน 5 บทความล่าสุดจากระบบ</p>
                   </div>
 
-                  <div className="space-y-3">
-                    {topArticles.map((article) => (
-                      <div key={article.id} className="rounded-xl bg-slate-50 px-4 py-4">
-                        <p className="font-medium text-slate-900">{article.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">{article.description}</p>
-                      </div>
-                    ))}
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <div
+                      className="flex transition-transform duration-700 ease-in-out"
+                      style={{
+                        transform: `translateX(-${activeArticleIndex * 100}%)`,
+                      }}
+                    >
+                      {topArticles.map((article) => (
+                        <Link
+                          key={article.id}
+                          to={`/articles/${encodeURIComponent(article.id)}`}
+                          state={{ article }}
+                          className="block w-full flex-shrink-0 p-4"
+                        >
+                          {article.image_url ? (
+                            <img
+                              src={article.image_url}
+                              alt={article.title}
+                              className="h-36 w-full rounded-xl object-cover"
+                            />
+                          ) : null}
+                          <p className="mt-3 line-clamp-2 text-sm font-semibold text-slate-900">
+                            {article.title}
+                          </p>
+                          <p className="mt-1 line-clamp-3 text-xs leading-5 text-slate-600">
+                            {article.description}
+                          </p>
+                          {formatPublishedDate(article.published_at ?? article.created_at) ? (
+                            <p className="mt-3 text-[11px] text-slate-400">
+                              {formatPublishedDate(article.published_at ?? article.created_at)}
+                            </p>
+                          ) : null}
+                          <p className="mt-2 text-xs font-medium text-[#d88d80]">แตะเพื่ออ่านรายละเอียด</p>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
+
+                  {topArticles.length > 1 ? (
+                    <div className="flex items-center justify-center gap-2">
+                      {topArticles.map((article, index) => (
+                        <button
+                          key={article.id}
+                          type="button"
+                          onClick={() => setActiveArticleIndex(index)}
+                          aria-label={`ไปบทความที่ ${index + 1}`}
+                          className={`h-2.5 rounded-full transition-all ${
+                            index === activeArticleIndex
+                              ? "w-6 bg-[#d88d80]"
+                              : "w-2.5 bg-slate-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </InfoCard>
             </>

@@ -34,6 +34,16 @@ export interface Appointment {
   note: string;
 }
 
+export interface Article {
+  id: string;
+  title: string;
+  description: string;
+  image_url?: string;
+  link_url?: string;
+  published_at?: string;
+  created_at?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
