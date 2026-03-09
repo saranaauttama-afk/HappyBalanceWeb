@@ -74,7 +74,20 @@ Actions:
 - listAppointments(userId)
 - createAppointment(user_id, appointment_date, type, status, note)
 
-## Sheet 5: articles
+## Sheet 5: monthly_goals
+Columns:
+- id (string, PK)
+- user_id (string, FK users.id)
+- month_key (string, format YYYY-MM)
+- goal_text (string)
+- created_at (ISO datetime)
+- updated_at (ISO datetime)
+
+Actions:
+- listMonthlyGoals(userId, month_key?)
+- upsertMonthlyGoal(user_id, month_key, goal_text)
+
+## Sheet 6: articles
 Columns:
 - id (string, PK)
 - title (string)
@@ -86,7 +99,7 @@ Columns:
 Actions:
 - listArticles(limit?)
 
-## Optional Sheet 6: task_logs (next phase)
+## Optional Sheet 7: task_logs (next phase)
 Use this when task-detail pages need dedicated analytics instead of storing summaries in daily_logs.note.
 
 Columns:
@@ -106,9 +119,10 @@ Recommended actions:
 - listTaskLogs(userId, category?, activity?, task_slug?, from?, to?)
 - createTaskLog(user_id, category, activity, task_slug, value_type, value_number?, value_boolean?, value_json?, log_date)
 
-## Notes for current codebase (as of 2026-03-08)
+## Notes for current codebase (as of 2026-03-09)
 - Core pages now save to goals and daily_logs actions directly.
 - Some task-detail pages currently save via createDailyLog as an interim approach.
 - Next migration step: switch those pages to createTaskLog once Apps Script supports task_logs.
 - Profile avatar upload now uses `uploadProfileAvatar` and stores file on Google Drive.
 - Optional Apps Script property: `PROFILE_AVATAR_FOLDER_ID` (if not set, files go to Drive root).
+- Appointments monthly goal now saves to `monthly_goals` (Google Sheets) via `upsertMonthlyGoal`.

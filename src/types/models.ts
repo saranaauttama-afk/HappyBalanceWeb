@@ -37,6 +37,15 @@ export interface Appointment {
   note: string;
 }
 
+export interface MonthlyGoal {
+  id: string;
+  user_id: string;
+  month_key: string;
+  goal_text: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Article {
   id: string;
   title: string;

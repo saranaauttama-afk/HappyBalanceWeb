@@ -5,6 +5,7 @@
   ClipboardPenLine,
   Sparkles,
   Stethoscope,
+  Target,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
@@ -30,6 +31,10 @@ function toTimeInputValue(date: Date) {
 
 function toDateKey(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function toMonthKey(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
 }
 
 function parseDateValue(value: string) {
@@ -153,9 +158,12 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingDailyLog, setSavingDailyLog] = useState(false);
+  const [savingMonthlyGoal, setSavingMonthlyGoal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [dailyLogMessage, setDailyLogMessage] = useState("");
+  const [monthlyGoal, setMonthlyGoal] = useState("");
+  const [monthlyGoalMessage, setMonthlyGoalMessage] = useState("");
 
   const [monthDate, setMonthDate] = useState(() => getStartOfToday());
   const [selectedDate, setSelectedDate] = useState(() => getStartOfToday());
@@ -163,7 +171,6 @@ export default function AppointmentsPage() {
   const defaultAppointmentSelection = useMemo(() => getDefaultAppointmentSelection(), []);
   const [appointmentDate, setAppointmentDate] = useState(defaultAppointmentSelection.date);
   const [appointmentTime, setAppointmentTime] = useState(defaultAppointmentSelection.time);
-  const [type, setType] = useState("consultation");
   const [note, setNote] = useState("");
   const [dailyNote, setDailyNote] = useState("");
   const [appointmentHour, appointmentMinute] = useMemo(() => {
@@ -177,9 +184,7 @@ export default function AppointmentsPage() {
       setError(null);
 
       const [appointmentsResponse, dailyLogsResponse] = await Promise.all([
-        userId
-          ? appointmentsService.listAppointments(userId)
-          : appointmentsService.listAppointments(),
+        appointmentsService.listAppointments(userId ?? undefined),
         userId ? logsService.listDailyLogs(userId) : logsService.listDailyLogs(),
       ]);
 
@@ -205,6 +210,7 @@ export default function AppointmentsPage() {
   }, [loadData]);
 
   const selectedDateKey = useMemo(() => toDateKey(selectedDate), [selectedDate]);
+  const monthKey = useMemo(() => toMonthKey(monthDate), [monthDate]);
 
   const dailyLogByDate = useMemo(() => {
     const map = new Map<string, DailyLog>();
@@ -225,6 +231,29 @@ export default function AppointmentsPage() {
     setDailyNote(String(selectedDailyLog?.note ?? ""));
     setDailyLogMessage("");
   }, [selectedDateKey, selectedDailyLog]);
+
+  const loadMonthlyGoal = useCallback(async () => {
+    try {
+      setError(null);
+      const response = await appointmentsService.listMonthlyGoals(
+        userId ?? undefined,
+        monthKey
+      );
+
+      if (!response.success) {
+        throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายรายเดือนได้");
+      }
+
+      setMonthlyGoal(String(response.data?.[0]?.goal_text ?? ""));
+      setMonthlyGoalMessage("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+    }
+  }, [monthKey, userId]);
+
+  useEffect(() => {
+    void loadMonthlyGoal();
+  }, [loadMonthlyGoal]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -247,7 +276,7 @@ export default function AppointmentsPage() {
       const response = await appointmentsService.createAppointment({
         user_id: userId ?? undefined,
         appointment_date: parsedDate.toISOString(),
-        type,
+        type: "consultation",
         status: "pending",
         note: note.trim(),
       });
@@ -378,6 +407,37 @@ export default function AppointmentsPage() {
     setAppointmentTime(`${appointmentHour}:${minute}`);
   }
 
+  async function handleSaveMonthlyGoal() {
+    const trimmedGoal = monthlyGoal.trim();
+    setError(null);
+    setMonthlyGoalMessage("");
+
+    try {
+      setSavingMonthlyGoal(true);
+
+      const response = await appointmentsService.upsertMonthlyGoal({
+        user_id: userId ?? undefined,
+        month_key: monthKey,
+        goal_text: trimmedGoal,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายรายเดือนได้");
+      }
+
+      setMonthlyGoal(String(response.data?.goal_text ?? trimmedGoal));
+      setMonthlyGoalMessage(
+        trimmedGoal
+          ? `บันทึกเป้าหมายของเดือน ${monthLabel} เรียบร้อยแล้ว`
+          : `ล้างเป้าหมายของเดือน ${monthLabel} แล้ว`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+    } finally {
+      setSavingMonthlyGoal(false);
+    }
+  }
+
   return (
     <MobileShell>
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
@@ -425,6 +485,48 @@ export default function AppointmentsPage() {
                 <p className="text-xs text-emerald-700">บันทึกแล้ว</p>
                 <p className="text-lg font-semibold text-emerald-800">{dailyLogs.length}</p>
               </div>
+            </div>
+          </InfoCard>
+
+          <InfoCard className={`${cardClassName} rounded-3xl`}>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf6ef] text-[#2f7b56]">
+                  <Target size={18} />
+                </span>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">เป้าหมายรายเดือน</h3>
+                  <p className="text-sm text-slate-500">โฟกัสของเดือน {monthLabel}</p>
+                </div>
+              </div>
+
+              <textarea
+                value={monthlyGoal}
+                onChange={(e) => setMonthlyGoal(e.target.value)}
+                rows={3}
+                placeholder="เช่น เดือนนี้ต้องการปรับสมดุลชีวิตการทำงานและการพักผ่อนให้ดีขึ้น"
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#4c9f7f]"
+              />
+
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs text-slate-400">ระบบจะเก็บเป้าหมายแยกตามแต่ละเดือน</p>
+                <button
+                  type="button"
+                  onClick={() => void handleSaveMonthlyGoal()}
+                  disabled={savingMonthlyGoal}
+                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white transition ${
+                    savingMonthlyGoal
+                      ? "cursor-not-allowed bg-slate-300"
+                      : "bg-[#4c9f7f] shadow-[0_12px_24px_rgba(76,159,127,0.3)] hover:brightness-105"
+                  }`}
+                >
+                  {savingMonthlyGoal ? "กำลังบันทึก..." : "บันทึกเป้าหมาย"}
+                </button>
+              </div>
+
+              {monthlyGoalMessage ? (
+                <p className="text-xs font-medium text-emerald-700">{monthlyGoalMessage}</p>
+              ) : null}
             </div>
           </InfoCard>
 
@@ -643,19 +745,6 @@ export default function AppointmentsPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">รูปแบบการนัดหมาย</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
-                >
-                  <option value="consultation">การปรึกษา</option>
-                  <option value="follow-up">ติดตามผล</option>
-                  <option value="coaching">การโค้ช</option>
-                </select>
-              </div>
-
-              <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">หมายเหตุ</label>
                 <textarea
                   value={note}
@@ -734,3 +823,4 @@ export default function AppointmentsPage() {
     </MobileShell>
   );
 }
+

@@ -3,6 +3,7 @@ const SHEET_NAMES = {
   goals: "goals",
   dailyLogs: "daily_logs",
   appointments: "appointments",
+  monthlyGoals: "monthly_goals",
   articles: "articles",
 };
 
@@ -21,6 +22,10 @@ function doGet(e) {
         return jsonOutput_(listDailyLogs_(getParam_(e, "userId")));
       case "listAppointments":
         return jsonOutput_(listAppointments_(getParam_(e, "userId")));
+      case "listMonthlyGoals":
+        return jsonOutput_(
+          listMonthlyGoals_(getParam_(e, "userId"), getParam_(e, "month_key"))
+        );
       case "listArticles":
         return jsonOutput_(listArticles_(getParam_(e, "limit")));
       default:
@@ -57,6 +62,8 @@ function doPost(e) {
         return jsonOutput_(uploadProfileAvatar_(body));
       case "createAppointment":
         return jsonOutput_(createAppointment_(body));
+      case "upsertMonthlyGoal":
+        return jsonOutput_(upsertMonthlyGoal_(body));
       default:
         return jsonOutput_({
           success: false,
@@ -369,6 +376,78 @@ function createAppointment_(payload) {
   return {
     success: true,
     data: newAppointment,
+  };
+}
+
+function listMonthlyGoals_(userId, monthKey) {
+  if (!userId) {
+    throw new Error("Missing userId");
+  }
+
+  const normalizedMonthKey = monthKey ? String(monthKey).trim() : "";
+
+  const rows = getAllObjects_(SHEET_NAMES.monthlyGoals)
+    .filter((row) => {
+      if (row.user_id !== userId) return false;
+      if (!normalizedMonthKey) return true;
+      return String(row.month_key) === normalizedMonthKey;
+    })
+    .sort((a, b) => String(b.month_key).localeCompare(String(a.month_key)));
+
+  return {
+    success: true,
+    data: rows,
+  };
+}
+
+function upsertMonthlyGoal_(payload) {
+  const userId = String(payload.user_id || "").trim();
+  const monthKey = String(payload.month_key || "").trim();
+  const goalText = String(payload.goal_text || "").trim();
+
+  if (!userId) {
+    throw new Error("Missing user_id");
+  }
+
+  if (!monthKey) {
+    throw new Error("Missing month_key");
+  }
+
+  const sheet = getSheet_(SHEET_NAMES.monthlyGoals);
+  const rows = getAllObjects_(SHEET_NAMES.monthlyGoals);
+  const index = rows.findIndex(
+    (row) => row.user_id === userId && String(row.month_key) === monthKey
+  );
+
+  if (index === -1) {
+    const newGoal = {
+      id: generateId_("mgoal"),
+      user_id: userId,
+      month_key: monthKey,
+      goal_text: goalText,
+      created_at: nowIso_(),
+      updated_at: nowIso_(),
+    };
+
+    appendObject_(SHEET_NAMES.monthlyGoals, newGoal);
+
+    return {
+      success: true,
+      data: newGoal,
+    };
+  }
+
+  const updated = {
+    ...rows[index],
+    goal_text: goalText,
+    updated_at: nowIso_(),
+  };
+
+  updateRowByIndex_(sheet, index + 2, updated);
+
+  return {
+    success: true,
+    data: updated,
   };
 }
 
