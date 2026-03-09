@@ -4,8 +4,8 @@ import type { Goal } from "../types/models";
 const DEMO_USER_ID = "demo-user-001";
 
 export const goalsService = {
-  async listGoals(userId: string = DEMO_USER_ID) {
-    return api.get<Goal[]>("listGoals", { userId });
+  async listGoals(userId?: string) {
+    return api.get<Goal[]>("listGoals", { userId: userId ?? DEMO_USER_ID });
   },
 
   async createGoal(payload: {

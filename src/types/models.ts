@@ -16,6 +16,8 @@ export interface Goal {
   current_value: number;
   target_value: number;
   status: "active" | "completed" | "paused";
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface DailyLog {
@@ -26,6 +28,8 @@ export interface DailyLog {
   energy: number;
   stress: number;
   note: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Appointment {

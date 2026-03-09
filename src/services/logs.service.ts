@@ -4,8 +4,8 @@ import type { DailyLog } from "../types/models";
 const DEMO_USER_ID = "demo-user-001";
 
 export const logsService = {
-  async listDailyLogs(userId: string = DEMO_USER_ID) {
-    return api.get<DailyLog[]>("listDailyLogs", { userId });
+  async listDailyLogs(userId?: string) {
+    return api.get<DailyLog[]>("listDailyLogs", { userId: userId ?? DEMO_USER_ID });
   },
 
   async createDailyLog(payload: {

@@ -1,9 +1,10 @@
-﻿import { Link, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+﻿import { Activity, Brain, ChevronRight, Scale, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
+import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
-import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
 import { goalsService } from "../../../services/goals.service";
 import type { Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
@@ -16,17 +17,26 @@ type ActivityItem = {
 
 type CategoryConfig = {
   title: string;
+  shortTitle: string;
   statusTitle: string;
   description: string;
+  Icon: typeof Activity;
+  iconColor: string;
+  softCard: string;
+  progressColor: string;
   activities: ActivityItem[];
 };
 
 const CATEGORY_MAP: Record<string, CategoryConfig> = {
   physical: {
     title: "สุขภาวะทางกาย",
+    shortTitle: "สุขภาวะทางกาย",
     statusTitle: "สถานะสุขภาวะทางกาย",
-    description:
-      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางกายของตนเองได้จากรายการด้านล่าง",
+    description: "เลือกกิจกรรมด้านร่างกาย แล้วบันทึกค่ารายวันเพื่ออัปเดตคะแนนหมวดนี้",
+    Icon: Activity,
+    iconColor: "text-[#2e6a8b]",
+    softCard: "bg-[#eef7fd]",
+    progressColor: "bg-[#8cc2db]",
     activities: [
       {
         label: "การพักผ่อน",
@@ -50,12 +60,15 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
       },
     ],
   },
-
   mental: {
     title: "สุขภาวะทางใจ",
+    shortTitle: "สุขภาวะทางใจ",
     statusTitle: "สถานะสุขภาวะทางใจ",
-    description:
-      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางใจของตนเองได้จากรายการด้านล่าง",
+    description: "ติดตามการดูแลใจของคุณผ่านกิจกรรมที่ออกแบบไว้ในแต่ละมิติ",
+    Icon: Brain,
+    iconColor: "text-[#2f7b56]",
+    softCard: "bg-[#eef8f2]",
+    progressColor: "bg-[#7fc3a0]",
     activities: [
       {
         label: "การมองโลกในแง่บวก",
@@ -79,12 +92,15 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
       },
     ],
   },
-
   social: {
     title: "สุขภาวะทางสังคม",
+    shortTitle: "สุขภาวะทางสังคม",
     statusTitle: "สถานะสุขภาวะทางสังคม",
-    description:
-      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาสุขภาวะทางสังคมของตนเองได้จากรายการด้านล่าง",
+    description: "พัฒนาความสัมพันธ์รอบตัว และติดตามความเปลี่ยนแปลงผ่านคะแนนกิจกรรม",
+    Icon: Users,
+    iconColor: "text-[#8a5a3a]",
+    softCard: "bg-[#fff6ef]",
+    progressColor: "bg-[#d7b08f]",
     activities: [
       {
         label: "ความสัมพันธ์ระหว่างสมาชิกในครอบครัว",
@@ -103,13 +119,15 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
       },
     ],
   },
-
   balance: {
     title: "ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว",
-    statusTitle:
-      "ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว",
-    description:
-      "ผู้ใช้งานสามารถเลือกกิจกรรมเพื่อพัฒนาความสมดุลของบทบาทต่าง ๆ ในชีวิตได้จากรายการด้านล่าง",
+    shortTitle: "สุขสมดุลชีวิต",
+    statusTitle: "สถานะสุขสมดุลชีวิต",
+    description: "ติดตามความสมดุลของบทบาทชีวิต เพื่อดูภาพรวมที่สมดุลมากขึ้นในแต่ละเดือน",
+    Icon: Scale,
+    iconColor: "text-[#7a2a48]",
+    softCard: "bg-[#fff1f6]",
+    progressColor: "bg-[#d79bb4]",
     activities: [
       {
         label: "สมดุลระหว่างการทำงาน",
@@ -130,11 +148,36 @@ const CATEGORY_MAP: Record<string, CategoryConfig> = {
   },
 };
 
-function getActivityScore(goal: Goal) {
+function getActivityScore(goal?: Goal) {
+  if (!goal) return 0;
   const current = Number(goal.current_value) || 0;
   const target = Number(goal.target_value) || 0;
   if (target <= 0) return 0;
   return Math.round(Math.min(current / target, 1) * 100);
+}
+
+function getScoreStatus(score: number) {
+  if (score >= 80) return "ดีมาก";
+  if (score >= 60) return "ดี";
+  if (score >= 40) return "กำลังพัฒนา";
+  if (score > 0) return "เริ่มต้น";
+  return "ยังไม่มีข้อมูล";
+}
+
+function getScoreChip(score: number) {
+  if (score >= 80) return "bg-emerald-50 text-emerald-700";
+  if (score >= 60) return "bg-sky-50 text-sky-700";
+  if (score >= 40) return "bg-amber-50 text-amber-700";
+  if (score > 0) return "bg-orange-50 text-orange-700";
+  return "bg-slate-100 text-slate-600";
+}
+
+function formatThaiDate(value: Date) {
+  return value.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export default function GoalCategoryPage() {
@@ -146,99 +189,185 @@ export default function GoalCategoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadGoals() {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadGoals = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const response = await goalsService.listGoals(userId ?? undefined);
-
-        if (!response.success) {
-          throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
-        }
-
-        setGoals(response.data || []);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ"
-        );
-      } finally {
-        setLoading(false);
+      const response = await goalsService.listGoals(userId ?? undefined);
+      if (!response.success) {
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
       }
-    }
 
-    void loadGoals();
+      setGoals(response.data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
+
+  useEffect(() => {
+    void loadGoals();
+  }, [loadGoals]);
+
+  const categoryGoals = useMemo(() => {
+    return goals.filter((goal) => goal.category === (category ?? "physical"));
+  }, [category, goals]);
+
+  const goalByActivity = useMemo(() => {
+    const map = new Map<string, Goal>();
+    categoryGoals.forEach((goal) => {
+      map.set(goal.activity, goal);
+    });
+    return map;
+  }, [categoryGoals]);
 
   const chartItems = useMemo(() => {
     return config.activities.map((activity) => {
-      const matched = goals.find(
-        (goal) => goal.category === category && goal.activity === activity.slug
-      );
-
+      const matchedGoal = goalByActivity.get(activity.slug);
       return {
         label: activity.label,
-        score: matched ? getActivityScore(matched) : 0,
+        score: getActivityScore(matchedGoal),
       };
     });
-  }, [config.activities, goals, category]);
+  }, [config.activities, goalByActivity]);
+
+  const overallScore = useMemo(() => {
+    if (chartItems.length === 0) return 0;
+    return Math.round(chartItems.reduce((sum, item) => sum + item.score, 0) / chartItems.length);
+  }, [chartItems]);
+
+  const completedCount = useMemo(() => {
+    return chartItems.filter((item) => item.score >= 100).length;
+  }, [chartItems]);
 
   return (
     <MobileShell>
-      <AppHeader title={config.title} showBack showBell />
+      <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+        <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-      <main className="space-y-4 px-4 py-4">
-        {error ? (
-          <InfoCard>
-            <p className="text-sm text-rose-600">{error}</p>
-          </InfoCard>
-        ) : null}
+        <AppHeader
+          title={config.shortTitle}
+          showBack
+          showBell
+          variant="soft"
+          subtitle={loading ? "กำลังโหลดข้อมูล..." : "เลือกกิจกรรมเพื่ออัปเดตคะแนน"}
+        />
 
-        <InfoCard>
-          <div className="space-y-3">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">
-                {config.statusTitle}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {config.description}
-              </p>
-            </div>
-
-            {loading ? (
-              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                กำลังโหลดข้อมูลสุขภาวะ...
-              </div>
-            ) : (
-              <CategoryRadarChart title={config.statusTitle} items={chartItems} />
-            )}
-          </div>
-        </InfoCard>
-
-        {config.activities.map((activity) => (
-          <Link
-            key={activity.slug}
-            to={`/goals/${category}/${activity.slug}`}
-            className="block"
-          >
-            <InfoCard>
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold leading-6 text-slate-900">
-                    {activity.label}
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    {activity.subtitle}
-                  </p>
-                </div>
-
-                <span className="text-sm text-slate-400">›</span>
+        <main className="relative z-10 space-y-4 px-4 py-4">
+          {error ? (
+            <InfoCard className="rounded-3xl border-rose-200 bg-rose-50">
+              <div className="space-y-3">
+                <p className="text-sm text-rose-700">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => void loadGoals()}
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                >
+                  ลองใหม่
+                </button>
               </div>
             </InfoCard>
-          </Link>
-        ))}
-      </main>
+          ) : null}
+
+          <section className="relative overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.9)_0%,rgba(245,253,255,0.86)_48%,rgba(237,251,243,0.88)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#9ad4be]/20 blur-3xl" />
+            <div className="flex items-start gap-3">
+              <span
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white ${config.iconColor}`}
+              >
+                <config.Icon size={20} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">CATEGORY OVERVIEW</p>
+                <h2 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">{config.shortTitle}</h2>
+                <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-sm leading-6 text-slate-600">{config.description}</p>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-2xl bg-[#f8fafc] px-2 py-3">
+                <p className="text-xs text-slate-500">กิจกรรม</p>
+                <p className="text-lg font-bold text-slate-900">{config.activities.length}</p>
+              </div>
+              <div className="rounded-2xl bg-[#ecfdf3] px-2 py-3">
+                <p className="text-xs text-slate-500">สำเร็จ</p>
+                <p className="text-lg font-bold text-[#166534]">{completedCount}</p>
+              </div>
+              <div className="rounded-2xl bg-[#fff7ed] px-2 py-3">
+                <p className="text-xs text-slate-500">คะแนนเฉลี่ย</p>
+                <p className="text-lg font-bold text-[#9a3412]">{overallScore}%</p>
+              </div>
+            </div>
+          </section>
+
+          <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold text-slate-900">{config.statusTitle}</h3>
+
+              {loading ? (
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">กำลังโหลดข้อมูลสุขภาวะ...</div>
+              ) : (
+                <CategoryRadarChart items={chartItems} />
+              )}
+
+              <div className={`rounded-2xl px-3 py-2 text-xs ${config.softCard} text-slate-700`}>
+                เมื่อบันทึกค่าที่หน้ากิจกรรม คะแนนจะสะท้อนในกราฟหมวดนี้ และกลับไปแสดงบนกราฟหลักหน้าเป้าหมาย
+              </div>
+            </div>
+          </InfoCard>
+
+          <section className="space-y-3">
+            {config.activities.map((activity) => {
+              const matchedGoal = goalByActivity.get(activity.slug);
+              const score = getActivityScore(matchedGoal);
+              const statusText = getScoreStatus(score);
+              const currentValue = Number(matchedGoal?.current_value) || 0;
+              const targetValue = Number(matchedGoal?.target_value) || 0;
+
+              return (
+                <Link key={activity.slug} to={`/goals/${category}/${activity.slug}`} className="block">
+                  <InfoCard className="relative overflow-hidden rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(31,47,61,0.14)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base font-semibold leading-6 text-slate-900">{activity.label}</h3>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{activity.subtitle}</p>
+
+                        <div className="mt-3 h-2 rounded-full bg-slate-200">
+                          <div
+                            className={`h-2 rounded-full ${config.progressColor} transition-all`}
+                            style={{ width: `${score}%` }}
+                          />
+                        </div>
+
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          <p className="text-sm text-slate-500">
+                            {matchedGoal
+                              ? `ความคืบหน้า ${currentValue}/${targetValue || "-"}`
+                              : "ยังไม่ตั้งเป้าหมาย"}
+                          </p>
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getScoreChip(score)}`}>
+                            {score}% • {statusText}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-400">
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                  </InfoCard>
+                </Link>
+              );
+            })}
+          </section>
+        </main>
+      </div>
     </MobileShell>
   );
 }

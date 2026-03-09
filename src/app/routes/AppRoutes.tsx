@@ -8,6 +8,7 @@ import HomePage from "../../features/home/HomePage";
 import GoalsPage from "../../features/goals/GoalsPage";
 import GoalCategoryPage from "../../features/goals/category-detail/GoalCategoryPage";
 import GoalActivityPage from "../../features/goals/activity-detail/GoalActivityPage";
+import RestActivityPage from "../../features/goals/activity-detail/RestActivityPage";
 import CreateGoalPage from "../../features/goals/create/CreateGoalPage";
 import AppointmentsPage from "../../features/appointments/AppointmentsPage";
 import ProfilePage from "../../features/profile/ProfilePage";
@@ -51,6 +52,7 @@ export default function AppRoutes() {
       <Route path="/goals" element={<GoalsPage />} />
       <Route path="/goals/create" element={<CreateGoalPage />} />
       <Route path="/goals/:category" element={<GoalCategoryPage />} />
+      <Route path="/goals/physical/rest" element={<RestActivityPage />} />
       <Route path="/goals/:category/:activity" element={<GoalActivityPage />} />
       <Route
         path="/goals/:category/:activity/goal"
