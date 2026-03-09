@@ -245,21 +245,39 @@ export default function RestActivityPage() {
             </div>
           </section>
 
-          <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-center justify-between gap-3">
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold text-slate-900">ตั้งเป้าหมายการนอน</h3>
-                <p className="text-sm text-slate-500">กำหนดเป้าหมายชั่วโมงนอนเพื่อใช้เป็นฐานคำนวณความคืบหน้า</p>
+          <div className="grid gap-3">
+            <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-slate-900">ตั้งเป้าหมายการนอน</h3>
+                  <p className="text-sm text-slate-500">กำหนดเป้าหมายชั่วโมงนอนเพื่อใช้เป็นฐานคำนวณความคืบหน้า</p>
+                </div>
+                <Link
+                  to="/goals/physical/rest/sleep/goal"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#d88d80] px-3 py-2 text-sm font-medium text-white"
+                >
+                  <MoonStar size={16} />
+                  ตั้งค่า
+                </Link>
               </div>
-              <Link
-                to="/goals/physical/rest/sleep/goal"
-                className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#d88d80] px-3 py-2 text-sm font-medium text-white"
-              >
-                <MoonStar size={16} />
-                ตั้งค่า
-              </Link>
-            </div>
-          </InfoCard>
+            </InfoCard>
+
+            <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className="text-base font-semibold text-slate-900">ตั้งเป้าหมายการดื่มน้ำ</h3>
+                  <p className="text-sm text-slate-500">ใช้ค่าเดียวกับหน้า Settings เพื่อให้ทุกหน้าตรงกัน</p>
+                </div>
+                <Link
+                  to="/profile/settings/water-goal"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#6ea8c5] px-3 py-2 text-sm font-medium text-white"
+                >
+                  <Droplets size={16} />
+                  ตั้งค่า
+                </Link>
+              </div>
+            </InfoCard>
+          </div>
 
           <section className="space-y-3">
             {REST_TASKS.map((task) => {

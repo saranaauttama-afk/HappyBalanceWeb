@@ -1,9 +1,10 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
+import { profileService } from "../../../services/profile.service";
 import type { DailyLog, Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS, type TaskConfig } from "../tasks/restTasks";
@@ -30,6 +31,16 @@ type SleepHistoryItem = {
   date: string;
   sleptMinutes: number;
   targetMinutes: number;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type WaterHistoryItem = {
+  id: string;
+  date: string;
+  glasses: number;
+  targetGlasses: number;
   score: number;
   point: number;
   achieved: boolean;
@@ -89,6 +100,12 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
 function getNumber(value: unknown, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toPositiveNumber(value: unknown) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0;
+  return parsed;
 }
 
 function getBoolean(value: unknown, fallback: boolean) {
@@ -154,6 +171,25 @@ function computeSleepPoint(sleptMinutes: number, targetMinutes: number) {
   return sleptMinutes >= targetMinutes ? 1 : 0;
 }
 
+function computeWaterScore(glasses: number, targetGlasses: number) {
+  if (targetGlasses <= 0) return 0;
+  return glasses >= targetGlasses ? 100 : 0;
+}
+
+function computeWaterPoint(glasses: number, targetGlasses: number) {
+  if (targetGlasses <= 0) return 0;
+  return glasses >= targetGlasses ? 1 : 0;
+}
+
+function glassesToMl(glasses: number) {
+  return glasses * 350;
+}
+
+function mlToGlasses(ml: number) {
+  if (ml <= 0) return 0;
+  return Math.max(1, Math.round(ml / 350));
+}
+
 type TimeAdjusterProps = {
   value: number;
   onIncrease: () => void;
@@ -171,16 +207,6 @@ function TimeAdjuster({ value, onIncrease, onDecrease }: TimeAdjusterProps) {
         v
       </button>
     </div>
-  );
-}
-
-function WaterCup({ filled }: { filled: boolean }) {
-  return (
-    <div
-      className={`h-16 w-10 rounded-b-xl rounded-t-md border-2 ${
-        filled ? "border-sky-400 bg-sky-200" : "border-slate-300 bg-white"
-      }`}
-    />
   );
 }
 
@@ -208,6 +234,12 @@ export default function ActivityTaskPage() {
   const [sleepHistory, setSleepHistory] = useState<SleepHistoryItem[]>([]);
   const [sleepLoading, setSleepLoading] = useState(false);
 
+  const [waterTargetGlasses, setWaterTargetGlasses] = useState(8);
+  const [waterTargetMl, setWaterTargetMl] = useState(8 * 350);
+  const [waterHistory, setWaterHistory] = useState<WaterHistoryItem[]>([]);
+  const [waterLoading, setWaterLoading] = useState(false);
+  const [hasLoadedWaterContext, setHasLoadedWaterContext] = useState(false);
+
   const todaySleepScore = useMemo(() => {
     const sleptMinutes = sleepHour * 60 + sleepMinute;
     return computeSleepScore(sleptMinutes, sleepTargetMinutes);
@@ -221,6 +253,21 @@ export default function ActivityTaskPage() {
       .filter((item) => item.date.startsWith(monthKey))
       .reduce((sum, item) => sum + item.point, 0);
   }, [sleepHistory]);
+
+  const todayWaterScore = useMemo(() => {
+    return computeWaterScore(waterCount, waterTargetGlasses);
+  }, [waterCount, waterTargetGlasses]);
+
+  const monthlyWaterPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return waterHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [waterHistory]);
+
+  const isInitialWaterLoading = task === "drink-water" && !hasLoadedWaterContext;
 
   const loadSleepContext = useCallback(async () => {
     if (!(isRestFlow && task === "sleep")) return;
@@ -303,9 +350,79 @@ export default function ActivityTaskPage() {
     }
   }, [isRestFlow, task, userId]);
 
+  const loadWaterContext = useCallback(async () => {
+    if (!(isRestFlow && task === "drink-water")) return;
+
+    try {
+      setWaterLoading(true);
+      const [userResponse, logsResponse] = await Promise.all([
+        profileService.getUser(userId ?? undefined),
+        logsService.listDailyLogs(userId ?? undefined),
+      ]);
+
+      if (!userResponse.success) {
+        throw new Error(userResponse.error || "Could not load profile");
+      }
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const targetMlFromProfile = toPositiveNumber(userResponse.data?.water_goal_ml);
+      const targetGlasses =
+        targetMlFromProfile > 0 ? mlToGlasses(targetMlFromProfile) : 8;
+
+      setWaterTargetMl(targetMlFromProfile > 0 ? targetMlFromProfile : glassesToMl(targetGlasses));
+      setWaterTargetGlasses(targetGlasses);
+
+      const byDate = new Map<string, WaterHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "drink-water") return;
+
+          const glasses = getNumber(parsed.payload.glasses, 0);
+          const targetFromLog = getNumber(parsed.payload.target_glasses, targetGlasses);
+          const achievedFromLog = getBoolean(parsed.payload.achieved, parsed.score > 0);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            glasses,
+            targetGlasses: Math.max(1, Math.round(targetFromLog)),
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setWaterHistory(history);
+
+      if (history.length > 0 && history[0].date === getTodayDate()) {
+        setWaterCount(Math.max(0, Math.round(history[0].glasses)));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setWaterLoading(false);
+      setHasLoadedWaterContext(true);
+    }
+  }, [isRestFlow, task, userId]);
+
   useEffect(() => {
     void loadSleepContext();
   }, [loadSleepContext]);
+
+  useEffect(() => {
+    void loadWaterContext();
+  }, [loadWaterContext]);
 
   function renderStatusBanner() {
     return (
@@ -351,6 +468,7 @@ export default function ActivityTaskPage() {
 
     const latestByTask = new Map<string, number>();
     const sleepByDate = new Map<string, number>();
+    const waterByDate = new Map<string, number>();
 
     [...(logsResponse.data || [])]
       .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
@@ -364,6 +482,12 @@ export default function ActivityTaskPage() {
           return;
         }
 
+        if (parsed.task === "drink-water") {
+          if (waterByDate.has(log.log_date)) return;
+          waterByDate.set(log.log_date, parsed.score);
+          return;
+        }
+
         if (latestByTask.has(parsed.task)) return;
         latestByTask.set(parsed.task, parsed.score);
       });
@@ -374,6 +498,14 @@ export default function ActivityTaskPage() {
         sleepScores.reduce((sum, score) => sum + score, 0) / sleepScores.length
       );
       latestByTask.set("sleep", avgSleepScore);
+    }
+
+    const waterScores = Array.from(waterByDate.values()).slice(0, 7);
+    if (waterScores.length > 0) {
+      const avgWaterScore = Math.round(
+        waterScores.reduce((sum, score) => sum + score, 0) / waterScores.length
+      );
+      latestByTask.set("drink-water", avgWaterScore);
     }
 
     const scores = Array.from(latestByTask.values());
@@ -515,11 +647,17 @@ export default function ActivityTaskPage() {
       }
 
       if (task === "drink-water") {
-        const score = Math.max(0, Math.min(100, Math.round((waterCount / 15) * 100)));
+        const score = computeWaterScore(waterCount, waterTargetGlasses);
+        const point = computeWaterPoint(waterCount, waterTargetGlasses);
+        const achieved = point > 0;
+
         await saveTaskLog({
           mood: "task-drink-water",
-          energy: Math.round((waterCount / 15) * 5),
-          stress: 1,
+          energy: Math.max(
+            1,
+            Math.min(5, Math.round((waterCount / Math.max(waterTargetGlasses, 1)) * 5))
+          ),
+          stress: achieved ? 1 : 4,
           note: isRestFlow
             ? {
                 entry_type: "rest_task",
@@ -527,15 +665,33 @@ export default function ActivityTaskPage() {
                 activity: "rest",
                 task: "drink-water",
                 score,
-                payload: { glasses: waterCount, ml: waterCount * 350 },
+                payload: {
+                  glasses: waterCount,
+                  ml: glassesToMl(waterCount),
+                  target_glasses: waterTargetGlasses,
+                  point,
+                  achieved,
+                },
               }
-            : { task, glasses: waterCount, ml: waterCount * 350 },
+            : {
+                task,
+                glasses: waterCount,
+                ml: glassesToMl(waterCount),
+                target_glasses: waterTargetGlasses,
+                point,
+                achieved,
+              },
         });
 
         if (isRestFlow) {
           await syncRestGoalProgress();
+          await loadWaterContext();
         }
-        setSuccessMessage("Water intake log saved");
+        setSuccessMessage(
+          achieved
+            ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
+            : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
+        );
         return;
       }
 
@@ -700,61 +856,207 @@ export default function ActivityTaskPage() {
   }
 
   if (task === "drink-water") {
-    const totalCups = 15;
-
     return (
       <MobileShell>
-        <AppHeader title="Drink Water" showBack showBell />
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="การดื่มน้ำ" showBack showBell variant="soft" />
 
-        <main className="space-y-5 px-4 py-6">
-          {renderStatusBanner()}
+          <main className="space-y-4 px-4 py-4">
+            {renderStatusBanner()}
 
-          <div className="space-y-1 text-center">
-            <h1 className="text-3xl font-bold text-slate-900">Drink Water</h1>
-            <p className="text-sm text-slate-600">Track your water intake today</p>
-          </div>
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">บันทึกการดื่มน้ำวันนี้</h2>
+                  {isInitialWaterLoading ? (
+                    <div className="mt-1 h-5 w-52 animate-pulse rounded-md bg-slate-200" />
+                  ) : (
+                    <p className="text-sm text-slate-500">
+                      เป้าหมายรายวัน {waterTargetGlasses} แก้ว (~{Math.round(waterTargetMl)} ml)
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    isInitialWaterLoading
+                      ? "bg-slate-100 text-slate-500"
+                      : todayWaterScore > 0
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {isInitialWaterLoading
+                    ? "กำลังโหลดเป้าหมาย..."
+                    : todayWaterScore > 0
+                      ? "ผ่านเป้าหมาย +1 คะแนน"
+                      : "ต่ำกว่าเป้าหมาย 0 คะแนน"}
+                </span>
+              </div>
 
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-center gap-4">
-              <button
-                type="button"
-                onClick={() => setWaterCount((prev) => Math.max(prev - 1, 0))}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-700"
-              >
-                -
-              </button>
+              <div className="mt-3">
+                <Link
+                  to="/profile/settings/water-goal"
+                  className="inline-flex items-center rounded-full border border-[#c8e2ef] bg-[#eef8fd] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]"
+                >
+                  ปรับเป้าหมายที่หน้า Settings
+                </Link>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setWaterCount((prev) => Math.min(prev + 1, totalCups))}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-700"
-              >
-                +
-              </button>
-            </div>
+              <div className="mt-4 rounded-2xl bg-white px-4 py-4">
+                {isInitialWaterLoading ? (
+                  <div className="space-y-3">
+                    <div className="mx-auto h-4 w-36 animate-pulse rounded bg-slate-200" />
+                    <div className="mx-auto h-12 w-56 animate-pulse rounded-xl bg-slate-100" />
+                    <div className="mx-auto h-8 w-60 animate-pulse rounded-full bg-slate-100" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-center text-xs text-slate-500">จำนวนแก้วที่ดื่มวันนี้</p>
+                    <div className="mt-2 flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setWaterCount((prev) => Math.max(prev - 1, 0))}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                        aria-label="ลดจำนวนแก้วน้ำ"
+                      >
+                        -
+                      </button>
 
-            <div className="grid grid-cols-5 justify-items-center gap-4">
-              {Array.from({ length: totalCups }).map((_, index) => (
-                <WaterCup key={index} filled={index < waterCount} />
-              ))}
-            </div>
+                      <input
+                        type="number"
+                        min={0}
+                        max={40}
+                        value={waterCount}
+                        onChange={(event) => {
+                          const next = Number(event.target.value);
+                          if (!Number.isFinite(next)) return;
+                          setWaterCount(Math.max(0, Math.round(next)));
+                        }}
+                        className="w-28 rounded-xl border border-slate-200 bg-[#f8fafc] px-3 py-2 text-center text-3xl font-bold text-slate-900"
+                      />
 
-            <div className="mt-5 text-center text-sm text-slate-600">
-              <span className="font-medium">{waterCount} cups</span> = {waterCount * 350} ml
-            </div>
-          </div>
+                      <button
+                        type="button"
+                        onClick={() => setWaterCount((prev) => Math.min(prev + 1, 40))}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                        aria-label="เพิ่มจำนวนแก้วน้ำ"
+                      >
+                        +
+                      </button>
+                    </div>
 
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving}
-            className={`w-full rounded-2xl py-4 font-semibold text-white ${
-              saving ? "bg-slate-400" : "bg-[#c6968c]"
-            }`}
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-        </main>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      {[4, 6, 8, 10, 12].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setWaterCount(preset)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                            waterCount === preset
+                              ? "border-[#d88d80] bg-[#fff1e9] text-[#b46e44]"
+                              : "border-slate-200 bg-white text-slate-600"
+                          }`}
+                        >
+                          {preset} แก้ว
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                {isInitialWaterLoading ? (
+                  <span className="inline-block h-5 w-40 animate-pulse rounded bg-slate-200" />
+                ) : (
+                  <>
+                    วันนี้ดื่มแล้ว <span className="font-semibold text-slate-900">{waterCount} แก้ว</span> (
+                    {glassesToMl(waterCount)} ml)
+                  </>
+                )}
+              </div>
+
+              <div className="mt-3">
+                <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                  <span>ความคืบหน้าต่อเป้าหมาย</span>
+                  <span className="font-semibold text-slate-900">
+                    {isInitialWaterLoading
+                      ? "-"
+                      : `${Math.min(100, Math.round((waterCount / Math.max(waterTargetGlasses, 1)) * 100))}%`}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-200">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-[#8cc2db] to-[#7fc3a0]"
+                    style={{
+                      width: isInitialWaterLoading
+                        ? "0%"
+                        : `${Math.min(100, Math.round((waterCount / Math.max(waterTargetGlasses, 1)) * 100))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || waterLoading || isInitialWaterLoading}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || waterLoading || isInitialWaterLoading ? "bg-slate-400" : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : isInitialWaterLoading ? "กำลังโหลด..." : "บันทึกการดื่มน้ำวันนี้"}
+            </button>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  เดือนนี้ได้ {monthlyWaterPoints} คะแนน
+                </span>
+              </div>
+
+              {waterLoading || isInitialWaterLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : waterHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการดื่มน้ำที่บันทึกไว้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {waterHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ดื่ม {item.glasses} แก้ว ({glassesToMl(item.glasses)} ml) / เป้าหมาย {item.targetGlasses} แก้ว
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <p className="text-xs text-slate-500">
+              ข้อมูลนี้บันทึกในชีต <span className="font-semibold">daily_logs</span> และดึงมาแสดงจาก API ทุกครั้งที่เข้า
+              หน้านี้
+            </p>
+          </main>
+        </div>
       </MobileShell>
     );
   }
