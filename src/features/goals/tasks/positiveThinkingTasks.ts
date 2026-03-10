@@ -1,4 +1,4 @@
-export interface PositiveThinkingTaskConfig {
+﻿export interface PositiveThinkingTaskConfig {
   slug: string;
   label: string;
   completed?: boolean;
