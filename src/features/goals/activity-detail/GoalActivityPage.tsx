@@ -11,6 +11,7 @@ import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTask
 import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
+import { ChevronRight, Smile, Sparkles } from "lucide-react";
 
 const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
   string,
@@ -163,43 +164,113 @@ export default function GoalActivityPage() {
   }
 
   if (category === "mental" && activity === "positive-thinking") {
+    const completedCount = POSITIVE_THINKING_TASKS.filter((task) => task.completed).length;
+    const totalCount = POSITIVE_THINKING_TASKS.length;
+    const progressPercent =
+      totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
     return (
       <MobileShell>
-        <AppHeader title="การมองโลกในแง่บวก" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">🌤️</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                6
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="การมองโลกในแง่บวก"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="บันทึกพฤติกรรมเชิงบวกอย่างต่อเนื่อง"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">POSITIVE THINKING</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมการฝึกมองโลกในแง่บวก</h2>
+                  <p className="mt-1 text-sm text-slate-600">หัวข้อทั่วไปใช้การตอบ Yes/No และมี 1 หัวข้อที่บันทึกรายวัน</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2e6a8b] shadow-sm">
+                  <Sparkles size={22} />
+                </div>
               </div>
-              <span className="text-4xl">🌤️</span>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            {POSITIVE_THINKING_TASKS.map((task) => {
-              const path =
-                task.slug === "smile-when-disappointed"
-                  ? "/goals/mental/positive-thinking/smile-when-disappointed"
-                  : `/goals/mental/positive-thinking/${task.slug}`;
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                  </p>
+                </div>
+              </div>
+            </section>
 
-              return (
-                <Link
-                  key={task.slug}
-                  to={path}
-                  className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                    task.completed
-                      ? "border-green-400 bg-green-50 text-slate-900"
-                      : "border-slate-200 bg-white text-slate-600"
-                  }`}
-                >
-                  {task.label}
-                </Link>
-              );
-            })}
-          </div>
-        </main>
+            <section className="space-y-3">
+              {POSITIVE_THINKING_TASKS.map((task) => {
+                const path =
+                  task.slug === "smile-when-disappointed"
+                    ? "/goals/mental/positive-thinking/smile-when-disappointed"
+                    : `/goals/mental/positive-thinking/${task.slug}`;
+                const isDaily = task.slug === "smile-when-disappointed";
+
+                return (
+                  <Link key={task.slug} to={path} className="block">
+                    <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {isDaily ? "บันทึกจำนวนยิ้มแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.completed
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                            </span>
+                            {isDaily ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4ec] px-2.5 py-1 text-xs font-medium text-[#a95f3a]">
+                                <Smile size={12} />
+                                Daily
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                                Yes / No
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                          <ChevronRight size={16} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </section>
+          </main>
+        </div>
       </MobileShell>
     );
   }
