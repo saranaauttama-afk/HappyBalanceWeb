@@ -109,20 +109,20 @@ export default function AppRoutes() {
       />
       <Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
       <Route
-        path="/goals/social/family-relationship/:task"
-        element={<FamilyRelationshipTaskPage />}
-      />
-      <Route
         path="/goals/social/family-relationship/listen-and-accept"
         element={<ListenAcceptTaskPage />}
       />
       <Route
-        path="/goals/social/workplace-relationship/:task"
-        element={<WorkplaceRelationshipTaskPage />}
+        path="/goals/social/family-relationship/:task"
+        element={<FamilyRelationshipTaskPage />}
       />
       <Route
         path="/goals/social/workplace-relationship/share-items-with-colleagues"
         element={<ShareItemsTaskPage />}
+      />
+      <Route
+        path="/goals/social/workplace-relationship/:task"
+        element={<WorkplaceRelationshipTaskPage />}
       />
       <Route
         path="/goals/balance/:activity/task"
@@ -133,13 +133,13 @@ export default function AppRoutes() {
         element={<FamilySocialBalanceTaskPage />}
       />
       <Route
-  path="/goals/balance/family-social-balance/say-thanks-or-sorry"
-  element={<ThanksSorryTaskPage />}
-/>
-<Route
-  path="/goals/balance/work-balance/:task"
-  element={<WorkBalanceTaskPage />}
-/>
+        path="/goals/balance/family-social-balance/say-thanks-or-sorry"
+        element={<ThanksSorryTaskPage />}
+      />
+      <Route
+        path="/goals/balance/work-balance/:task"
+        element={<WorkBalanceTaskPage />}
+      />
     </Routes>
   );
 }

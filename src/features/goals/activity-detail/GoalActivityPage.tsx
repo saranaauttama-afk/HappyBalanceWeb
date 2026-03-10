@@ -1,4 +1,4 @@
-﻿import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { REST_TASKS } from "../tasks/restTasks";
@@ -388,85 +388,275 @@ export default function GoalActivityPage() {
   }
 
   if (category === "social" && activity === "family-relationship") {
+    const completedCount = FAMILY_RELATIONSHIP_TASKS.filter((task) => task.completed).length;
+    const totalCount = FAMILY_RELATIONSHIP_TASKS.length;
+    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
     return (
       <MobileShell>
-        <AppHeader title="ความสัมพันธ์ระหว่างสมาชิกในครอบครัว" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">👨‍👩‍👧</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                9
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="ความสัมพันธ์ระหว่างสมาชิกในครอบครัว"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="บันทึกความสัมพันธ์ที่ดีในบ้านอย่างต่อเนื่อง"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">FAMILY RELATIONSHIP</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมความสัมพันธ์ในครอบครัว</h2>
+                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อ Yes/No และ 1 หัวข้อที่บันทึกแบบรายวัน</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  👨‍👩‍👧
+                </div>
               </div>
-              <span className="text-4xl">🏡</span>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            {FAMILY_RELATIONSHIP_TASKS.map((task) => {
-              const path =
-                task.slug === "listen-and-accept"
-                  ? "/goals/social/family-relationship/listen-and-accept"
-                  : `/goals/social/family-relationship/${task.slug}`;
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                  </p>
+                </div>
+              </div>
+            </section>
 
-              return (
-                <Link
-                  key={task.slug}
-                  to={path}
-                  className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                    task.completed
-                      ? "border-green-400 bg-green-50 text-slate-900"
-                      : "border-slate-200 bg-white text-slate-600"
-                  }`}
-                >
-                  {task.label}
-                </Link>
-              );
-            })}
-          </div>
-        </main>
+            <section className="space-y-3">
+              {FAMILY_RELATIONSHIP_TASKS.map((task) => {
+                const path =
+                  task.slug === "listen-and-accept"
+                    ? "/goals/social/family-relationship/listen-and-accept"
+                    : `/goals/social/family-relationship/${task.slug}`;
+                const isDaily = task.slug === "listen-and-accept";
+
+                return (
+                  <Link key={task.slug} to={path} className="block">
+                    <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.completed
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                            </span>
+                            {isDaily ? (
+                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
+                                Daily
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                                Yes / No
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                          <ChevronRight size={16} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (category === "social" && activity === "community-participation") {
+    return (
+      <MobileShell>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="การมีส่วนร่วมในชุมชนและสังคมรอบข้าง"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="ประเมินภาพรวมด้วยคำตอบ Yes/No"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">COMMUNITY PARTICIPATION</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">
+                    การมีส่วนร่วมในชุมชนและสังคม
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">ตอบว่าในช่วงนี้คุณทำได้หรือไม่ เพื่ออัปเดตคะแนนภาพรวม</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  🤝
+                </div>
+              </div>
+            </section>
+
+            <Link
+              to="/goals/social/community-participation/task"
+              className="block rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold leading-7 text-slate-900">บันทึกผลกิจกรรมนี้</h3>
+                  <p className="mt-1 text-sm text-slate-500">ตอบแบบ Yes / No และบันทึกลงระบบได้ทันที</p>
+                  <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                    Yes / No
+                  </span>
+                </div>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                  <ChevronRight size={16} />
+                </span>
+              </div>
+            </Link>
+          </main>
+        </div>
       </MobileShell>
     );
   }
 
   if (category === "social" && activity === "workplace-relationship") {
+    const completedCount = WORKPLACE_RELATIONSHIP_TASKS.filter((task) => task.completed).length;
+    const totalCount = WORKPLACE_RELATIONSHIP_TASKS.length;
+    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
     return (
       <MobileShell>
-        <AppHeader title="ความสัมพันธ์ในที่ทำงาน" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">💼</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                6
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="ความสัมพันธ์ในที่ทำงาน"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="บันทึกพฤติกรรมเชิงบวกกับเพื่อนร่วมงาน"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">WORKPLACE RELATIONSHIP</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมความสัมพันธ์ในที่ทำงาน</h2>
+                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อ Yes/No และ 1 หัวข้อที่บันทึกแบบรายวัน</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  💼
+                </div>
               </div>
-              <span className="text-4xl">🧑‍💻</span>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            {WORKPLACE_RELATIONSHIP_TASKS.map((task) => {
-              const path =
-                task.slug === "share-items-with-colleagues"
-                  ? "/goals/social/workplace-relationship/share-items-with-colleagues"
-                  : `/goals/social/workplace-relationship/${task.slug}`;
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                  </p>
+                </div>
+              </div>
+            </section>
 
-              return (
-                <Link
-                  key={task.slug}
-                  to={path}
-                  className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                    task.completed
-                      ? "border-green-400 bg-green-50 text-slate-900"
-                      : "border-slate-200 bg-white text-slate-600"
-                  }`}
-                >
-                  {task.label}
-                </Link>
-              );
-            })}
-          </div>
-        </main>
+            <section className="space-y-3">
+              {WORKPLACE_RELATIONSHIP_TASKS.map((task) => {
+                const path =
+                  task.slug === "share-items-with-colleagues"
+                    ? "/goals/social/workplace-relationship/share-items-with-colleagues"
+                    : `/goals/social/workplace-relationship/${task.slug}`;
+                const isDaily = task.slug === "share-items-with-colleagues";
+
+                return (
+                  <Link key={task.slug} to={path} className="block">
+                    <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.completed
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                            </span>
+                            {isDaily ? (
+                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
+                                Daily
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                                Yes / No
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                          <ChevronRight size={16} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </section>
+          </main>
+        </div>
       </MobileShell>
     );
   }
@@ -592,34 +782,39 @@ export default function GoalActivityPage() {
   if (category === "social") {
     return (
       <MobileShell>
-        <AppHeader title={getSocialTitle(activity)} showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">🤝</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-slate-200 text-4xl font-bold text-slate-900">
-                5
-              </div>
-              <span className="text-4xl">🤝</span>
-            </div>
-          </div>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-          <div className="space-y-3">
-            {SOCIAL_TASKS.map((task) => (
-              <Link
-                key={task.slug}
-                to={`/goals/social/${task.slug}/task`}
-                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                  task.completed
-                    ? "border-green-400 bg-green-50 text-slate-900"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {task.label}
-              </Link>
-            ))}
-          </div>
-        </main>
+          <AppHeader title={getSocialTitle(activity)} showBack showBell variant="soft" subtitle="เลือกกิจกรรมด้านสังคม" />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">SOCIAL WELLBEING</p>
+              <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">เสริมพลังความสัมพันธ์รอบตัว</h2>
+              <p className="mt-1 text-sm text-slate-600">เลือกเมนูย่อยเพื่อบันทึกพฤติกรรมรายวันหรือตอบแบบ Yes/No</p>
+            </section>
+
+            <section className="space-y-3">
+              {SOCIAL_TASKS.map((task) => (
+                <Link key={task.slug} to={`/goals/social/${task.slug}`} className="block">
+                  <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                        <p className="mt-1 text-sm text-slate-500">เปิดดูและบันทึกกิจกรรมย่อยในหัวข้อนี้</p>
+                      </div>
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </section>
+          </main>
+        </div>
       </MobileShell>
     );
   }
