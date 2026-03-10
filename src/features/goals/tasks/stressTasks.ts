@@ -1,4 +1,4 @@
-export interface StressTaskConfig {
+﻿export interface StressTaskConfig {
   slug: string;
   label: string;
   completed?: boolean;

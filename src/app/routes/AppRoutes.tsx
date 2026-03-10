@@ -100,12 +100,12 @@ export default function AppRoutes() {
         element={<PositiveThinkingTaskPage />}
       />
       <Route
-        path="/goals/mental/stress-level/:task"
-        element={<StressTaskPage />}
-      />
-      <Route
         path="/goals/mental/stress-level/get-sunlight"
         element={<SunlightTaskPage />}
+      />
+      <Route
+        path="/goals/mental/stress-level/:task"
+        element={<StressTaskPage />}
       />
       <Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
       <Route
