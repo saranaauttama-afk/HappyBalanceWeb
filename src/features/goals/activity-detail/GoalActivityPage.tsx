@@ -23,53 +23,53 @@ const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
   }
 > = {
   "food-intake": {
-    title: "การรับประทานอาหาร",
-    subtitle: "เมนูนี้กำลังเตรียมระบบบันทึกโภชนาการรายวัน",
-    emoji: "🥗",
+    title: "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â£Ã Â¸Â±Ã Â¸Å¡Ã Â¸â€ºÃ Â¸Â£Ã Â¸Â°Ã Â¸â€”Ã Â¸Â²Ã Â¸â„¢Ã Â¸Â­Ã Â¸Â²Ã Â¸Â«Ã Â¸Â²Ã Â¸Â£",
+    subtitle: "Ã Â¹â‚¬Ã Â¸Â¡Ã Â¸â„¢Ã Â¸Â¹Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â°Ã Â¸Å¡Ã Â¸Å¡Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¹â€šÃ Â¸Â Ã Â¸Å Ã Â¸â„¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢",
+    emoji: "Ã°Å¸Â¥â€”",
     tips: [
-      "กำลังเพิ่มฟอร์มบันทึกมื้ออาหารและคุณภาพอาหาร",
-      "กำลังเชื่อมคะแนนเข้ากับกราฟสุขภาวะทางกาย",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â´Ã Â¹Ë†Ã Â¸Â¡Ã Â¸Å¸Ã Â¸Â­Ã Â¸Â£Ã Â¹Å’Ã Â¸Â¡Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Â¡Ã Â¸Â·Ã Â¹â€°Ã Â¸Â­Ã Â¸Â­Ã Â¸Â²Ã Â¸Â«Ã Â¸Â²Ã Â¸Â£Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸â€žÃ Â¸Â¸Ã Â¸â€œÃ Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â­Ã Â¸Â²Ã Â¸Â«Ã Â¸Â²Ã Â¸Â£",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸Å Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â°Ã Â¹ÂÃ Â¸â„¢Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸â€šÃ Â¹â€°Ã Â¸Â²Ã Â¸ÂÃ Â¸Â±Ã Â¸Å¡Ã Â¸ÂÃ Â¸Â£Ã Â¸Â²Ã Â¸Å¸Ã Â¸ÂªÃ Â¸Â¸Ã Â¸â€šÃ Â¸Â Ã Â¸Â²Ã Â¸Â§Ã Â¸Â°Ã Â¸â€”Ã Â¸Â²Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢",
     ],
   },
   exercise: {
-    title: "การออกกำลังกาย",
-    subtitle: "เมนูนี้กำลังเตรียมระบบติดตามกิจกรรมการออกกำลังกาย",
-    emoji: "🏃",
+    title: "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â­Ã Â¸Â­Ã Â¸ÂÃ Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢",
+    subtitle: "Ã Â¹â‚¬Ã Â¸Â¡Ã Â¸â„¢Ã Â¸Â¹Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â°Ã Â¸Å¡Ã Â¸Å¡Ã Â¸â€¢Ã Â¸Â´Ã Â¸â€Ã Â¸â€¢Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â­Ã Â¸Â­Ã Â¸ÂÃ Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢",
+    emoji: "Ã°Å¸ÂÆ’",
     tips: [
-      "กำลังเพิ่มรูปแบบกิจกรรมและระยะเวลาในการออกกำลังกาย",
-      "กำลังพัฒนาการคำนวณคะแนนรายวันแบบอัตโนมัติ",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â´Ã Â¹Ë†Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â¹Ã Â¸â€ºÃ Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸Â£Ã Â¸Â°Ã Â¸Â¢Ã Â¸Â°Ã Â¹â‚¬Ã Â¸Â§Ã Â¸Â¥Ã Â¸Â²Ã Â¹Æ’Ã Â¸â„¢Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â­Ã Â¸Â­Ã Â¸ÂÃ Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â€™Ã Â¸â„¢Ã Â¸Â²Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸â€žÃ Â¸Â³Ã Â¸â„¢Ã Â¸Â§Ã Â¸â€œÃ Â¸â€žÃ Â¸Â°Ã Â¹ÂÃ Â¸â„¢Ã Â¸â„¢Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â­Ã Â¸Â±Ã Â¸â€¢Ã Â¹â€šÃ Â¸â„¢Ã Â¸Â¡Ã Â¸Â±Ã Â¸â€¢Ã Â¸Â´",
     ],
   },
   "body-hygiene": {
-    title: "การดูแลรักษาความสะอาดของร่างกาย",
-    subtitle: "เมนูนี้กำลังเตรียมระบบบันทึกพฤติกรรมสุขอนามัย",
-    emoji: "🧼",
+    title: "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸â€Ã Â¸Â¹Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â£Ã Â¸Â±Ã Â¸ÂÃ Â¸Â©Ã Â¸Â²Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â°Ã Â¸Â­Ã Â¸Â²Ã Â¸â€Ã Â¸â€šÃ Â¸Â­Ã Â¸â€¡Ã Â¸Â£Ã Â¹Ë†Ã Â¸Â²Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢",
+    subtitle: "Ã Â¹â‚¬Ã Â¸Â¡Ã Â¸â„¢Ã Â¸Â¹Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â°Ã Â¸Å¡Ã Â¸Å¡Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â¤Ã Â¸â€¢Ã Â¸Â´Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â¸Ã Â¸â€šÃ Â¸Â­Ã Â¸â„¢Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â±Ã Â¸Â¢",
+    emoji: "Ã°Å¸Â§Â¼",
     tips: [
-      "กำลังเพิ่มรายการพฤติกรรมดูแลสุขอนามัยที่จำเป็น",
-      "กำลังเชื่อมข้อมูลเพื่อสรุปผลเป็นคะแนนรายสัปดาห์",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â´Ã Â¹Ë†Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Å¾Ã Â¸Â¤Ã Â¸â€¢Ã Â¸Â´Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸â€Ã Â¸Â¹Ã Â¹ÂÃ Â¸Â¥Ã Â¸ÂªÃ Â¸Â¸Ã Â¸â€šÃ Â¸Â­Ã Â¸â„¢Ã Â¸Â²Ã Â¸Â¡Ã Â¸Â±Ã Â¸Â¢Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸Ë†Ã Â¸Â³Ã Â¹â‚¬Ã Â¸â€ºÃ Â¹â€¡Ã Â¸â„¢",
+      "Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸Å Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸Â¡Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸Â¡Ã Â¸Â¹Ã Â¸Â¥Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸ÂªÃ Â¸Â£Ã Â¸Â¸Ã Â¸â€ºÃ Â¸Å“Ã Â¸Â¥Ã Â¹â‚¬Ã Â¸â€ºÃ Â¹â€¡Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â°Ã Â¹ÂÃ Â¸â„¢Ã Â¸â„¢Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€ºÃ Â¸â€Ã Â¸Â²Ã Â¸Â«Ã Â¹Å’",
     ],
   },
 };
 
 function getMentalTitle(activity?: string) {
-  if (activity === "positive-thinking") return "การมองโลกในแง่บวก";
-  if (activity === "stress-level") return "ระดับความเครียด";
-  if (activity === "life-satisfaction") return "ระดับความพึงพอใจในชีวิต";
-  if (activity === "self-worth") return "การรู้สึกมีคุณค่าในตนเอง";
-  return "กิจกรรม";
+  if (activity === "positive-thinking") return "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â¡Ã Â¸Â­Ã Â¸â€¡Ã Â¹â€šÃ Â¸Â¥Ã Â¸ÂÃ Â¹Æ’Ã Â¸â„¢Ã Â¹ÂÃ Â¸â€¡Ã Â¹Ë†Ã Â¸Å¡Ã Â¸Â§Ã Â¸Â";
+  if (activity === "stress-level") return "Ã Â¸Â£Ã Â¸Â°Ã Â¸â€Ã Â¸Â±Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸â€žÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸â€";
+  if (activity === "life-satisfaction") return "Ã Â¸Â£Ã Â¸Â°Ã Â¸â€Ã Â¸Â±Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â¶Ã Â¸â€¡Ã Â¸Å¾Ã Â¸Â­Ã Â¹Æ’Ã Â¸Ë†Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Å Ã Â¸ÂµÃ Â¸Â§Ã Â¸Â´Ã Â¸â€¢";
+  if (activity === "self-worth") return "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â£Ã Â¸Â¹Ã Â¹â€°Ã Â¸ÂªÃ Â¸Â¶Ã Â¸ÂÃ Â¸Â¡Ã Â¸ÂµÃ Â¸â€žÃ Â¸Â¸Ã Â¸â€œÃ Â¸â€žÃ Â¹Ë†Ã Â¸Â²Ã Â¹Æ’Ã Â¸â„¢Ã Â¸â€¢Ã Â¸â„¢Ã Â¹â‚¬Ã Â¸Â­Ã Â¸â€¡";
+  return "Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡";
 }
 
 function getSocialTitle(activity?: string) {
   if (activity === "family-relationship") {
-    return "ความสัมพันธ์ระหว่างสมาชิกในครอบครัว";
+    return "Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¸Â£Ã Â¸Â°Ã Â¸Â«Ã Â¸Â§Ã Â¹Ë†Ã Â¸Â²Ã Â¸â€¡Ã Â¸ÂªÃ Â¸Â¡Ã Â¸Â²Ã Â¸Å Ã Â¸Â´Ã Â¸ÂÃ Â¹Æ’Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§";
   }
   if (activity === "community-participation") {
-    return "การมีส่วนร่วมในชุมชนและสังคมรอบข้าง";
+    return "Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â¡Ã Â¸ÂµÃ Â¸ÂªÃ Â¹Ë†Ã Â¸Â§Ã Â¸â„¢Ã Â¸Â£Ã Â¹Ë†Ã Â¸Â§Ã Â¸Â¡Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Å Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å Ã Â¸â„¢Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¡Ã Â¸â€žÃ Â¸Â¡Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€šÃ Â¹â€°Ã Â¸Â²Ã Â¸â€¡";
   }
   if (activity === "workplace-relationship") {
-    return "ความสัมพันธ์ในที่ทำงาน";
+    return "Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¹Æ’Ã Â¸â„¢Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â€”Ã Â¸Â³Ã Â¸â€¡Ã Â¸Â²Ã Â¸â„¢";
   }
-  return "กิจกรรม";
+  return "Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡";
 }
 
 export default function GoalActivityPage() {
@@ -81,15 +81,15 @@ export default function GoalActivityPage() {
   if (category === "physical" && activity === "rest") {
     return (
       <MobileShell>
-        <AppHeader title="การพักผ่อน" showBack showBell />
+        <AppHeader title="Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Å¾Ã Â¸Â±Ã Â¸ÂÃ Â¸Å“Ã Â¹Ë†Ã Â¸Â­Ã Â¸â„¢" showBack showBell />
         <main className="space-y-4 px-4 py-4">
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🛏️</span>
+              <span className="text-4xl">Ã°Å¸â€ºÂÃ¯Â¸Â</span>
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
                 7
               </div>
-              <span className="text-4xl">🛏️</span>
+              <span className="text-4xl">Ã°Å¸â€ºÂÃ¯Â¸Â</span>
             </div>
           </div>
 
@@ -123,7 +123,7 @@ export default function GoalActivityPage() {
             <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
             <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-            <AppHeader title={physicalConfig.title} showBack showBell variant="soft" subtitle="กำลังพัฒนาเมนูนี้" />
+            <AppHeader title={physicalConfig.title} showBack showBell variant="soft" subtitle="Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â€™Ã Â¸â„¢Ã Â¸Â²Ã Â¹â‚¬Ã Â¸Â¡Ã Â¸â„¢Ã Â¸Â¹Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°" />
 
             <main className="relative z-10 space-y-4 px-4 py-4">
               <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
@@ -140,7 +140,7 @@ export default function GoalActivityPage() {
               </section>
 
               <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-                <h3 className="text-base font-semibold text-slate-900">สิ่งที่กำลังเตรียมในหน้านี้</h3>
+                <h3 className="text-base font-semibold text-slate-900">Ã Â¸ÂªÃ Â¸Â´Ã Â¹Ë†Ã Â¸â€¡Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸ÂÃ Â¸Â³Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¹â‚¬Ã Â¸â€¢Ã Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸Â¡Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°</h3>
                 <div className="mt-3 space-y-2">
                   {physicalConfig.tips.map((tip) => (
                     <div key={tip} className="rounded-2xl border border-[#dcecf5] bg-[#f6fbff] px-3 py-2 text-sm text-slate-600">
@@ -154,7 +154,7 @@ export default function GoalActivityPage() {
                 to="/goals/physical"
                 className="inline-flex w-full items-center justify-center rounded-2xl border border-[#c8e2ef] bg-[#eef8fd] px-4 py-3 text-sm font-medium text-[#2e6a8b]"
               >
-                กลับไปหน้าสุขภาวะทางกาย
+                Ã Â¸ÂÃ Â¸Â¥Ã Â¸Â±Ã Â¸Å¡Ã Â¹â€žÃ Â¸â€ºÃ Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸ÂªÃ Â¸Â¸Ã Â¸â€šÃ Â¸Â Ã Â¸Â²Ã Â¸Â§Ã Â¸Â°Ã Â¸â€”Ã Â¸Â²Ã Â¸â€¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â¢
               </Link>
             </main>
           </div>
@@ -176,11 +176,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="การมองโลกในแง่บวก"
+            title="Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â¡Ã Â¸Â­Ã Â¸â€¡Ã Â¹â€šÃ Â¸Â¥Ã Â¸ÂÃ Â¹Æ’Ã Â¸â„¢Ã Â¹ÂÃ Â¸â€¡Ã Â¹Ë†Ã Â¸Å¡Ã Â¸Â§Ã Â¸Â"
             showBack
             showBell
             variant="soft"
-            subtitle="บันทึกพฤติกรรมเชิงบวกอย่างต่อเนื่อง"
+            subtitle="Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â¤Ã Â¸â€¢Ã Â¸Â´Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸Å Ã Â¸Â´Ã Â¸â€¡Ã Â¸Å¡Ã Â¸Â§Ã Â¸ÂÃ Â¸Â­Ã Â¸Â¢Ã Â¹Ë†Ã Â¸Â²Ã Â¸â€¡Ã Â¸â€¢Ã Â¹Ë†Ã Â¸Â­Ã Â¹â‚¬Ã Â¸â„¢Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€¡"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -188,8 +188,8 @@ export default function GoalActivityPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">POSITIVE THINKING</p>
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมการฝึกมองโลกในแง่บวก</h2>
-                  <p className="mt-1 text-sm text-slate-600">หัวข้อทั่วไปใช้การตอบ Yes/No และมี 1 หัวข้อที่บันทึกรายวัน</p>
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸ÂÃ Â¸Â¶Ã Â¸ÂÃ Â¸Â¡Ã Â¸Â­Ã Â¸â€¡Ã Â¹â€šÃ Â¸Â¥Ã Â¸ÂÃ Â¹Æ’Ã Â¸â„¢Ã Â¹ÂÃ Â¸â€¡Ã Â¹Ë†Ã Â¸Å¡Ã Â¸Â§Ã Â¸Â</h2>
+                  <p className="mt-1 text-sm text-slate-600">Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹Ë†Ã Â¸Â§Ã Â¹â€žÃ Â¸â€ºÃ Â¹Æ’Ã Â¸Å Ã Â¹â€°Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡ Yes/No Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸Â¡Ã Â¸Âµ 1 Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2e6a8b] shadow-sm">
                   <Sparkles size={22} />
@@ -202,7 +202,7 @@ export default function GoalActivityPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span>Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â·Ã Â¸Å¡Ã Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸â€</span>
                     <span className="font-semibold text-slate-900">{progressPercent}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-200">
@@ -212,7 +212,7 @@ export default function GoalActivityPage() {
                     />
                   </div>
                   <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    Ã Â¸â€”Ã Â¸Â³Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§ {completedCount} / {totalCount} Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­
                   </p>
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default function GoalActivityPage() {
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนยิ้มแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                            {isDaily ? "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Ë†Ã Â¸Â³Ã Â¸â„¢Ã Â¸Â§Ã Â¸â„¢Ã Â¸Â¢Ã Â¸Â´Ã Â¹â€°Ã Â¸Â¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢" : "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å“Ã Â¸Â¥Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes/No (Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢)"}
                           </p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -245,7 +245,7 @@ export default function GoalActivityPage() {
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {task.completed ? "Ã Â¸â€”Ã Â¸Â³Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§" : "Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸Â"}
                             </span>
                             {isDaily ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4ec] px-2.5 py-1 text-xs font-medium text-[#a95f3a]">
@@ -288,11 +288,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="ระดับความเครียด"
+            title="Ã Â¸Â£Ã Â¸Â°Ã Â¸â€Ã Â¸Â±Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸â€žÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸â€"
             showBack
             showBell
             variant="soft"
-            subtitle="ดูแลความเครียดแบบต่อเนื่องในแต่ละวัน"
+            subtitle="Ã Â¸â€Ã Â¸Â¹Ã Â¹ÂÃ Â¸Â¥Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸â€žÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸â€Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸â€¢Ã Â¹Ë†Ã Â¸Â­Ã Â¹â‚¬Ã Â¸â„¢Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€¡Ã Â¹Æ’Ã Â¸â„¢Ã Â¹ÂÃ Â¸â€¢Ã Â¹Ë†Ã Â¸Â¥Ã Â¸Â°Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -300,8 +300,8 @@ export default function GoalActivityPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">STRESS LEVEL</p>
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมการดูแลความเครียด</h2>
-                  <p className="mt-1 text-sm text-slate-600">หัวข้อทั่วไปใช้การตอบ Yes/No และมี 1 หัวข้อที่บันทึกรายวัน</p>
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸â€Ã Â¸Â¹Ã Â¹ÂÃ Â¸Â¥Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸â€žÃ Â¸Â£Ã Â¸ÂµÃ Â¸Â¢Ã Â¸â€</h2>
+                  <p className="mt-1 text-sm text-slate-600">Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹Ë†Ã Â¸Â§Ã Â¹â€žÃ Â¸â€ºÃ Â¹Æ’Ã Â¸Å Ã Â¹â€°Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡ Yes/No Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸Â¡Ã Â¸Âµ 1 Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2e6a8b] shadow-sm">
                   <Sparkles size={22} />
@@ -314,7 +314,7 @@ export default function GoalActivityPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span>Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â·Ã Â¸Å¡Ã Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸â€</span>
                     <span className="font-semibold text-slate-900">{progressPercent}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-200">
@@ -324,7 +324,7 @@ export default function GoalActivityPage() {
                     />
                   </div>
                   <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    Ã Â¸â€”Ã Â¸Â³Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§ {completedCount} / {totalCount} Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­
                   </p>
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function GoalActivityPage() {
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                            {isDaily ? "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Ë†Ã Â¸Â³Ã Â¸â„¢Ã Â¸Â§Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢" : "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å“Ã Â¸Â¥Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes/No (Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢)"}
                           </p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -357,7 +357,7 @@ export default function GoalActivityPage() {
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {task.completed ? "Ã Â¸â€”Ã Â¸Â³Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§" : "Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸Â"}
                             </span>
                             {isDaily ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
@@ -399,11 +399,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="ความสัมพันธ์ระหว่างสมาชิกในครอบครัว"
+            title="Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¸Â£Ã Â¸Â°Ã Â¸Â«Ã Â¸Â§Ã Â¹Ë†Ã Â¸Â²Ã Â¸â€¡Ã Â¸ÂªÃ Â¸Â¡Ã Â¸Â²Ã Â¸Å Ã Â¸Â´Ã Â¸ÂÃ Â¹Æ’Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§"
             showBack
             showBell
             variant="soft"
-            subtitle="บันทึกความสัมพันธ์ที่ดีในบ้านอย่างต่อเนื่อง"
+            subtitle="Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â€Ã Â¸ÂµÃ Â¹Æ’Ã Â¸â„¢Ã Â¸Å¡Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸Â­Ã Â¸Â¢Ã Â¹Ë†Ã Â¸Â²Ã Â¸â€¡Ã Â¸â€¢Ã Â¹Ë†Ã Â¸Â­Ã Â¹â‚¬Ã Â¸â„¢Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸â€¡"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -411,11 +411,11 @@ export default function GoalActivityPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">FAMILY RELATIONSHIP</p>
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมความสัมพันธ์ในครอบครัว</h2>
-                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อ Yes/No และ 1 หัวข้อที่บันทึกแบบรายวัน</p>
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¹Æ’Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¸Â§</h2>
+                  <p className="mt-1 text-sm text-slate-600">Ã Â¸Â¡Ã Â¸ÂµÃ Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­ Yes/No Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â° 1 Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                  👨‍👩‍👧
+                  Ã°Å¸â€˜Â¨Ã¢â‚¬ÂÃ°Å¸â€˜Â©Ã¢â‚¬ÂÃ°Å¸â€˜Â§
                 </div>
               </div>
 
@@ -425,7 +425,7 @@ export default function GoalActivityPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span>Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â·Ã Â¸Å¡Ã Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸â€</span>
                     <span className="font-semibold text-slate-900">{progressPercent}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-200">
@@ -435,7 +435,7 @@ export default function GoalActivityPage() {
                     />
                   </div>
                   <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    Ã Â¸â€”Ã Â¸Â³Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§ {completedCount} / {totalCount} Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­
                   </p>
                 </div>
               </div>
@@ -457,7 +457,7 @@ export default function GoalActivityPage() {
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                            {isDaily ? "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Ë†Ã Â¸Â³Ã Â¸â„¢Ã Â¸Â§Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢" : "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å“Ã Â¸Â¥Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes/No (Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢)"}
                           </p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -468,7 +468,7 @@ export default function GoalActivityPage() {
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {task.completed ? "Ã Â¸â€”Ã Â¸Â³Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§" : "Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸Â"}
                             </span>
                             {isDaily ? (
                               <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
@@ -505,11 +505,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="การมีส่วนร่วมในชุมชนและสังคมรอบข้าง"
+            title="Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â¡Ã Â¸ÂµÃ Â¸ÂªÃ Â¹Ë†Ã Â¸Â§Ã Â¸â„¢Ã Â¸Â£Ã Â¹Ë†Ã Â¸Â§Ã Â¸Â¡Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Å Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å Ã Â¸â„¢Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¡Ã Â¸â€žÃ Â¸Â¡Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€šÃ Â¹â€°Ã Â¸Â²Ã Â¸â€¡"
             showBack
             showBell
             variant="soft"
-            subtitle="ประเมินภาพรวมด้วยคำตอบ Yes/No"
+            subtitle="Ã Â¸â€ºÃ Â¸Â£Ã Â¸Â°Ã Â¹â‚¬Ã Â¸Â¡Ã Â¸Â´Ã Â¸â„¢Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡Ã Â¸â€Ã Â¹â€°Ã Â¸Â§Ã Â¸Â¢Ã Â¸â€žÃ Â¸Â³Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡ Yes/No"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -518,12 +518,12 @@ export default function GoalActivityPage() {
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-2xl font-extrabold leading-tight text-slate-900">
-                    การมีส่วนร่วมในชุมชนและสังคม
+                    Ã Â¸ÂÃ Â¸Â²Ã Â¸Â£Ã Â¸Â¡Ã Â¸ÂµÃ Â¸ÂªÃ Â¹Ë†Ã Â¸Â§Ã Â¸â„¢Ã Â¸Â£Ã Â¹Ë†Ã Â¸Â§Ã Â¸Â¡Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Å Ã Â¸Â¸Ã Â¸Â¡Ã Â¸Å Ã Â¸â„¢Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¡Ã Â¸â€žÃ Â¸Â¡
                   </h2>
-                  <p className="mt-1 text-sm text-slate-600">ตอบว่าในช่วงนี้คุณทำได้หรือไม่ เพื่ออัปเดตคะแนนภาพรวม</p>
+                  <p className="mt-1 text-sm text-slate-600">Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â§Ã Â¹Ë†Ã Â¸Â²Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Å Ã Â¹Ë†Ã Â¸Â§Ã Â¸â€¡Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°Ã Â¸â€žÃ Â¸Â¸Ã Â¸â€œÃ Â¸â€”Ã Â¸Â³Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¸Â«Ã Â¸Â£Ã Â¸Â·Ã Â¸Â­Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë† Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸Â­Ã Â¸Â±Ã Â¸â€ºÃ Â¹â‚¬Ã Â¸â€Ã Â¸â€¢Ã Â¸â€žÃ Â¸Â°Ã Â¹ÂÃ Â¸â„¢Ã Â¸â„¢Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                  🤝
+                  Ã°Å¸Â¤Â
                 </div>
               </div>
             </section>
@@ -534,8 +534,8 @@ export default function GoalActivityPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold leading-7 text-slate-900">บันทึกผลกิจกรรมนี้</h3>
-                  <p className="mt-1 text-sm text-slate-500">ตอบแบบ Yes / No และบันทึกลงระบบได้ทันที</p>
+                  <h3 className="text-lg font-semibold leading-7 text-slate-900">Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å“Ã Â¸Â¥Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°</h3>
+                  <p className="mt-1 text-sm text-slate-500">Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes / No Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Â¥Ã Â¸â€¡Ã Â¸Â£Ã Â¸Â°Ã Â¸Å¡Ã Â¸Å¡Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¸â€”Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Âµ</p>
                   <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
                     Yes / No
                   </span>
@@ -563,11 +563,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="ความสัมพันธ์ในที่ทำงาน"
+            title="Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¹Æ’Ã Â¸â„¢Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â€”Ã Â¸Â³Ã Â¸â€¡Ã Â¸Â²Ã Â¸â„¢"
             showBack
             showBell
             variant="soft"
-            subtitle="บันทึกพฤติกรรมเชิงบวกกับเพื่อนร่วมงาน"
+            subtitle="Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â¤Ã Â¸â€¢Ã Â¸Â´Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¹â‚¬Ã Â¸Å Ã Â¸Â´Ã Â¸â€¡Ã Â¸Å¡Ã Â¸Â§Ã Â¸ÂÃ Â¸ÂÃ Â¸Â±Ã Â¸Å¡Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸â„¢Ã Â¸Â£Ã Â¹Ë†Ã Â¸Â§Ã Â¸Â¡Ã Â¸â€¡Ã Â¸Â²Ã Â¸â„¢"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -575,11 +575,11 @@ export default function GoalActivityPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">WORKPLACE RELATIONSHIP</p>
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมความสัมพันธ์ในที่ทำงาน</h2>
-                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อ Yes/No และ 1 หัวข้อที่บันทึกแบบรายวัน</p>
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Ã Â¸Â Ã Â¸Â²Ã Â¸Å¾Ã Â¸Â£Ã Â¸Â§Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¹Æ’Ã Â¸â„¢Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸â€”Ã Â¸Â³Ã Â¸â€¡Ã Â¸Â²Ã Â¸â„¢</h2>
+                  <p className="mt-1 text-sm text-slate-600">Ã Â¸Â¡Ã Â¸ÂµÃ Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­ Yes/No Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â° 1 Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸ÂµÃ Â¹Ë†Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-                  💼
+                  Ã°Å¸â€™Â¼
                 </div>
               </div>
 
@@ -589,7 +589,7 @@ export default function GoalActivityPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าหัวข้อทั้งหมด</span>
+                    <span>Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸â€žÃ Â¸Â·Ã Â¸Å¡Ã Â¸Â«Ã Â¸â„¢Ã Â¹â€°Ã Â¸Â²Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â€”Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¸Â«Ã Â¸Â¡Ã Â¸â€</span>
                     <span className="font-semibold text-slate-900">{progressPercent}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-200">
@@ -599,7 +599,7 @@ export default function GoalActivityPage() {
                     />
                   </div>
                   <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    Ã Â¸â€”Ã Â¸Â³Ã Â¹â€žÃ Â¸â€Ã Â¹â€°Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§ {completedCount} / {totalCount} Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­
                   </p>
                 </div>
               </div>
@@ -621,7 +621,7 @@ export default function GoalActivityPage() {
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes/No (ไม่รายวัน)"}
+                            {isDaily ? "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Ë†Ã Â¸Â³Ã Â¸â„¢Ã Â¸Â§Ã Â¸â„¢Ã Â¸â€žÃ Â¸Â£Ã Â¸Â±Ã Â¹â€°Ã Â¸â€¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢" : "Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å“Ã Â¸Â¥Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes/No (Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢)"}
                           </p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -632,7 +632,7 @@ export default function GoalActivityPage() {
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {task.completed ? "Ã Â¸â€”Ã Â¸Â³Ã Â¹ÂÃ Â¸Â¥Ã Â¹â€°Ã Â¸Â§" : "Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸Â"}
                             </span>
                             {isDaily ? (
                               <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
@@ -662,78 +662,257 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "family-social-balance") {
+    const completedCount = FAMILY_SOCIAL_BALANCE_TASKS.filter((task) => task.completed).length;
+    const totalCount = FAMILY_SOCIAL_BALANCE_TASKS.length;
+    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
     return (
       <MobileShell>
-        <AppHeader title="สมดุลระหว่างครอบครัวและสังคม" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">👨‍👩‍👧</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                9
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="Family & Social Balance"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="Keep healthy balance between family time and social life"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">FAMILY & SOCIAL BALANCE</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Overview</h2>
+                  <p className="mt-1 text-sm text-slate-600">Includes Yes/No tasks and 1 daily log task</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  🤝
+                </div>
               </div>
-              <span className="text-4xl">🌍</span>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            {FAMILY_SOCIAL_BALANCE_TASKS.map((task) => {
-              const path =
-                task.slug === "say-thanks-or-sorry"
-                  ? "/goals/balance/family-social-balance/say-thanks-or-sorry"
-                  : `/goals/balance/family-social-balance/${task.slug}`;
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>Total progress</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    Completed {completedCount} / {totalCount} tasks
+                  </p>
+                </div>
+              </div>
+            </section>
 
-              return (
-                <Link
-                  key={task.slug}
-                  to={path}
-                  className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                    task.completed
-                      ? "border-green-400 bg-green-50 text-slate-900"
-                      : "border-slate-200 bg-white text-slate-600"
-                  }`}
-                >
-                  {task.label}
-                </Link>
-              );
-            })}
-          </div>
-        </main>
+            <section className="space-y-3">
+              {FAMILY_SOCIAL_BALANCE_TASKS.map((task) => {
+                const path =
+                  task.slug === "say-thanks-or-sorry"
+                    ? "/goals/balance/family-social-balance/say-thanks-or-sorry"
+                    : `/goals/balance/family-social-balance/${task.slug}`;
+                const isDaily = task.slug === "say-thanks-or-sorry";
+
+                return (
+                  <Link key={task.slug} to={path} className="block">
+                    <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {isDaily ? "Daily count log" : "Yes/No summary log"}
+                          </p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.completed
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {task.completed ? "Done" : "Pending"}
+                            </span>
+                            {isDaily ? (
+                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
+                                Daily
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                                Yes / No
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                          <ChevronRight size={16} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </section>
+          </main>
+        </div>
       </MobileShell>
     );
   }
 
   if (category === "balance" && activity === "work-balance") {
+    const completedCount = WORK_BALANCE_TASKS.filter((task) => task.completed).length;
+    const totalCount = WORK_BALANCE_TASKS.length;
+    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
     return (
       <MobileShell>
-        <AppHeader title="สมดุลระหว่างการทำงาน" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">📝</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                5
-              </div>
-              <span className="text-4xl">💻</span>
-            </div>
-          </div>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-          <div className="space-y-3">
-            {WORK_BALANCE_TASKS.map((task) => (
-              <Link
-                key={task.slug}
-                to={`/goals/balance/work-balance/${task.slug}`}
-                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                  task.completed
-                    ? "border-green-400 bg-green-50 text-slate-900"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {task.label}
-              </Link>
-            ))}
-          </div>
-        </main>
+          <AppHeader
+            title="Work Balance"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="Improve your work rhythm and avoid overload"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">WORK BALANCE</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Overview</h2>
+                  <p className="mt-1 text-sm text-slate-600">All tasks use Yes/No summary logging</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  💼
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>Total progress</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    Completed {completedCount} / {totalCount} tasks
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-3">
+              {WORK_BALANCE_TASKS.map((task) => (
+                <Link key={task.slug} to={`/goals/balance/work-balance/${task.slug}`} className="block">
+                  <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                        <p className="mt-1 text-sm text-slate-500">Yes/No summary log</p>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              task.completed
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {task.completed ? "Done" : "Pending"}
+                          </span>
+                          <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                            Yes / No
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (category === "balance" && activity === "personal-life-balance") {
+    return (
+      <MobileShell>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title="Personal Life Balance"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="Quickly check how balanced your personal life feels"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">PERSONAL LIFE BALANCE</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Quick check</h2>
+                  <p className="mt-1 text-sm text-slate-600">Use a simple Yes/No result to update this score</p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                  🌿
+                </div>
+              </div>
+            </section>
+
+            <Link
+              to="/goals/balance/personal-life-balance/task"
+              className="block rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold leading-7 text-slate-900">Open task</h3>
+                  <p className="mt-1 text-sm text-slate-500">Answer Yes/No and save instantly</p>
+                  <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                    Yes / No
+                  </span>
+                </div>
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                  <ChevronRight size={16} />
+                </span>
+              </div>
+            </Link>
+          </main>
+        </div>
       </MobileShell>
     );
   }
@@ -741,40 +920,47 @@ export default function GoalActivityPage() {
   if (category === "balance") {
     return (
       <MobileShell>
-        <AppHeader
-          title="ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว"
-          showBack
-          showBell
-        />
-        <main className="space-y-4 px-4 py-4">
-          <div className="rounded-3xl bg-white p-5 shadow-sm">
-            <h2 className="text-center text-lg font-semibold leading-7 text-slate-900">
-              ความพอใจในสุขสมดุลระหว่างการทำงาน ครอบครัว สังคม และชีวิตส่วนตัว
-            </h2>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-            <div className="mt-4 flex justify-center">
-              <div className="w-full max-w-xs rounded-2xl bg-green-50 p-4 text-center text-sm text-slate-500">
-                พื้นที่แสดงกราฟสมดุลของผู้ใช้งาน
-              </div>
-            </div>
-          </div>
+          <AppHeader
+            title="Life Balance"
+            showBack
+            showBell
+            variant="soft"
+            subtitle="Choose one area to log and track"
+          />
 
-          <div className="space-y-3">
-            {BALANCE_TASKS.map((task) => (
-              <Link
-                key={task.slug}
-                to={`/goals/balance/${task.slug}/task`}
-                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                  task.completed
-                    ? "border-green-400 bg-green-50 text-slate-900"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {task.label}
-              </Link>
-            ))}
-          </div>
-        </main>
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">LIFE BALANCE</p>
+              <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">
+                Track balance across work, family/social, and personal life
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">Your logs here are used to calculate this category score</p>
+            </section>
+
+            <section className="space-y-3">
+              {BALANCE_TASKS.map((task) => (
+                <Link key={task.slug} to={`/goals/balance/${task.slug}`} className="block">
+                  <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                        <p className="mt-1 text-sm text-slate-500">Open and update subtasks in this area</p>
+                      </div>
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </section>
+          </main>
+        </div>
       </MobileShell>
     );
   }
@@ -786,13 +972,13 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-          <AppHeader title={getSocialTitle(activity)} showBack showBell variant="soft" subtitle="เลือกกิจกรรมด้านสังคม" />
+          <AppHeader title={getSocialTitle(activity)} showBack showBell variant="soft" subtitle="Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸Â·Ã Â¸Â­Ã Â¸ÂÃ Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸â€Ã Â¹â€°Ã Â¸Â²Ã Â¸â„¢Ã Â¸ÂªÃ Â¸Â±Ã Â¸â€¡Ã Â¸â€žÃ Â¸Â¡" />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">SOCIAL WELLBEING</p>
-              <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">เสริมพลังความสัมพันธ์รอบตัว</h2>
-              <p className="mt-1 text-sm text-slate-600">เลือกเมนูย่อยเพื่อบันทึกพฤติกรรมรายวันหรือตอบแบบ Yes/No</p>
+              <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">Ã Â¹â‚¬Ã Â¸ÂªÃ Â¸Â£Ã Â¸Â´Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â¥Ã Â¸Â±Ã Â¸â€¡Ã Â¸â€žÃ Â¸Â§Ã Â¸Â²Ã Â¸Â¡Ã Â¸ÂªÃ Â¸Â±Ã Â¸Â¡Ã Â¸Å¾Ã Â¸Â±Ã Â¸â„¢Ã Â¸ËœÃ Â¹Å’Ã Â¸Â£Ã Â¸Â­Ã Â¸Å¡Ã Â¸â€¢Ã Â¸Â±Ã Â¸Â§</h2>
+              <p className="mt-1 text-sm text-slate-600">Ã Â¹â‚¬Ã Â¸Â¥Ã Â¸Â·Ã Â¸Â­Ã Â¸ÂÃ Â¹â‚¬Ã Â¸Â¡Ã Â¸â„¢Ã Â¸Â¹Ã Â¸Â¢Ã Â¹Ë†Ã Â¸Â­Ã Â¸Â¢Ã Â¹â‚¬Ã Â¸Å¾Ã Â¸Â·Ã Â¹Ë†Ã Â¸Â­Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸Å¾Ã Â¸Â¤Ã Â¸â€¢Ã Â¸Â´Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸Â£Ã Â¸Â²Ã Â¸Â¢Ã Â¸Â§Ã Â¸Â±Ã Â¸â„¢Ã Â¸Â«Ã Â¸Â£Ã Â¸Â·Ã Â¸Â­Ã Â¸â€¢Ã Â¸Â­Ã Â¸Å¡Ã Â¹ÂÃ Â¸Å¡Ã Â¸Å¡ Yes/No</p>
             </section>
 
             <section className="space-y-3">
@@ -803,7 +989,7 @@ export default function GoalActivityPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                        <p className="mt-1 text-sm text-slate-500">เปิดดูและบันทึกกิจกรรมย่อยในหัวข้อนี้</p>
+                        <p className="mt-1 text-sm text-slate-500">Ã Â¹â‚¬Ã Â¸â€ºÃ Â¸Â´Ã Â¸â€Ã Â¸â€Ã Â¸Â¹Ã Â¹ÂÃ Â¸Â¥Ã Â¸Â°Ã Â¸Å¡Ã Â¸Â±Ã Â¸â„¢Ã Â¸â€”Ã Â¸Â¶Ã Â¸ÂÃ Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡Ã Â¸Â¢Ã Â¹Ë†Ã Â¸Â­Ã Â¸Â¢Ã Â¹Æ’Ã Â¸â„¢Ã Â¸Â«Ã Â¸Â±Ã Â¸Â§Ã Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸â„¢Ã Â¸ÂµÃ Â¹â€°</p>
                       </div>
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
                         <ChevronRight size={16} />
@@ -828,11 +1014,11 @@ export default function GoalActivityPage() {
         <main className="space-y-4 px-4 py-4">
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">🧠</span>
+              <span className="text-4xl">Ã°Å¸Â§Â </span>
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-pink-200 text-4xl font-bold text-slate-900">
                 6
               </div>
-              <span className="text-4xl">🧠</span>
+              <span className="text-4xl">Ã°Å¸Â§Â </span>
             </div>
           </div>
 
@@ -849,7 +1035,7 @@ export default function GoalActivityPage() {
             </Link>
           ) : (
             <div className="rounded-2xl bg-white px-4 py-6 text-center text-slate-500 shadow-sm">
-              ยังไม่มีข้อมูลกิจกรรม
+              Ã Â¸Â¢Ã Â¸Â±Ã Â¸â€¡Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â¡Ã Â¸ÂµÃ Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸Â¡Ã Â¸Â¹Ã Â¸Â¥Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡
             </div>
           )}
         </main>
@@ -859,9 +1045,9 @@ export default function GoalActivityPage() {
 
   return (
     <MobileShell>
-      <AppHeader title="กิจกรรม" showBack showBell />
+      <AppHeader title="Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡" showBack showBell />
       <main className="px-4 py-6 text-center text-slate-500">
-        ยังไม่มีข้อมูลกิจกรรม
+        Ã Â¸Â¢Ã Â¸Â±Ã Â¸â€¡Ã Â¹â€žÃ Â¸Â¡Ã Â¹Ë†Ã Â¸Â¡Ã Â¸ÂµÃ Â¸â€šÃ Â¹â€°Ã Â¸Â­Ã Â¸Â¡Ã Â¸Â¹Ã Â¸Â¥Ã Â¸ÂÃ Â¸Â´Ã Â¸Ë†Ã Â¸ÂÃ Â¸Â£Ã Â¸Â£Ã Â¸Â¡
       </main>
     </MobileShell>
   );

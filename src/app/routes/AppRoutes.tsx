@@ -129,12 +129,12 @@ export default function AppRoutes() {
         element={<BalanceTaskPage />}
       />
       <Route
-        path="/goals/balance/family-social-balance/:task"
-        element={<FamilySocialBalanceTaskPage />}
-      />
-      <Route
         path="/goals/balance/family-social-balance/say-thanks-or-sorry"
         element={<ThanksSorryTaskPage />}
+      />
+      <Route
+        path="/goals/balance/family-social-balance/:task"
+        element={<FamilySocialBalanceTaskPage />}
       />
       <Route
         path="/goals/balance/work-balance/:task"
