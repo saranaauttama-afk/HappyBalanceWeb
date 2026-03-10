@@ -12,6 +12,44 @@ import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 
+const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
+  string,
+  {
+    title: string;
+    subtitle: string;
+    emoji: string;
+    tips: string[];
+  }
+> = {
+  "food-intake": {
+    title: "การรับประทานอาหาร",
+    subtitle: "เมนูนี้กำลังเตรียมระบบบันทึกโภชนาการรายวัน",
+    emoji: "🥗",
+    tips: [
+      "กำลังเพิ่มฟอร์มบันทึกมื้ออาหารและคุณภาพอาหาร",
+      "กำลังเชื่อมคะแนนเข้ากับกราฟสุขภาวะทางกาย",
+    ],
+  },
+  exercise: {
+    title: "การออกกำลังกาย",
+    subtitle: "เมนูนี้กำลังเตรียมระบบติดตามกิจกรรมการออกกำลังกาย",
+    emoji: "🏃",
+    tips: [
+      "กำลังเพิ่มรูปแบบกิจกรรมและระยะเวลาในการออกกำลังกาย",
+      "กำลังพัฒนาการคำนวณคะแนนรายวันแบบอัตโนมัติ",
+    ],
+  },
+  "body-hygiene": {
+    title: "การดูแลรักษาความสะอาดของร่างกาย",
+    subtitle: "เมนูนี้กำลังเตรียมระบบบันทึกพฤติกรรมสุขอนามัย",
+    emoji: "🧼",
+    tips: [
+      "กำลังเพิ่มรายการพฤติกรรมดูแลสุขอนามัยที่จำเป็น",
+      "กำลังเชื่อมข้อมูลเพื่อสรุปผลเป็นคะแนนรายสัปดาห์",
+    ],
+  },
+};
+
 function getMentalTitle(activity?: string) {
   if (activity === "positive-thinking") return "การมองโลกในแง่บวก";
   if (activity === "stress-level") return "ระดับความเครียด";
@@ -72,6 +110,56 @@ export default function GoalActivityPage() {
         </main>
       </MobileShell>
     );
+  }
+
+  if (category === "physical" && activity) {
+    const physicalConfig = PHYSICAL_UNDER_CONSTRUCTION_MAP[activity];
+
+    if (physicalConfig) {
+      return (
+        <MobileShell>
+          <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+            <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+            <AppHeader title={physicalConfig.title} showBack showBell variant="soft" subtitle="กำลังพัฒนาเมนูนี้" />
+
+            <main className="relative z-10 space-y-4 px-4 py-4">
+              <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">UNDER CONSTRUCTION</p>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
+                    {physicalConfig.emoji}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">{physicalConfig.title}</h2>
+                    <p className="mt-1 text-sm text-slate-600">{physicalConfig.subtitle}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+                <h3 className="text-base font-semibold text-slate-900">สิ่งที่กำลังเตรียมในหน้านี้</h3>
+                <div className="mt-3 space-y-2">
+                  {physicalConfig.tips.map((tip) => (
+                    <div key={tip} className="rounded-2xl border border-[#dcecf5] bg-[#f6fbff] px-3 py-2 text-sm text-slate-600">
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <Link
+                to="/goals/physical"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-[#c8e2ef] bg-[#eef8fd] px-4 py-3 text-sm font-medium text-[#2e6a8b]"
+              >
+                กลับไปหน้าสุขภาวะทางกาย
+              </Link>
+            </main>
+          </div>
+        </MobileShell>
+      );
+    }
   }
 
   if (category === "mental" && activity === "positive-thinking") {
