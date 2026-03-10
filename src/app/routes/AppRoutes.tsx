@@ -16,6 +16,7 @@ import DailyLogPage from "../../features/daily-log/DailyLogPage";
 import GoalSettingPage from "../../features/goals/activity-goal/GoalSettingPage";
 import ActivityTaskPage from "../../features/goals/task-detail/ActivityTaskPage";
 import SleepGoalPage from "../../features/goals/task-detail/SleepGoalPage";
+import ScreenTimeGoalPage from "../../features/goals/task-detail/ScreenTimeGoalPage";
 import SettingsPage from "../../features/profile/settings/SettingsPage";
 import SleepGoalSettingsPage from "../../features/profile/settings/SleepGoalSettingsPage";
 import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSettingsPage";
@@ -75,6 +76,10 @@ export default function AppRoutes() {
       <Route
         path="/goals/:category/:activity/sleep/goal"
         element={<SleepGoalPage />}
+      />
+      <Route
+        path="/goals/:category/:activity/limit-screen-time/goal"
+        element={<ScreenTimeGoalPage />}
       />
       <Route path="/profile/settings" element={<SettingsPage />} />
       <Route

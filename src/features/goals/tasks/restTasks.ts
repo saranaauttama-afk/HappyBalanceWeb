@@ -26,6 +26,7 @@ export const REST_TASKS: TaskConfig[] = [
     slug: "limit-screen-time",
     label: "จำกัดเวลาการใช้หน้าจอก่อนนอน",
     type: "boolean",
+    target: 60,
   },
   {
     slug: "sleep-on-time",

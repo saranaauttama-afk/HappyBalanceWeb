@@ -1,4 +1,4 @@
-﻿import { BedDouble, ChevronRight, Droplets, Gauge, MoonStar } from "lucide-react";
+﻿import { BedDouble, ChevronRight, Droplets, Gauge, MoonStar, Smartphone } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -245,45 +245,60 @@ export default function RestActivityPage() {
             </div>
           </section>
 
-          <div className="grid gap-3">
-            <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-slate-900">ตั้งเป้าหมายการนอน</h3>
-                  <p className="text-sm text-slate-500">กำหนดเป้าหมายชั่วโมงนอนเพื่อใช้เป็นฐานคำนวณความคืบหน้า</p>
-                </div>
-                <Link
-                  to="/goals/physical/rest/sleep/goal"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#d88d80] px-3 py-2 text-sm font-medium text-white"
-                >
-                  <MoonStar size={16} />
-                  ตั้งค่า
-                </Link>
-              </div>
-            </InfoCard>
+          <InfoCard className="rounded-2xl border-white/70 bg-white/75 p-3 shadow-[0_12px_28px_rgba(31,47,61,0.08)] backdrop-blur">
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-800">ตั้งค่าเริ่มต้น</h3>
+              <span className="text-xs text-slate-500">จุดกำหนดค่า</span>
+            </div>
 
-            <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-3">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold text-slate-900">ตั้งเป้าหมายการดื่มน้ำ</h3>
-                  <p className="text-sm text-slate-500">ใช้ค่าเดียวกับหน้า Settings เพื่อให้ทุกหน้าตรงกัน</p>
-                </div>
-                <Link
-                  to="/profile/settings/water-goal"
-                  className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#6ea8c5] px-3 py-2 text-sm font-medium text-white"
-                >
-                  <Droplets size={16} />
-                  ตั้งค่า
-                </Link>
-              </div>
-            </InfoCard>
-          </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Link
+                to="/goals/physical/rest/sleep/goal"
+                className="flex items-center justify-between rounded-xl border border-[#f0d9d3] bg-[#fff6f2] px-2 py-2"
+              >
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#8b4d35]">
+                  <MoonStar size={13} />
+                  นอน
+                </span>
+                <span className="text-[11px] font-semibold text-[#b46e44]">ตั้งค่า</span>
+              </Link>
+
+              <Link
+                to="/profile/settings/water-goal"
+                className="flex items-center justify-between rounded-xl border border-[#d7e7f1] bg-[#f2f9fd] px-2 py-2"
+              >
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#2e6a8b]">
+                  <Droplets size={13} />
+                  น้ำ
+                </span>
+                <span className="text-[11px] font-semibold text-[#3f7a96]">Settings</span>
+              </Link>
+
+              <Link
+                to="/goals/physical/rest/limit-screen-time/goal"
+                className="flex items-center justify-between rounded-xl border border-[#e2e5f0] bg-[#f5f6fb] px-2 py-2"
+              >
+                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#4d5670]">
+                  <Smartphone size={13} />
+                  หน้าจอ
+                </span>
+                <span className="text-[11px] font-semibold text-[#5f6a86]">ไม่เกิน</span>
+              </Link>
+            </div>
+          </InfoCard>
 
           <section className="space-y-3">
             {REST_TASKS.map((task) => {
               const score = taskScoreMap.get(task.slug);
               const status = getTaskStatus(score);
-              const Icon = task.slug === "sleep" ? BedDouble : task.slug === "drink-water" ? Droplets : Gauge;
+              const Icon =
+                task.slug === "sleep"
+                  ? BedDouble
+                  : task.slug === "drink-water"
+                    ? Droplets
+                    : task.slug === "limit-screen-time"
+                      ? Smartphone
+                      : Gauge;
 
               return (
                 <Link key={task.slug} to={`/goals/physical/rest/${task.slug}`} className="block">
@@ -329,3 +344,4 @@ export default function RestActivityPage() {
     </MobileShell>
   );
 }
+

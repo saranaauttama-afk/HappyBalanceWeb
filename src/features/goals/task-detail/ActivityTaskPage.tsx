@@ -1,5 +1,14 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import {
+  AlarmClockCheck,
+  BedDouble,
+  CircleCheckBig,
+  CircleX,
+  Droplets,
+  MoonStar,
+  Sunrise,
+} from "lucide-react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { goalsService } from "../../../services/goals.service";
@@ -41,6 +50,42 @@ type WaterHistoryItem = {
   date: string;
   glasses: number;
   targetGlasses: number;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type SleepOnTimeHistoryItem = {
+  id: string;
+  date: string;
+  onTime: boolean;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type AvoidWaterBeforeBedHistoryItem = {
+  id: string;
+  date: string;
+  avoidedLargeWater: boolean;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type NoLongLateNapHistoryItem = {
+  id: string;
+  date: string;
+  noLongLateNap: boolean;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type NoFood4HoursBeforeBedHistoryItem = {
+  id: string;
+  date: string;
+  noFood4HoursBeforeBed: boolean;
   score: number;
   point: number;
   achieved: boolean;
@@ -240,6 +285,26 @@ export default function ActivityTaskPage() {
   const [waterLoading, setWaterLoading] = useState(false);
   const [hasLoadedWaterContext, setHasLoadedWaterContext] = useState(false);
 
+  const [sleepOnTimeValue, setSleepOnTimeValue] = useState<boolean | null>(null);
+  const [sleepOnTimeHistory, setSleepOnTimeHistory] = useState<SleepOnTimeHistoryItem[]>([]);
+  const [sleepOnTimeLoading, setSleepOnTimeLoading] = useState(false);
+
+  const [avoidWaterBeforeBedValue, setAvoidWaterBeforeBedValue] = useState<boolean | null>(null);
+  const [avoidWaterBeforeBedHistory, setAvoidWaterBeforeBedHistory] = useState<
+    AvoidWaterBeforeBedHistoryItem[]
+  >([]);
+  const [avoidWaterBeforeBedLoading, setAvoidWaterBeforeBedLoading] = useState(false);
+
+  const [noLongLateNapValue, setNoLongLateNapValue] = useState<boolean | null>(null);
+  const [noLongLateNapHistory, setNoLongLateNapHistory] = useState<NoLongLateNapHistoryItem[]>([]);
+  const [noLongLateNapLoading, setNoLongLateNapLoading] = useState(false);
+
+  const [noFood4HoursBeforeBedValue, setNoFood4HoursBeforeBedValue] = useState<boolean | null>(null);
+  const [noFood4HoursBeforeBedHistory, setNoFood4HoursBeforeBedHistory] = useState<
+    NoFood4HoursBeforeBedHistoryItem[]
+  >([]);
+  const [noFood4HoursBeforeBedLoading, setNoFood4HoursBeforeBedLoading] = useState(false);
+
   const todaySleepScore = useMemo(() => {
     const sleptMinutes = sleepHour * 60 + sleepMinute;
     return computeSleepScore(sleptMinutes, sleepTargetMinutes);
@@ -266,6 +331,42 @@ export default function ActivityTaskPage() {
       .filter((item) => item.date.startsWith(monthKey))
       .reduce((sum, item) => sum + item.point, 0);
   }, [waterHistory]);
+
+  const monthlySleepOnTimePoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return sleepOnTimeHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [sleepOnTimeHistory]);
+
+  const monthlyAvoidWaterBeforeBedPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return avoidWaterBeforeBedHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [avoidWaterBeforeBedHistory]);
+
+  const monthlyNoLongLateNapPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return noLongLateNapHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [noLongLateNapHistory]);
+
+  const monthlyNoFood4HoursBeforeBedPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return noFood4HoursBeforeBedHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [noFood4HoursBeforeBedHistory]);
 
   const isInitialWaterLoading = task === "drink-water" && !hasLoadedWaterContext;
 
@@ -416,6 +517,217 @@ export default function ActivityTaskPage() {
     }
   }, [isRestFlow, task, userId]);
 
+  const loadSleepOnTimeContext = useCallback(async () => {
+    if (!(isRestFlow && task === "sleep-on-time")) return;
+
+    try {
+      setSleepOnTimeLoading(true);
+      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const byDate = new Map<string, SleepOnTimeHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "sleep-on-time") return;
+
+          const onTimeFromLog = getBoolean(parsed.payload.on_time, parsed.score > 0);
+          const achievedFromLog = getBoolean(parsed.payload.achieved, onTimeFromLog);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            onTime: onTimeFromLog,
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setSleepOnTimeHistory(history);
+
+      if (history.length > 0 && history[0].date === getTodayDate()) {
+        setSleepOnTimeValue(history[0].onTime);
+        return;
+      }
+
+      setSleepOnTimeValue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setSleepOnTimeLoading(false);
+    }
+  }, [isRestFlow, task, userId]);
+
+  const loadAvoidWaterBeforeBedContext = useCallback(async () => {
+    if (!(isRestFlow && task === "avoid-water-before-bed")) return;
+
+    try {
+      setAvoidWaterBeforeBedLoading(true);
+      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const byDate = new Map<string, AvoidWaterBeforeBedHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "avoid-water-before-bed") return;
+
+          const avoidedFromLog = getBoolean(
+            parsed.payload.avoided_large_water_before_bed,
+            parsed.score > 0
+          );
+          const achievedFromLog = getBoolean(parsed.payload.achieved, avoidedFromLog);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            avoidedLargeWater: avoidedFromLog,
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setAvoidWaterBeforeBedHistory(history);
+
+      if (history.length > 0 && history[0].date === getTodayDate()) {
+        setAvoidWaterBeforeBedValue(history[0].avoidedLargeWater);
+        return;
+      }
+
+      setAvoidWaterBeforeBedValue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setAvoidWaterBeforeBedLoading(false);
+    }
+  }, [isRestFlow, task, userId]);
+
+  const loadNoLongLateNapContext = useCallback(async () => {
+    if (!(isRestFlow && task === "no-long-late-nap")) return;
+
+    try {
+      setNoLongLateNapLoading(true);
+      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const byDate = new Map<string, NoLongLateNapHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "no-long-late-nap") return;
+
+          const noLongNapFromLog = getBoolean(parsed.payload.no_long_late_nap, parsed.score > 0);
+          const achievedFromLog = getBoolean(parsed.payload.achieved, noLongNapFromLog);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            noLongLateNap: noLongNapFromLog,
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setNoLongLateNapHistory(history);
+
+      if (history.length > 0 && history[0].date === getTodayDate()) {
+        setNoLongLateNapValue(history[0].noLongLateNap);
+        return;
+      }
+
+      setNoLongLateNapValue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setNoLongLateNapLoading(false);
+    }
+  }, [isRestFlow, task, userId]);
+
+  const loadNoFood4HoursBeforeBedContext = useCallback(async () => {
+    if (!(isRestFlow && task === "no-food-4-hours-before-bed")) return;
+
+    try {
+      setNoFood4HoursBeforeBedLoading(true);
+      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const byDate = new Map<string, NoFood4HoursBeforeBedHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "no-food-4-hours-before-bed") return;
+
+          const noFoodFromLog = getBoolean(parsed.payload.no_food_4_hours_before_bed, parsed.score > 0);
+          const achievedFromLog = getBoolean(parsed.payload.achieved, noFoodFromLog);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            noFood4HoursBeforeBed: noFoodFromLog,
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setNoFood4HoursBeforeBedHistory(history);
+
+      if (history.length > 0 && history[0].date === getTodayDate()) {
+        setNoFood4HoursBeforeBedValue(history[0].noFood4HoursBeforeBed);
+        return;
+      }
+
+      setNoFood4HoursBeforeBedValue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setNoFood4HoursBeforeBedLoading(false);
+    }
+  }, [isRestFlow, task, userId]);
+
   useEffect(() => {
     void loadSleepContext();
   }, [loadSleepContext]);
@@ -423,6 +735,22 @@ export default function ActivityTaskPage() {
   useEffect(() => {
     void loadWaterContext();
   }, [loadWaterContext]);
+
+  useEffect(() => {
+    void loadSleepOnTimeContext();
+  }, [loadSleepOnTimeContext]);
+
+  useEffect(() => {
+    void loadAvoidWaterBeforeBedContext();
+  }, [loadAvoidWaterBeforeBedContext]);
+
+  useEffect(() => {
+    void loadNoLongLateNapContext();
+  }, [loadNoLongLateNapContext]);
+
+  useEffect(() => {
+    void loadNoFood4HoursBeforeBedContext();
+  }, [loadNoFood4HoursBeforeBedContext]);
 
   function renderStatusBanner() {
     return (
@@ -691,6 +1019,194 @@ export default function ActivityTaskPage() {
           achieved
             ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
             : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
+        );
+        return;
+      }
+
+      if (task === "sleep-on-time") {
+        if (sleepOnTimeValue === null) {
+          setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+          return;
+        }
+
+        const score = sleepOnTimeValue ? 100 : 0;
+        const point = sleepOnTimeValue ? 1 : 0;
+        const achieved = sleepOnTimeValue;
+
+        await saveTaskLog({
+          mood: "task-sleep-on-time",
+          energy: sleepOnTimeValue ? 4 : 2,
+          stress: sleepOnTimeValue ? 1 : 4,
+          note: isRestFlow
+            ? {
+                entry_type: "rest_task",
+                category: "physical",
+                activity: "rest",
+                task: "sleep-on-time",
+                score,
+                payload: {
+                  on_time: sleepOnTimeValue,
+                  point,
+                  achieved,
+                },
+              }
+            : {
+                task,
+                on_time: sleepOnTimeValue,
+                point,
+                achieved,
+              },
+        });
+
+        if (isRestFlow) {
+          await syncRestGoalProgress();
+          await loadSleepOnTimeContext();
+        }
+
+        setSuccessMessage(
+          achieved
+            ? "บันทึกวันนี้สำเร็จ เข้านอนและตื่นนอนตรงเวลา ได้ +1 คะแนน"
+            : "บันทึกวันนี้สำเร็จ วันนี้ยังไม่ตรงเวลาที่ตั้งไว้"
+        );
+        return;
+      }
+
+      if (task === "avoid-water-before-bed") {
+        if (avoidWaterBeforeBedValue === null) {
+          setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+          return;
+        }
+
+        const score = avoidWaterBeforeBedValue ? 100 : 0;
+        const point = avoidWaterBeforeBedValue ? 1 : 0;
+        const achieved = avoidWaterBeforeBedValue;
+
+        await saveTaskLog({
+          mood: "task-avoid-water-before-bed",
+          energy: avoidWaterBeforeBedValue ? 4 : 2,
+          stress: avoidWaterBeforeBedValue ? 1 : 4,
+          note: isRestFlow
+            ? {
+                entry_type: "rest_task",
+                category: "physical",
+                activity: "rest",
+                task: "avoid-water-before-bed",
+                score,
+                payload: {
+                  avoided_large_water_before_bed: avoidWaterBeforeBedValue,
+                  point,
+                  achieved,
+                },
+              }
+            : {
+                task,
+                avoided_large_water_before_bed: avoidWaterBeforeBedValue,
+                point,
+                achieved,
+              },
+        });
+
+        if (isRestFlow) {
+          await syncRestGoalProgress();
+          await loadAvoidWaterBeforeBedContext();
+        }
+
+        setSuccessMessage(
+          achieved
+            ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
+            : "บันทึกวันนี้สำเร็จ วันนี้ยังดื่มน้ำมากเกินไปก่อนนอน"
+        );
+        return;
+      }
+
+      if (task === "no-long-late-nap") {
+        if (noLongLateNapValue === null) {
+          setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+          return;
+        }
+
+        const score = noLongLateNapValue ? 100 : 0;
+        const point = noLongLateNapValue ? 1 : 0;
+        const achieved = noLongLateNapValue;
+
+        await saveTaskLog({
+          mood: "task-no-long-late-nap",
+          energy: noLongLateNapValue ? 4 : 2,
+          stress: noLongLateNapValue ? 1 : 4,
+          note: isRestFlow
+            ? {
+                entry_type: "rest_task",
+                category: "physical",
+                activity: "rest",
+                task: "no-long-late-nap",
+                score,
+                payload: {
+                  no_long_late_nap: noLongLateNapValue,
+                  point,
+                  achieved,
+                },
+              }
+            : {
+                task,
+                no_long_late_nap: noLongLateNapValue,
+                point,
+                achieved,
+              },
+        });
+
+        if (isRestFlow) {
+          await syncRestGoalProgress();
+          await loadNoLongLateNapContext();
+        }
+
+        setSuccessMessage(
+          achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้งีบยาวเกินเงื่อนไข"
+        );
+        return;
+      }
+
+      if (task === "no-food-4-hours-before-bed") {
+        if (noFood4HoursBeforeBedValue === null) {
+          setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+          return;
+        }
+
+        const score = noFood4HoursBeforeBedValue ? 100 : 0;
+        const point = noFood4HoursBeforeBedValue ? 1 : 0;
+        const achieved = noFood4HoursBeforeBedValue;
+
+        await saveTaskLog({
+          mood: "task-no-food-4-hours-before-bed",
+          energy: noFood4HoursBeforeBedValue ? 4 : 2,
+          stress: noFood4HoursBeforeBedValue ? 1 : 4,
+          note: isRestFlow
+            ? {
+                entry_type: "rest_task",
+                category: "physical",
+                activity: "rest",
+                task: "no-food-4-hours-before-bed",
+                score,
+                payload: {
+                  no_food_4_hours_before_bed: noFood4HoursBeforeBedValue,
+                  point,
+                  achieved,
+                },
+              }
+            : {
+                task,
+                no_food_4_hours_before_bed: noFood4HoursBeforeBedValue,
+                point,
+                achieved,
+              },
+        });
+
+        if (isRestFlow) {
+          await syncRestGoalProgress();
+          await loadNoFood4HoursBeforeBedContext();
+        }
+
+        setSuccessMessage(
+          achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้ทานอาหารใกล้เวลานอนเกินไป"
         );
         return;
       }
@@ -1055,6 +1571,534 @@ export default function ActivityTaskPage() {
               ข้อมูลนี้บันทึกในชีต <span className="font-semibold">daily_logs</span> และดึงมาแสดงจาก API ทุกครั้งที่เข้า
               หน้านี้
             </p>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (task === "sleep-on-time") {
+    return (
+      <MobileShell>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="เข้านอนและตื่นนอนตรงเวลา" showBack showBell variant="soft" />
+
+          <main className="space-y-4 px-4 py-4">
+            {renderStatusBanner()}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">เช็กวินัยการนอนวันนี้</h2>
+                  <p className="text-sm text-slate-500">วันนี้เข้านอนและตื่นนอนตามเวลาที่ตั้งไว้หรือไม่</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    sleepOnTimeValue === null
+                      ? "bg-slate-100 text-slate-600"
+                      : sleepOnTimeValue
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {sleepOnTimeValue === null
+                    ? "ยังไม่เลือก"
+                    : sleepOnTimeValue
+                      ? "ได้ +1 คะแนน"
+                      : "วันนี้ 0 คะแนน"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#f9fbff] px-3 py-2 text-xs text-slate-600">
+                  <BedDouble size={14} className="text-[#5f6a86]" />
+                  เข้านอนตรงเวลา
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-[#f2fbf5] px-3 py-2 text-xs text-slate-600">
+                  <Sunrise size={14} className="text-[#2f7b56]" />
+                  ตื่นนอนตรงเวลา
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSleepOnTimeValue(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    sleepOnTimeValue === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSleepOnTimeValue(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    sleepOnTimeValue === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || sleepOnTimeLoading || sleepOnTimeValue === null}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || sleepOnTimeLoading || sleepOnTimeValue === null ? "bg-slate-400" : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผลวันนี้"}
+            </button>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  <AlarmClockCheck size={13} />
+                  เดือนนี้ได้ {monthlySleepOnTimePoints} คะแนน
+                </span>
+              </div>
+
+              {sleepOnTimeLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : sleepOnTimeHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {sleepOnTimeHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ผลการทำวันนี้: {item.onTime ? "ตรงเวลา" : "ไม่ตรงเวลา"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (task === "avoid-water-before-bed") {
+    return (
+      <MobileShell>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="ไม่ดื่มน้ำปริมาณมากก่อนนอน" showBack showBell variant="soft" />
+
+          <main className="space-y-4 px-4 py-4">
+            {renderStatusBanner()}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">เช็กพฤติกรรมก่อนนอน</h2>
+                  <p className="text-sm text-slate-500">วันนี้หลีกเลี่ยงการดื่มน้ำปริมาณมากก่อนนอนได้หรือไม่</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    avoidWaterBeforeBedValue === null
+                      ? "bg-slate-100 text-slate-600"
+                      : avoidWaterBeforeBedValue
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {avoidWaterBeforeBedValue === null
+                    ? "ยังไม่เลือก"
+                    : avoidWaterBeforeBedValue
+                      ? "ได้ +1 คะแนน"
+                      : "วันนี้ 0 คะแนน"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#f2fbf5] px-3 py-2 text-xs text-slate-600">
+                  <MoonStar size={14} className="text-[#2f7b56]" />
+                  ลดการดื่มก่อนนอน
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-[#f9fbff] px-3 py-2 text-xs text-slate-600">
+                  <Droplets size={14} className="text-[#5f6a86]" />
+                  ไม่ดื่มปริมาณมาก
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAvoidWaterBeforeBedValue(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    avoidWaterBeforeBedValue === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAvoidWaterBeforeBedValue(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    avoidWaterBeforeBedValue === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || avoidWaterBeforeBedLoading || avoidWaterBeforeBedValue === null}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || avoidWaterBeforeBedLoading || avoidWaterBeforeBedValue === null
+                  ? "bg-slate-400"
+                  : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผลวันนี้"}
+            </button>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  <AlarmClockCheck size={13} />
+                  เดือนนี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
+                </span>
+              </div>
+
+              {avoidWaterBeforeBedLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : avoidWaterBeforeBedHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {avoidWaterBeforeBedHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ผลการทำวันนี้: {item.avoidedLargeWater ? "หลีกเลี่ยงได้" : "ยังดื่มมากก่อนนอน"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (task === "no-long-late-nap") {
+    return (
+      <MobileShell>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="ไม่งีบหลับหลังบ่าย 3 โมงเกิน 1 ชม." showBack showBell variant="soft" />
+
+          <main className="space-y-4 px-4 py-4">
+            {renderStatusBanner()}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">เช็กการงีบระหว่างวัน</h2>
+                  <p className="text-sm text-slate-500">หลังบ่าย 3 โมง วันนี้งีบเกิน 1 ชั่วโมงหรือไม่</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    noLongLateNapValue === null
+                      ? "bg-slate-100 text-slate-600"
+                      : noLongLateNapValue
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {noLongLateNapValue === null
+                    ? "ยังไม่เลือก"
+                    : noLongLateNapValue
+                      ? "ได้ +1 คะแนน"
+                      : "วันนี้ 0 คะแนน"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#f2fbf5] px-3 py-2 text-xs text-slate-600">
+                  <MoonStar size={14} className="text-[#2f7b56]" />
+                  ไม่งีบยาวช่วงเย็น
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-[#f9fbff] px-3 py-2 text-xs text-slate-600">
+                  <BedDouble size={14} className="text-[#5f6a86]" />
+                  ไม่เกิน 1 ชั่วโมง
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNoLongLateNapValue(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    noLongLateNapValue === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setNoLongLateNapValue(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    noLongLateNapValue === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || noLongLateNapLoading || noLongLateNapValue === null}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || noLongLateNapLoading || noLongLateNapValue === null ? "bg-slate-400" : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผลวันนี้"}
+            </button>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  <AlarmClockCheck size={13} />
+                  เดือนนี้ได้ {monthlyNoLongLateNapPoints} คะแนน
+                </span>
+              </div>
+
+              {noLongLateNapLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : noLongLateNapHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {noLongLateNapHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ผลการทำวันนี้: {item.noLongLateNap ? "ผ่านเงื่อนไข" : "งีบเกินเงื่อนไข"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (task === "no-food-4-hours-before-bed") {
+    return (
+      <MobileShell>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="งดอาหารอย่างน้อย 4 ชม. ก่อนนอน" showBack showBell variant="soft" />
+
+          <main className="space-y-4 px-4 py-4">
+            {renderStatusBanner()}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">เช็กอาหารก่อนนอน</h2>
+                  <p className="text-sm text-slate-500">วันนี้งดอาหารอย่างน้อย 4 ชั่วโมงก่อนเข้านอนได้หรือไม่</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    noFood4HoursBeforeBedValue === null
+                      ? "bg-slate-100 text-slate-600"
+                      : noFood4HoursBeforeBedValue
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {noFood4HoursBeforeBedValue === null
+                    ? "ยังไม่เลือก"
+                    : noFood4HoursBeforeBedValue
+                      ? "ได้ +1 คะแนน"
+                      : "วันนี้ 0 คะแนน"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#f2fbf5] px-3 py-2 text-xs text-slate-600">
+                  <MoonStar size={14} className="text-[#2f7b56]" />
+                  เว้นช่วงก่อนนอน
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-[#f9fbff] px-3 py-2 text-xs text-slate-600">
+                  <BedDouble size={14} className="text-[#5f6a86]" />
+                  อย่างน้อย 4 ชั่วโมง
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNoFood4HoursBeforeBedValue(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    noFood4HoursBeforeBedValue === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setNoFood4HoursBeforeBedValue(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    noFood4HoursBeforeBedValue === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || noFood4HoursBeforeBedLoading || noFood4HoursBeforeBedValue === null}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || noFood4HoursBeforeBedLoading || noFood4HoursBeforeBedValue === null
+                  ? "bg-slate-400"
+                  : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผลวันนี้"}
+            </button>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  <AlarmClockCheck size={13} />
+                  เดือนนี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
+                </span>
+              </div>
+
+              {noFood4HoursBeforeBedLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : noFood4HoursBeforeBedHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {noFood4HoursBeforeBedHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ผลการทำวันนี้: {item.noFood4HoursBeforeBed ? "ผ่านเงื่อนไข" : "ทานอาหารใกล้เวลานอน"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           </main>
         </div>
       </MobileShell>
