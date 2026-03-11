@@ -19,7 +19,27 @@ function doGet(e) {
       case "listGoals":
         return jsonOutput_(listGoals_(getParam_(e, "userId")));
       case "listDailyLogs":
-        return jsonOutput_(listDailyLogs_(getParam_(e, "userId")));
+        return jsonOutput_(
+          listDailyLogs_(getParam_(e, "userId"), {
+            from: getParam_(e, "from"),
+            to: getParam_(e, "to"),
+            limit: getParam_(e, "limit"),
+            entry_type: getParam_(e, "entry_type"),
+            category: getParam_(e, "category"),
+            activity: getParam_(e, "activity"),
+            task: getParam_(e, "task"),
+          })
+        );
+      case "listRestTaskLogs":
+        return jsonOutput_(
+          listRestTaskLogs_(
+            getParam_(e, "userId"),
+            getParam_(e, "task"),
+            getParam_(e, "limit"),
+            getParam_(e, "from"),
+            getParam_(e, "to")
+          )
+        );
       case "listAppointments":
         return jsonOutput_(listAppointments_(getParam_(e, "userId")));
       case "listMonthlyGoals":
@@ -202,137 +222,233 @@ function uploadProfileAvatar_(payload) {
 ========================= */
 
 function listGoals_(userId) {
-  if (!userId) {
-    throw new Error("Missing userId");
-  }
+  return withTiming_("listGoals_", function () {
+    if (!userId) {
+      throw new Error("Missing userId");
+    }
 
-  const rows = getAllObjects_(SHEET_NAMES.goals).filter(
-    (row) => row.user_id === userId
-  );
+    const cacheKey = buildReadCacheKey_("goals", {
+      userId: userId,
+      v: getUserDataVersion_(userId),
+    });
+    const cachedRows = getCachedObject_(cacheKey);
+    if (cachedRows) {
+      return {
+        success: true,
+        data: cachedRows,
+      };
+    }
 
-  return {
-    success: true,
-    data: rows,
-  };
+    const rows = getAllObjects_(SHEET_NAMES.goals).filter(
+      (row) => row.user_id === userId
+    );
+
+    setCachedObject_(cacheKey, rows, 120);
+
+    return {
+      success: true,
+      data: rows,
+    };
+  });
 }
 
 function createGoal_(payload) {
-  const requiredFields = [
-    "user_id",
-    "category",
-    "activity",
-    "current_value",
-    "target_value",
-    "status",
-  ];
-  validateRequired_(payload, requiredFields);
+  return withTiming_("createGoal_", function () {
+    const requiredFields = [
+      "user_id",
+      "category",
+      "activity",
+      "current_value",
+      "target_value",
+      "status",
+    ];
+    validateRequired_(payload, requiredFields);
 
-  const newGoal = {
-    id: generateId_("goal"),
-    user_id: payload.user_id,
-    category: payload.category,
-    activity: payload.activity,
-    current_value: Number(payload.current_value),
-    target_value: Number(payload.target_value),
-    status: payload.status,
-    created_at: nowIso_(),
-    updated_at: nowIso_(),
-  };
+    const newGoal = {
+      id: generateId_("goal"),
+      user_id: payload.user_id,
+      category: payload.category,
+      activity: payload.activity,
+      current_value: Number(payload.current_value),
+      target_value: Number(payload.target_value),
+      status: payload.status,
+      created_at: nowIso_(),
+      updated_at: nowIso_(),
+    };
 
-  appendObject_(SHEET_NAMES.goals, newGoal);
+    appendObject_(SHEET_NAMES.goals, newGoal);
+    bumpUserDataVersion_(newGoal.user_id);
 
-  return {
-    success: true,
-    data: newGoal,
-  };
+    return {
+      success: true,
+      data: newGoal,
+    };
+  });
 }
 
 function updateGoal_(payload) {
-  const id = payload.id;
-  if (!id) {
-    throw new Error("Missing goal id");
-  }
+  return withTiming_("updateGoal_", function () {
+    const id = payload.id;
+    if (!id) {
+      throw new Error("Missing goal id");
+    }
 
-  const sheet = getSheet_(SHEET_NAMES.goals);
-  const rows = getAllObjects_(SHEET_NAMES.goals);
-  const index = rows.findIndex((row) => row.id === id);
+    const sheet = getSheet_(SHEET_NAMES.goals);
+    const rows = getAllObjects_(SHEET_NAMES.goals);
+    const index = rows.findIndex((row) => row.id === id);
 
-  if (index === -1) {
-    throw new Error(`Goal not found: ${id}`);
-  }
+    if (index === -1) {
+      throw new Error(`Goal not found: ${id}`);
+    }
 
-  const updated = {
-    ...rows[index],
-    category: payload.category || rows[index].category,
-    activity: payload.activity || rows[index].activity,
-    current_value:
-      payload.current_value !== undefined
-        ? Number(payload.current_value)
-        : Number(rows[index].current_value),
-    target_value:
-      payload.target_value !== undefined
-        ? Number(payload.target_value)
-        : Number(rows[index].target_value),
-    status: payload.status || rows[index].status,
-    updated_at: nowIso_(),
-  };
+    const updated = {
+      ...rows[index],
+      category: payload.category || rows[index].category,
+      activity: payload.activity || rows[index].activity,
+      current_value:
+        payload.current_value !== undefined
+          ? Number(payload.current_value)
+          : Number(rows[index].current_value),
+      target_value:
+        payload.target_value !== undefined
+          ? Number(payload.target_value)
+          : Number(rows[index].target_value),
+      status: payload.status || rows[index].status,
+      updated_at: nowIso_(),
+    };
 
-  updateRowByIndex_(sheet, index + 2, updated);
+    updateRowByIndex_(sheet, index + 2, updated);
+    bumpUserDataVersion_(updated.user_id);
 
-  return {
-    success: true,
-    data: updated,
-  };
+    return {
+      success: true,
+      data: updated,
+    };
+  });
 }
 
 /* =========================
    DAILY LOGS
 ========================= */
 
-function listDailyLogs_(userId) {
-  if (!userId) {
-    throw new Error("Missing userId");
-  }
+function listDailyLogs_(userId, filters) {
+  return withTiming_("listDailyLogs_", function () {
+    if (!userId) {
+      throw new Error("Missing userId");
+    }
 
-  const rows = getAllObjects_(SHEET_NAMES.dailyLogs)
-    .filter((row) => row.user_id === userId)
-    .sort((a, b) => String(b.log_date).localeCompare(String(a.log_date)));
+    const normalized = normalizeLogFilters_(filters);
+    const cacheKey = buildReadCacheKey_("daily_logs", {
+      userId: userId,
+      v: getUserDataVersion_(userId),
+      from: normalized.from,
+      to: normalized.to,
+      limit: normalized.limit,
+      entry_type: normalized.entry_type,
+      category: normalized.category,
+      activity: normalized.activity,
+      task: normalized.task,
+    });
+    const cachedRows = getCachedObject_(cacheKey);
+    if (cachedRows) {
+      return {
+        success: true,
+        data: cachedRows,
+      };
+    }
 
-  return {
-    success: true,
-    data: rows,
-  };
+    const rows = getAllObjects_(SHEET_NAMES.dailyLogs)
+      .filter((row) => matchesLogFilters_(row, userId, normalized))
+      .sort(compareLogRowsDesc_)
+      .slice(0, normalized.limit > 0 ? normalized.limit : undefined);
+
+    setCachedObject_(cacheKey, rows, 90);
+
+    return {
+      success: true,
+      data: rows,
+    };
+  });
+}
+
+function listRestTaskLogs_(userId, task, limitParam, fromParam, toParam) {
+  return withTiming_("listRestTaskLogs_", function () {
+    if (!userId) {
+      throw new Error("Missing userId");
+    }
+
+    const normalizedTask = String(task || "").trim();
+    const normalized = normalizeLogFilters_({
+      entry_type: "rest_task",
+      category: "physical",
+      activity: "rest",
+      task: normalizedTask || null,
+      limit: limitParam,
+      from: fromParam,
+      to: toParam,
+    });
+    const cacheKey = buildReadCacheKey_("rest_task_logs", {
+      userId: userId,
+      v: getUserDataVersion_(userId),
+      task: normalized.task,
+      from: normalized.from,
+      to: normalized.to,
+      limit: normalized.limit,
+    });
+    const cachedRows = getCachedObject_(cacheKey);
+    if (cachedRows) {
+      return {
+        success: true,
+        data: cachedRows,
+      };
+    }
+
+    const rows = getAllObjects_(SHEET_NAMES.dailyLogs)
+      .filter((row) => matchesLogFilters_(row, userId, normalized))
+      .sort(compareLogRowsDesc_)
+      .slice(0, normalized.limit > 0 ? normalized.limit : undefined);
+
+    setCachedObject_(cacheKey, rows, 90);
+
+    return {
+      success: true,
+      data: rows,
+    };
+  });
 }
 
 function createDailyLog_(payload) {
-  const requiredFields = [
-    "user_id",
-    "log_date",
-    "mood",
-    "energy",
-    "stress",
-    "note",
-  ];
-  validateRequired_(payload, requiredFields);
+  return withTiming_("createDailyLog_", function () {
+    const requiredFields = [
+      "user_id",
+      "log_date",
+      "mood",
+      "energy",
+      "stress",
+      "note",
+    ];
+    validateRequired_(payload, requiredFields);
 
-  const newLog = {
-    id: generateId_("log"),
-    user_id: payload.user_id,
-    log_date: payload.log_date,
-    mood: payload.mood,
-    energy: Number(payload.energy),
-    stress: Number(payload.stress),
-    note: payload.note,
-    created_at: nowIso_(),
-    updated_at: nowIso_(),
-  };
+    const newLog = {
+      id: generateId_("log"),
+      user_id: payload.user_id,
+      log_date: payload.log_date,
+      mood: payload.mood,
+      energy: Number(payload.energy),
+      stress: Number(payload.stress),
+      note: payload.note,
+      created_at: nowIso_(),
+      updated_at: nowIso_(),
+    };
 
-  appendObject_(SHEET_NAMES.dailyLogs, newLog);
+    appendObject_(SHEET_NAMES.dailyLogs, newLog);
+    bumpUserDataVersion_(newLog.user_id);
 
-  return {
-    success: true,
-    data: newLog,
-  };
+    return {
+      success: true,
+      data: newLog,
+    };
+  });
 }
 
 /* =========================
@@ -475,6 +591,141 @@ function listArticles_(limitParam) {
 /* =========================
    HELPERS
 ========================= */
+
+function withTiming_(label, fn) {
+  const startedAt = new Date().getTime();
+  try {
+    return fn();
+  } finally {
+    const elapsedMs = new Date().getTime() - startedAt;
+    console.log(`[perf] ${label} ${elapsedMs}ms`);
+  }
+}
+
+function normalizeLogFilters_(filters) {
+  const source = filters || {};
+  const limitNumber = Number(source.limit);
+
+  return {
+    from: source.from ? String(source.from).trim() : "",
+    to: source.to ? String(source.to).trim() : "",
+    limit:
+      Number.isFinite(limitNumber) && limitNumber > 0
+        ? Math.floor(limitNumber)
+        : 0,
+    entry_type: source.entry_type ? String(source.entry_type).trim() : "",
+    category: source.category ? String(source.category).trim() : "",
+    activity: source.activity ? String(source.activity).trim() : "",
+    task: source.task ? String(source.task).trim() : "",
+  };
+}
+
+function matchesLogFilters_(row, userId, filters) {
+  if (row.user_id !== userId) return false;
+
+  const logDate = String(row.log_date || "");
+  if (filters.from && logDate < filters.from) return false;
+  if (filters.to && logDate > filters.to) return false;
+
+  const requiresNoteParse =
+    !!filters.entry_type || !!filters.category || !!filters.activity || !!filters.task;
+  if (!requiresNoteParse) return true;
+
+  const parsed = parseRestTaskNoteForFilter_(row.note);
+  if (!parsed) return false;
+
+  if (filters.entry_type && parsed.entry_type !== filters.entry_type) return false;
+  if (filters.category && parsed.category !== filters.category) return false;
+  if (filters.activity && parsed.activity !== filters.activity) return false;
+  if (filters.task && parsed.task !== filters.task) return false;
+
+  return true;
+}
+
+function parseRestTaskNoteForFilter_(note) {
+  if (!note) return null;
+
+  try {
+    const parsed = JSON.parse(String(note));
+    return {
+      entry_type: parsed.entry_type ? String(parsed.entry_type) : "",
+      category: parsed.category ? String(parsed.category) : "",
+      activity: parsed.activity ? String(parsed.activity) : "",
+      task: parsed.task ? String(parsed.task) : "",
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function compareLogRowsDesc_(a, b) {
+  const dateCompare = String(b.log_date || "").localeCompare(String(a.log_date || ""));
+  if (dateCompare !== 0) return dateCompare;
+
+  const bTs = getLogTimestampMs_(b);
+  const aTs = getLogTimestampMs_(a);
+  return bTs - aTs;
+}
+
+function getLogTimestampMs_(log) {
+  const updatedAt = log && log.updated_at ? new Date(log.updated_at).getTime() : Number.NaN;
+  if (Number.isFinite(updatedAt)) return updatedAt;
+
+  const createdAt = log && log.created_at ? new Date(log.created_at).getTime() : Number.NaN;
+  if (Number.isFinite(createdAt)) return createdAt;
+
+  const logDate = log && log.log_date ? new Date(log.log_date).getTime() : Number.NaN;
+  if (Number.isFinite(logDate)) return logDate;
+
+  return 0;
+}
+
+function getReadCache_() {
+  return CacheService.getScriptCache();
+}
+
+function buildReadCacheKey_(prefix, params) {
+  const normalized = Object.keys(params || {})
+    .sort()
+    .map((key) => `${key}:${String(params[key] || "")}`)
+    .join("|");
+
+  return `rb:${prefix}:${normalized}`.slice(0, 240);
+}
+
+function getCachedObject_(cacheKey) {
+  if (!cacheKey) return null;
+
+  const cached = getReadCache_().get(cacheKey);
+  if (!cached) return null;
+
+  try {
+    return JSON.parse(cached);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function setCachedObject_(cacheKey, value, ttlSeconds) {
+  if (!cacheKey) return;
+  getReadCache_().put(cacheKey, JSON.stringify(value), ttlSeconds || 60);
+}
+
+function getUserDataVersion_(userId) {
+  if (!userId) return "0";
+  const props = PropertiesService.getScriptProperties();
+  const key = `user_data_version_${userId}`;
+  return props.getProperty(key) || "0";
+}
+
+function bumpUserDataVersion_(userId) {
+  if (!userId) return;
+
+  const props = PropertiesService.getScriptProperties();
+  const key = `user_data_version_${userId}`;
+  const current = Number(props.getProperty(key) || "0");
+  props.setProperty(key, String(current + 1));
+}
 
 function getParam_(e, key) {
   return e && e.parameter ? e.parameter[key] : null;
