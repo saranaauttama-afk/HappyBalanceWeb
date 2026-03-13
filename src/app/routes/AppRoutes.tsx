@@ -36,6 +36,7 @@ import WorkplaceRelationshipTaskPage from "../../features/goals/task-detail/Work
 import ShareItemsTaskPage from "../../features/goals/task-detail/ShareItemsTaskPage";
 import BalanceTaskPage from "../../features/goals/task-detail/BalanceTaskPage";
 import FamilySocialBalanceTaskPage from "../../features/goals/task-detail/FamilySocialBalanceTaskPage";
+import PersonalLifeBalanceTaskPage from "../../features/goals/task-detail/PersonalLifeBalanceTaskPage";
 import ThanksSorryTaskPage from "../../features/goals/task-detail/ThanksSorryTaskPage";
 import WorkBalanceTaskPage from "../../features/goals/task-detail/WorkBalanceTaskPage";
 import ArticleDetailPage from "../../features/articles/ArticleDetailPage";
@@ -139,6 +140,10 @@ export default function AppRoutes() {
       <Route
         path="/goals/balance/work-balance/:task"
         element={<WorkBalanceTaskPage />}
+      />
+      <Route
+        path="/goals/balance/personal-life-balance/:task"
+        element={<PersonalLifeBalanceTaskPage />}
       />
     </Routes>
   );

@@ -377,7 +377,10 @@ export default function ActivityTaskPage() {
       setSleepLoading(true);
       const [goalsResponse, logsResponse] = await Promise.all([
         goalsService.listGoals(userId ?? undefined),
-        logsService.listDailyLogs(userId ?? undefined),
+        logsService.listRestTaskLogs(userId ?? undefined, {
+          task: "sleep",
+          limit: 30,
+        }),
       ]);
 
       if (!goalsResponse.success) {
@@ -458,7 +461,10 @@ export default function ActivityTaskPage() {
       setWaterLoading(true);
       const [userResponse, logsResponse] = await Promise.all([
         profileService.getUser(userId ?? undefined),
-        logsService.listDailyLogs(userId ?? undefined),
+        logsService.listRestTaskLogs(userId ?? undefined, {
+          task: "drink-water",
+          limit: 30,
+        }),
       ]);
 
       if (!userResponse.success) {
@@ -522,7 +528,10 @@ export default function ActivityTaskPage() {
 
     try {
       setSleepOnTimeLoading(true);
-      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        task: "sleep-on-time",
+        limit: 30,
+      });
 
       if (!logsResponse.success) {
         throw new Error(logsResponse.error || "Could not load daily logs");
@@ -574,7 +583,10 @@ export default function ActivityTaskPage() {
 
     try {
       setAvoidWaterBeforeBedLoading(true);
-      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        task: "avoid-water-before-bed",
+        limit: 30,
+      });
 
       if (!logsResponse.success) {
         throw new Error(logsResponse.error || "Could not load daily logs");
@@ -629,7 +641,10 @@ export default function ActivityTaskPage() {
 
     try {
       setNoLongLateNapLoading(true);
-      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        task: "no-long-late-nap",
+        limit: 30,
+      });
 
       if (!logsResponse.success) {
         throw new Error(logsResponse.error || "Could not load daily logs");
@@ -681,7 +696,10 @@ export default function ActivityTaskPage() {
 
     try {
       setNoFood4HoursBeforeBedLoading(true);
-      const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        task: "no-food-4-hours-before-bed",
+        limit: 30,
+      });
 
       if (!logsResponse.success) {
         throw new Error(logsResponse.error || "Could not load daily logs");
@@ -789,7 +807,10 @@ export default function ActivityTaskPage() {
   }
 
   async function syncRestGoalProgress() {
-    const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+    const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+      limit: 240,
+      forceRefresh: true,
+    });
     if (!logsResponse.success) {
       throw new Error(logsResponse.error || "Could not load daily logs");
     }
@@ -880,6 +901,22 @@ export default function ActivityTaskPage() {
     }
   }
 
+  function runPostSaveSync(refreshContext?: () => Promise<void>) {
+    if (!isRestFlow) return;
+
+    void (async () => {
+      try {
+        await syncRestGoalProgress();
+        if (refreshContext) {
+          await refreshContext();
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError((prev) => prev ?? `บันทึกสำเร็จแล้ว แต่ซิงก์คะแนนมีปัญหา: ${message}`);
+      }
+    })();
+  }
+
   function renderGenericInput(currentConfig: TaskConfig) {
     if (currentConfig.type === "number") {
       return (
@@ -961,16 +998,12 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadSleepContext();
-        }
-
         setSuccessMessage(
           achieved
             ? "บันทึกการนอนวันนี้สำเร็จ ได้ +1 คะแนน"
             : "บันทึกการนอนวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
         );
+        runPostSaveSync(loadSleepContext);
         return;
       }
 
@@ -1011,15 +1044,12 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadWaterContext();
-        }
         setSuccessMessage(
           achieved
             ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
             : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
         );
+        runPostSaveSync(loadWaterContext);
         return;
       }
 
@@ -1058,16 +1088,12 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadSleepOnTimeContext();
-        }
-
         setSuccessMessage(
           achieved
             ? "บันทึกวันนี้สำเร็จ เข้านอนและตื่นนอนตรงเวลา ได้ +1 คะแนน"
             : "บันทึกวันนี้สำเร็จ วันนี้ยังไม่ตรงเวลาที่ตั้งไว้"
         );
+        runPostSaveSync(loadSleepOnTimeContext);
         return;
       }
 
@@ -1106,16 +1132,12 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadAvoidWaterBeforeBedContext();
-        }
-
         setSuccessMessage(
           achieved
             ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
             : "บันทึกวันนี้สำเร็จ วันนี้ยังดื่มน้ำมากเกินไปก่อนนอน"
         );
+        runPostSaveSync(loadAvoidWaterBeforeBedContext);
         return;
       }
 
@@ -1154,14 +1176,10 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadNoLongLateNapContext();
-        }
-
         setSuccessMessage(
           achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้งีบยาวเกินเงื่อนไข"
         );
+        runPostSaveSync(loadNoLongLateNapContext);
         return;
       }
 
@@ -1200,14 +1218,10 @@ export default function ActivityTaskPage() {
               },
         });
 
-        if (isRestFlow) {
-          await syncRestGoalProgress();
-          await loadNoFood4HoursBeforeBedContext();
-        }
-
         setSuccessMessage(
           achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้ทานอาหารใกล้เวลานอนเกินไป"
         );
+        runPostSaveSync(loadNoFood4HoursBeforeBedContext);
         return;
       }
 
@@ -1242,10 +1256,8 @@ export default function ActivityTaskPage() {
           : { task, value },
       });
 
-      if (isRestFlow) {
-        await syncRestGoalProgress();
-      }
       setSuccessMessage("Task result saved");
+      runPostSaveSync();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {

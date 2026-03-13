@@ -114,7 +114,9 @@ export default function RestActivityPage() {
 
       const [goalsResponse, logsResponse] = await Promise.all([
         goalsService.listGoals(userId ?? undefined),
-        logsService.listDailyLogs(userId ?? undefined),
+        logsService.listRestTaskLogs(userId ?? undefined, {
+          limit: 240,
+        }),
       ]);
 
       if (!goalsResponse.success) {

@@ -60,6 +60,12 @@ export interface Article {
   created_at?: string;
 }
 
+export interface SystemVersionInfo {
+  version: string;
+  deployed_at?: string;
+  server_time?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;

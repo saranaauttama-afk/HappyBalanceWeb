@@ -3,6 +3,13 @@
 ## Goal
 Reduce page-load and save-to-feedback latency in goals/rest flows, while keeping current Google Sheets backend.
 
+## Status (2026-03-12)
+- Phase 0: done in code (frontend + Apps Script timing logs), baseline note added.
+- Phase 1: done in code (`listRestTaskLogs`, filter params, read cache + invalidation).
+- Phase 2: done in code for rest flow (`ActivityTaskPage`, `RestActivityPage` scoped fetch + faster save UX).
+- Phase 3: partially done (rest sync no longer scans full `daily_logs`, now reads scoped rest logs).
+- Phase 4: pending.
+
 ## Current Symptoms
 - First load of task pages feels slow.
 - After save, UI waits for multiple API calls before showing final state.

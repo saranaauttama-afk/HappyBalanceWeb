@@ -56,7 +56,8 @@ Columns:
 - updated_at (ISO datetime)
 
 Actions:
-- listDailyLogs(userId)
+- listDailyLogs(userId, from?, to?, limit?, entry_type?, category?, activity?, task?)
+- listRestTaskLogs(userId, task?, limit?, from?, to?)
 - createDailyLog(user_id, log_date, mood, energy, stress, note)
 
 ## Sheet 4: appointments
@@ -126,3 +127,4 @@ Recommended actions:
 - Profile avatar upload now uses `uploadProfileAvatar` and stores file on Google Drive.
 - Optional Apps Script property: `PROFILE_AVATAR_FOLDER_ID` (if not set, files go to Drive root).
 - Appointments monthly goal now saves to `monthly_goals` (Google Sheets) via `upsertMonthlyGoal`.
+- `listGoals`, `listDailyLogs`, and `listRestTaskLogs` now support short-lived read cache (Apps Script `CacheService`) with user-version invalidation after writes.
