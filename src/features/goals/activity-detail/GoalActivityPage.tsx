@@ -10,6 +10,7 @@ import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
 import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
 import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
+import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 import { ChevronRight, Smile, Sparkles, Sun } from "lucide-react";
 
@@ -866,6 +867,12 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "personal-life-balance") {
+    const completedCount = PERSONAL_LIFE_BALANCE_TASKS.filter((task) => task.completed).length;
+    const totalCount = PERSONAL_LIFE_BALANCE_TASKS.length;
+    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+    const counterTaskCount = PERSONAL_LIFE_BALANCE_TASKS.filter((task) => task.type === "counter").length;
+    const yesNoTaskCount = totalCount - counterTaskCount;
+
     return (
       <MobileShell>
         <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
@@ -873,11 +880,11 @@ export default function GoalActivityPage() {
           <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
           <AppHeader
-            title="Personal Life Balance"
+            title="สมดุลระหว่างชีวิตส่วนตัว"
             showBack
             showBell
             variant="soft"
-            subtitle="Quickly check how balanced your personal life feels"
+            subtitle="เว้นพื้นที่ให้ตัวเองด้วยกิจกรรมเล็ก ๆ ที่เติมพลัง"
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -885,32 +892,86 @@ export default function GoalActivityPage() {
               <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">PERSONAL LIFE BALANCE</p>
               <div className="mt-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Quick check</h2>
-                  <p className="mt-1 text-sm text-slate-600">Use a simple Yes/No result to update this score</p>
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">Overview</h2>
+                  <p className="mt-1 text-sm text-slate-600">มีทั้งงานแบบนับจำนวนและ Yes/No ตามลักษณะกิจกรรม</p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
                   🌿
                 </div>
               </div>
-            </section>
-
-            <Link
-              to="/goals/balance/personal-life-balance/task"
-              className="block rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold leading-7 text-slate-900">Open task</h3>
-                  <p className="mt-1 text-sm text-slate-500">Answer Yes/No and save instantly</p>
-                  <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                    Yes / No
-                  </span>
+              <div className="mt-4 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
+                  {completedCount}
                 </div>
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
-                  <ChevronRight size={16} />
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>Total progress</span>
+                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    Completed {completedCount} / {totalCount} tasks
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                  Yes / No {yesNoTaskCount} งาน
+                </span>
+                <span className="rounded-full bg-[#fff5ea] px-2.5 py-1 text-xs font-medium text-[#9a5b34]">
+                  Counter {counterTaskCount} งาน
                 </span>
               </div>
-            </Link>
+            </section>
+
+            <section className="space-y-3">
+              {PERSONAL_LIFE_BALANCE_TASKS.map((task) => (
+                <Link
+                  key={task.slug}
+                  to={`/goals/balance/personal-life-balance/${task.slug}`}
+                  className="block"
+                >
+                  <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              task.completed
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            {task.completed ? "Done" : "Pending"}
+                          </span>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              task.type === "counter"
+                                ? "bg-[#fff5ea] text-[#9a5b34]"
+                                : "bg-[#eef8fd] text-[#2e6a8b]"
+                            }`}
+                          >
+                            {task.type === "counter" ? "Counter" : "Yes / No"}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
+                        <ChevronRight size={16} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </section>
           </main>
         </div>
       </MobileShell>

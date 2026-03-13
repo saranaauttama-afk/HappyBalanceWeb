@@ -6,6 +6,8 @@ const SHEET_NAMES = {
   monthlyGoals: "monthly_goals",
   articles: "articles",
 };
+const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-13";
+const APP_SCRIPT_DEPLOYED_AT = "2026-03-13T00:20:00+07:00";
 
 function doGet(e) {
   try {
@@ -835,8 +837,9 @@ function testVersion_() {
   return {
     success: true,
     data: {
-      version: "GAS-NEW-FORM-PARAMS",
-      timestamp: new Date().toISOString(),
+      version: APP_SCRIPT_VERSION,
+      deployed_at: APP_SCRIPT_DEPLOYED_AT,
+      server_time: new Date().toISOString(),
     },
   };
 }

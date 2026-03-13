@@ -1,0 +1,53 @@
+export type PersonalLifeBalanceTaskType = "boolean" | "counter";
+
+export interface PersonalLifeBalanceTaskConfig {
+  slug: string;
+  label: string;
+  subtitle: string;
+  type: PersonalLifeBalanceTaskType;
+  helperText?: string;
+  completed?: boolean;
+}
+
+export const PERSONAL_LIFE_BALANCE_TASKS: PersonalLifeBalanceTaskConfig[] = [
+  {
+    slug: "mute-phone-after-work",
+    label: "ปิดเสียงเตือนโทรศัพท์หลังเลิกงาน",
+    subtitle: "ให้เวลาส่วนตัวหลังเลิกงานแบบไม่ถูกรบกวน",
+    helperText: "บันทึกจำนวนครั้งที่ตั้งใจปิดแจ้งเตือนเพื่อพักจริง ๆ",
+    type: "counter",
+  },
+  {
+    slug: "listen-favorite-music",
+    label: "ฟังเพลงที่ชอบ",
+    subtitle: "เติมบรรยากาศดี ๆ ให้ตัวเองในวันทั่วไป",
+    type: "boolean",
+    completed: true,
+  },
+  {
+    slug: "watch-favorite-movie",
+    label: "ดูหนังที่ตนเองชอบ",
+    subtitle: "เว้นเวลาให้ตัวเองได้พักและดูสิ่งที่ชอบ",
+    type: "boolean",
+  },
+  {
+    slug: "warm-water-skin-care",
+    label: "แช่น้ำอุ่นเพื่อดูแลผิว",
+    subtitle: "ดูแลตัวเองด้วยกิจกรรมผ่อนคลายเล็ก ๆ",
+    helperText: "อุณหภูมิประมาณ 27-37 องศาเซลเซียส ระยะเวลาไม่เกิน 15 นาที",
+    type: "counter",
+    completed: true,
+  },
+  {
+    slug: "read-interesting-book",
+    label: "อ่านหนังสือที่สนใจ",
+    subtitle: "กลับมาอยู่กับสิ่งที่อยากเรียนรู้หรือติดตาม",
+    type: "boolean",
+  },
+  {
+    slug: "develop-own-skill",
+    label: "เพิ่มทักษะให้ตนเอง",
+    subtitle: "ขยับตัวเองไปข้างหน้าทีละนิดในแบบที่อยากเป็น",
+    type: "boolean",
+  },
+];
