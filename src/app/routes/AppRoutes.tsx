@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { useLayoutEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import WelcomePage from "../../features/auth/welcome/WelcomePage";
 import LoginPage from "../../features/auth/login/LoginPage";
 import ForgotPasswordPage from "../../features/auth/forgot-password/ForgotPasswordPage";
@@ -41,110 +42,125 @@ import ThanksSorryTaskPage from "../../features/goals/task-detail/ThanksSorryTas
 import WorkBalanceTaskPage from "../../features/goals/task-detail/WorkBalanceTaskPage";
 import ArticleDetailPage from "../../features/articles/ArticleDetailPage";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [pathname]);
+
+  return null;
+}
+
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<WelcomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/terms" element={<TermsPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/goals" element={<GoalsPage />} />
-      <Route path="/goals/create" element={<CreateGoalPage />} />
-      <Route path="/goals/:category" element={<GoalCategoryPage />} />
-      <Route path="/goals/physical/rest" element={<RestActivityPage />} />
-      <Route path="/goals/:category/:activity" element={<GoalActivityPage />} />
-      <Route
-        path="/goals/:category/:activity/goal"
-        element={<GoalSettingPage />}
-      />
-      <Route path="/appointments" element={<AppointmentsPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/profile/personal-info" element={<PersonalInfoPage />} />
-      <Route path="/profile/counseling-record" element={<CounselingRecordPage />} />
-      <Route path="/profile/evaluation-result" element={<EvaluationResultPage />} />
-      <Route path="/profile/help" element={<HelpPage />} />
-      <Route path="/daily-log" element={<DailyLogPage />} />
-      <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/goals" element={<GoalsPage />} />
+        <Route path="/goals/create" element={<CreateGoalPage />} />
+        <Route path="/goals/:category" element={<GoalCategoryPage />} />
+        <Route path="/goals/physical/rest" element={<RestActivityPage />} />
+        <Route path="/goals/:category/:activity" element={<GoalActivityPage />} />
+        <Route
+          path="/goals/:category/:activity/goal"
+          element={<GoalSettingPage />}
+        />
+        <Route path="/appointments" element={<AppointmentsPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/personal-info" element={<PersonalInfoPage />} />
+        <Route path="/profile/counseling-record" element={<CounselingRecordPage />} />
+        <Route path="/profile/evaluation-result" element={<EvaluationResultPage />} />
+        <Route path="/profile/help" element={<HelpPage />} />
+        <Route path="/daily-log" element={<DailyLogPage />} />
+        <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-      <Route
-        path="/goals/:category/:activity/:task"
-        element={<ActivityTaskPage />}
-      />
-      <Route
-        path="/goals/:category/:activity/sleep/goal"
-        element={<SleepGoalPage />}
-      />
-      <Route
-        path="/goals/:category/:activity/limit-screen-time/goal"
-        element={<ScreenTimeGoalPage />}
-      />
-      <Route path="/profile/settings" element={<SettingsPage />} />
-      <Route
-        path="/profile/settings/sleep-goal"
-        element={<SleepGoalSettingsPage />}
-      />
-      <Route
-        path="/profile/settings/water-goal"
-        element={<WaterGoalSettingsPage />}
-      />
-      <Route path="/goals/mental/:activity/task" element={<MentalTaskPage />} />
-      <Route
-        path="/goals/mental/positive-thinking/smile-when-disappointed"
-        element={<SmileTaskPage />}
-      />
-      <Route
-        path="/goals/mental/positive-thinking/:task"
-        element={<PositiveThinkingTaskPage />}
-      />
-      <Route
-        path="/goals/mental/stress-level/get-sunlight"
-        element={<SunlightTaskPage />}
-      />
-      <Route
-        path="/goals/mental/stress-level/:task"
-        element={<StressTaskPage />}
-      />
-      <Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
-      <Route
-        path="/goals/social/family-relationship/listen-and-accept"
-        element={<ListenAcceptTaskPage />}
-      />
-      <Route
-        path="/goals/social/family-relationship/:task"
-        element={<FamilyRelationshipTaskPage />}
-      />
-      <Route
-        path="/goals/social/workplace-relationship/share-items-with-colleagues"
-        element={<ShareItemsTaskPage />}
-      />
-      <Route
-        path="/goals/social/workplace-relationship/:task"
-        element={<WorkplaceRelationshipTaskPage />}
-      />
-      <Route
-        path="/goals/balance/:activity/task"
-        element={<BalanceTaskPage />}
-      />
-      <Route
-        path="/goals/balance/family-social-balance/say-thanks-or-sorry"
-        element={<ThanksSorryTaskPage />}
-      />
-      <Route
-        path="/goals/balance/family-social-balance/:task"
-        element={<FamilySocialBalanceTaskPage />}
-      />
-      <Route
-        path="/goals/balance/work-balance/:task"
-        element={<WorkBalanceTaskPage />}
-      />
-      <Route
-        path="/goals/balance/personal-life-balance/:task"
-        element={<PersonalLifeBalanceTaskPage />}
-      />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="/goals/:category/:activity/:task"
+          element={<ActivityTaskPage />}
+        />
+        <Route
+          path="/goals/:category/:activity/sleep/goal"
+          element={<SleepGoalPage />}
+        />
+        <Route
+          path="/goals/:category/:activity/limit-screen-time/goal"
+          element={<ScreenTimeGoalPage />}
+        />
+        <Route path="/profile/settings" element={<SettingsPage />} />
+        <Route
+          path="/profile/settings/sleep-goal"
+          element={<SleepGoalSettingsPage />}
+        />
+        <Route
+          path="/profile/settings/water-goal"
+          element={<WaterGoalSettingsPage />}
+        />
+        <Route path="/goals/mental/:activity/task" element={<MentalTaskPage />} />
+        <Route
+          path="/goals/mental/positive-thinking/smile-when-disappointed"
+          element={<SmileTaskPage />}
+        />
+        <Route
+          path="/goals/mental/positive-thinking/:task"
+          element={<PositiveThinkingTaskPage />}
+        />
+        <Route
+          path="/goals/mental/stress-level/get-sunlight"
+          element={<SunlightTaskPage />}
+        />
+        <Route
+          path="/goals/mental/stress-level/:task"
+          element={<StressTaskPage />}
+        />
+        <Route path="/goals/social/:activity/task" element={<SocialTaskPage />} />
+        <Route
+          path="/goals/social/family-relationship/listen-and-accept"
+          element={<ListenAcceptTaskPage />}
+        />
+        <Route
+          path="/goals/social/family-relationship/:task"
+          element={<FamilyRelationshipTaskPage />}
+        />
+        <Route
+          path="/goals/social/workplace-relationship/share-items-with-colleagues"
+          element={<ShareItemsTaskPage />}
+        />
+        <Route
+          path="/goals/social/workplace-relationship/:task"
+          element={<WorkplaceRelationshipTaskPage />}
+        />
+        <Route
+          path="/goals/balance/:activity/task"
+          element={<BalanceTaskPage />}
+        />
+        <Route
+          path="/goals/balance/family-social-balance/say-thanks-or-sorry"
+          element={<ThanksSorryTaskPage />}
+        />
+        <Route
+          path="/goals/balance/family-social-balance/:task"
+          element={<FamilySocialBalanceTaskPage />}
+        />
+        <Route
+          path="/goals/balance/work-balance/:task"
+          element={<WorkBalanceTaskPage />}
+        />
+        <Route
+          path="/goals/balance/personal-life-balance/:task"
+          element={<PersonalLifeBalanceTaskPage />}
+        />
+      </Routes>
+    </>
   );
 }
