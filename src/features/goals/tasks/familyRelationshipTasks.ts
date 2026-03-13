@@ -1,4 +1,4 @@
-export interface FamilyRelationshipTaskConfig {
+﻿export interface FamilyRelationshipTaskConfig {
   slug: string;
   label: string;
   completed?: boolean;

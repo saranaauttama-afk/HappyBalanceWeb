@@ -1,4 +1,4 @@
-export interface WorkplaceRelationshipTaskConfig {
+﻿export interface WorkplaceRelationshipTaskConfig {
   slug: string;
   label: string;
   completed?: boolean;

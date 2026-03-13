@@ -272,37 +272,49 @@ export default function GoalCategoryPage() {
             </InfoCard>
           ) : null}
 
-          <section className="relative overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.9)_0%,rgba(245,253,255,0.86)_48%,rgba(237,251,243,0.88)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#9ad4be]/20 blur-3xl" />
-            <div className="flex items-start gap-3">
-              <span
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white ${config.iconColor}`}
-              >
-                <config.Icon size={20} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">CATEGORY OVERVIEW</p>
-                <h2 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">{config.shortTitle}</h2>
-                <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
+          <section className="relative overflow-hidden rounded-[30px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.94)_0%,rgba(247,252,255,0.92)_46%,rgba(238,248,242,0.9)_100%)] p-5 shadow-[0_24px_52px_rgba(31,47,61,0.14)] backdrop-blur">
+            <div className="pointer-events-none absolute -left-12 top-16 h-36 w-36 rounded-full bg-[#ffd8bf]/22 blur-3xl" />
+            <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-[#9ad4be]/18 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-0 right-0 translate-x-8 translate-y-8 opacity-[0.08]">
+              <config.Icon size={196} strokeWidth={1.5} className={config.iconColor} />
+            </div>
+
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/80 bg-white/90 shadow-[0_10px_24px_rgba(31,47,61,0.08)] ${config.iconColor}`}
+                >
+                  <config.Icon size={22} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold tracking-[0.16em] text-[#255f54]">CATEGORY OVERVIEW</p>
+                  <h2 className="mt-1 text-[1.75rem] font-extrabold leading-tight text-slate-900">{config.shortTitle}</h2>
+                  <p className="mt-1 text-sm font-medium text-slate-500">{formatThaiDate(new Date())}</p>
+                </div>
+              </div>
+
+              <div className="rounded-full border border-white/80 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-slate-600 shadow-[0_8px_18px_rgba(31,47,61,0.08)] backdrop-blur">
+                อัปเดตวันนี้
               </div>
             </div>
 
-            <p className="mt-3 text-sm leading-6 text-slate-600">{config.description}</p>
+            <p className="relative z-10 mt-4 max-w-[30rem] text-sm leading-7 text-slate-600">{config.description}</p>
 
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-2xl bg-[#f8fafc] px-2 py-3">
-                <p className="text-xs text-slate-500">กิจกรรม</p>
-                <p className="text-lg font-bold text-slate-900">{config.activities.length}</p>
+            <div className="relative z-10 mt-5 grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-[22px] border border-white/80 bg-white/72 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur">
+                <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-400">กิจกรรม</p>
+                <p className="mt-2 text-[1.7rem] font-extrabold leading-none text-slate-900">{config.activities.length}</p>
               </div>
-              <div className="rounded-2xl bg-[#ecfdf3] px-2 py-3">
-                <p className="text-xs text-slate-500">สำเร็จ</p>
-                <p className="text-lg font-bold text-[#166534]">{completedCount}</p>
+              <div className="rounded-[22px] border border-white/80 bg-[#eef8f2]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur">
+                <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-400">สำเร็จ</p>
+                <p className="mt-2 text-[1.7rem] font-extrabold leading-none text-[#166534]">{completedCount}</p>
               </div>
-              <div className="rounded-2xl bg-[#fff7ed] px-2 py-3">
-                <p className="text-xs text-slate-500">คะแนนเฉลี่ย</p>
-                <p className="text-lg font-bold text-[#9a3412]">{overallScore}%</p>
+              <div className="rounded-[22px] border border-white/80 bg-[#fff7ed]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur">
+                <p className="text-[11px] font-semibold tracking-[0.08em] text-slate-400">คะแนนเฉลี่ย</p>
+                <p className="mt-2 text-[1.7rem] font-extrabold leading-none text-[#9a3412]">{overallScore}%</p>
               </div>
             </div>
+
           </section>
 
           <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">

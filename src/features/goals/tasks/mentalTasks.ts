@@ -1,4 +1,4 @@
-export type MentalTaskType = "scale" | "boolean" | "text";
+﻿export type MentalTaskType = "scale" | "boolean" | "text";
 
 export interface MentalTaskConfig {
   slug: string;

@@ -1,4 +1,4 @@
-export interface SocialTaskConfig {
+﻿export interface SocialTaskConfig {
   slug: string;
   label: string;
   completed?: boolean;

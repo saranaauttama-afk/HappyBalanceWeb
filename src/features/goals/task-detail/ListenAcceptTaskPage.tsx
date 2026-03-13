@@ -1,4 +1,4 @@
-import { Ear, SmilePlus } from "lucide-react";
+﻿import { Ear, SmilePlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
@@ -54,7 +54,7 @@ export default function ListenAcceptTaskPage() {
 
       const response = await logsService.listDailyLogs(userId ?? undefined);
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const byDate = new Map<string, ListenHistoryItem>();
@@ -93,7 +93,7 @@ export default function ListenAcceptTaskPage() {
 
       setListenCount(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -136,7 +136,7 @@ export default function ListenAcceptTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncSocialActivityGoal(activityKey, userId ?? undefined);
@@ -148,7 +148,7 @@ export default function ListenAcceptTaskPage() {
           : "บันทึกสำเร็จ วันนี้ยังไม่มีจำนวนครั้งที่บันทึก"
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
