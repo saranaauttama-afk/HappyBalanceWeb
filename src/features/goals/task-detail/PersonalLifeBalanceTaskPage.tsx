@@ -64,9 +64,7 @@ export default function PersonalLifeBalanceTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined, {
-        entry_type: "balance_task",
-        category: "balance",
+      const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
         activity: activityKey,
         task,
         limit: 20,
@@ -213,9 +211,7 @@ export default function PersonalLifeBalanceTaskPage() {
                 </div>
                 <h2 className="mt-3 text-lg font-semibold text-slate-900">{config.label}</h2>
                 <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
-                {config.helperText ? (
-                  <p className="mt-2 text-sm text-slate-500">{config.helperText}</p>
-                ) : null}
+                {config.helperText ? <p className="mt-2 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
 
               <span
@@ -227,53 +223,51 @@ export default function PersonalLifeBalanceTaskPage() {
                       : "bg-rose-50 text-rose-700"
                 }`}
               >
-                {scorePreview === null ? "ยังไม่เลือก" : `${scorePreview}%`}
+                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
               </span>
             </div>
 
             {config.type === "counter" ? (
-              <>
-                <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
-                  <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้</p>
-                  <div className="mt-4 flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                      aria-label="ลดจำนวน"
-                    >
-                      -
-                    </button>
+              <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
+                <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้</p>
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                    aria-label="ลดจำนวน"
+                  >
+                    -
+                  </button>
 
-                    <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-slate-900">{countValue}</p>
-                      <p className="text-xs text-slate-500">ครั้ง</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                      aria-label="เพิ่มจำนวน"
-                    >
-                      <Plus size={18} />
-                    </button>
+                  <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                    <p className="text-3xl font-bold text-slate-900">{countValue}</p>
+                    <p className="text-xs text-slate-500">ครั้ง</p>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {[1, 2, 3].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setCountValue(preset)}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
-                      >
-                        {preset} ครั้ง
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                    aria-label="เพิ่มจำนวน"
+                  >
+                    <Plus size={18} />
+                  </button>
                 </div>
-              </>
+
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {[1, 2, 3].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setCountValue(preset)}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+                    >
+                      {preset} ครั้ง
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <button
@@ -318,9 +312,7 @@ export default function PersonalLifeBalanceTaskPage() {
             onClick={() => void handleSave()}
             disabled={saving || loading || (config.type === "boolean" && done === null)}
             className={`w-full rounded-2xl py-4 font-semibold text-white ${
-              saving || loading || (config.type === "boolean" && done === null)
-                ? "bg-slate-400"
-                : "bg-[#c6968c]"
+              saving || loading || (config.type === "boolean" && done === null) ? "bg-slate-400" : "bg-[#c6968c]"
             }`}
           >
             {saving ? "กำลังบันทึก..." : "บันทึกผล"}

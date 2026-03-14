@@ -56,9 +56,13 @@ export default function ThanksSorryTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
+        activity: activityKey,
+        task: taskKey,
+        limit: 90,
+      });
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "Could not load balance task logs");
       }
 
       const byDate = new Map<string, ThanksSorryHistoryItem>();

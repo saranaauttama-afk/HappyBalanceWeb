@@ -52,7 +52,11 @@ export default function ShareItemsTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listSocialTaskLogs(userId ?? undefined, {
+        activity: activityKey,
+        task: taskKey,
+        limit: 90,
+      });
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }

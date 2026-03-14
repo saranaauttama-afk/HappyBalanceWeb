@@ -2,12 +2,67 @@ const SHEET_NAMES = {
   users: "users",
   goals: "goals",
   dailyLogs: "daily_logs",
+  restTaskLogs: "rest_task_logs",
+  mentalTaskLogs: "mental_task_logs",
+  socialTaskLogs: "social_task_logs",
+  balanceTaskLogs: "balance_task_logs",
   appointments: "appointments",
   monthlyGoals: "monthly_goals",
   articles: "articles",
 };
-const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-13";
-const APP_SCRIPT_DEPLOYED_AT = "2026-03-13T00:20:00+07:00";
+const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-14B";
+const APP_SCRIPT_DEPLOYED_AT = "2026-03-14T13:30:00+07:00";
+
+const STRUCTURED_TASK_LOG_HEADERS = [
+  "id",
+  "daily_log_id",
+  "user_id",
+  "log_date",
+  "entry_type",
+  "category",
+  "activity",
+  "task",
+  "score",
+  "point",
+  "achieved",
+  "mood",
+  "energy",
+  "stress",
+  "note",
+  "created_at",
+  "updated_at",
+];
+
+const TASK_LOG_SPECS = {
+  rest: {
+    sheetName: SHEET_NAMES.restTaskLogs,
+    idPrefix: "restlog",
+    entry_type: "rest_task",
+    category: "physical",
+    activity: "rest",
+  },
+  mental: {
+    sheetName: SHEET_NAMES.mentalTaskLogs,
+    idPrefix: "mentallog",
+    entry_type: "mental_task",
+    category: "mental",
+    activity: "",
+  },
+  social: {
+    sheetName: SHEET_NAMES.socialTaskLogs,
+    idPrefix: "sociallog",
+    entry_type: "social_task",
+    category: "social",
+    activity: "",
+  },
+  balance: {
+    sheetName: SHEET_NAMES.balanceTaskLogs,
+    idPrefix: "balancelog",
+    entry_type: "balance_task",
+    category: "balance",
+    activity: "",
+  },
+};
 
 function doGet(e) {
   try {
@@ -36,6 +91,39 @@ function doGet(e) {
         return jsonOutput_(
           listRestTaskLogs_(
             getParam_(e, "userId"),
+            getParam_(e, "task"),
+            getParam_(e, "limit"),
+            getParam_(e, "from"),
+            getParam_(e, "to")
+          )
+        );
+      case "listMentalTaskLogs":
+        return jsonOutput_(
+          listMentalTaskLogs_(
+            getParam_(e, "userId"),
+            getParam_(e, "activity"),
+            getParam_(e, "task"),
+            getParam_(e, "limit"),
+            getParam_(e, "from"),
+            getParam_(e, "to")
+          )
+        );
+      case "listSocialTaskLogs":
+        return jsonOutput_(
+          listSocialTaskLogs_(
+            getParam_(e, "userId"),
+            getParam_(e, "activity"),
+            getParam_(e, "task"),
+            getParam_(e, "limit"),
+            getParam_(e, "from"),
+            getParam_(e, "to")
+          )
+        );
+      case "listBalanceTaskLogs":
+        return jsonOutput_(
+          listBalanceTaskLogs_(
+            getParam_(e, "userId"),
+            getParam_(e, "activity"),
             getParam_(e, "task"),
             getParam_(e, "limit"),
             getParam_(e, "from"),
@@ -374,24 +462,64 @@ function listDailyLogs_(userId, filters) {
 }
 
 function listRestTaskLogs_(userId, task, limitParam, fromParam, toParam) {
-  return withTiming_("listRestTaskLogs_", function () {
+  return listStructuredTaskLogs_("listRestTaskLogs_", TASK_LOG_SPECS.rest, userId, {
+    entry_type: TASK_LOG_SPECS.rest.entry_type,
+    category: TASK_LOG_SPECS.rest.category,
+    activity: TASK_LOG_SPECS.rest.activity,
+    task: task,
+    limit: limitParam,
+    from: fromParam,
+    to: toParam,
+  });
+}
+
+function listMentalTaskLogs_(userId, activity, task, limitParam, fromParam, toParam) {
+  return listStructuredTaskLogs_("listMentalTaskLogs_", TASK_LOG_SPECS.mental, userId, {
+    entry_type: TASK_LOG_SPECS.mental.entry_type,
+    category: TASK_LOG_SPECS.mental.category,
+    activity: activity,
+    task: task,
+    limit: limitParam,
+    from: fromParam,
+    to: toParam,
+  });
+}
+
+function listSocialTaskLogs_(userId, activity, task, limitParam, fromParam, toParam) {
+  return listStructuredTaskLogs_("listSocialTaskLogs_", TASK_LOG_SPECS.social, userId, {
+    entry_type: TASK_LOG_SPECS.social.entry_type,
+    category: TASK_LOG_SPECS.social.category,
+    activity: activity,
+    task: task,
+    limit: limitParam,
+    from: fromParam,
+    to: toParam,
+  });
+}
+
+function listBalanceTaskLogs_(userId, activity, task, limitParam, fromParam, toParam) {
+  return listStructuredTaskLogs_("listBalanceTaskLogs_", TASK_LOG_SPECS.balance, userId, {
+    entry_type: TASK_LOG_SPECS.balance.entry_type,
+    category: TASK_LOG_SPECS.balance.category,
+    activity: activity,
+    task: task,
+    limit: limitParam,
+    from: fromParam,
+    to: toParam,
+  });
+}
+
+function listStructuredTaskLogs_(label, spec, userId, filters) {
+  return withTiming_(label, function () {
     if (!userId) {
       throw new Error("Missing userId");
     }
 
-    const normalizedTask = String(task || "").trim();
-    const normalized = normalizeLogFilters_({
-      entry_type: "rest_task",
-      category: "physical",
-      activity: "rest",
-      task: normalizedTask || null,
-      limit: limitParam,
-      from: fromParam,
-      to: toParam,
-    });
-    const cacheKey = buildReadCacheKey_("rest_task_logs", {
+    const normalized = normalizeLogFilters_(filters);
+    const cacheKey = buildReadCacheKey_(spec.sheetName, {
       userId: userId,
       v: getUserDataVersion_(userId),
+      activity: normalized.activity,
       task: normalized.task,
       from: normalized.from,
       to: normalized.to,
@@ -405,7 +533,13 @@ function listRestTaskLogs_(userId, task, limitParam, fromParam, toParam) {
       };
     }
 
-    const rows = getAllObjects_(SHEET_NAMES.dailyLogs)
+    const structuredRows = getAllObjectsIfSheetExists_(spec.sheetName);
+    const sourceRows =
+      structuredRows.length > 0
+        ? structuredRows
+        : getAllObjects_(SHEET_NAMES.dailyLogs);
+
+    const rows = sourceRows
       .filter((row) => matchesLogFilters_(row, userId, normalized))
       .sort(compareLogRowsDesc_)
       .slice(0, normalized.limit > 0 ? normalized.limit : undefined);
@@ -444,6 +578,7 @@ function createDailyLog_(payload) {
     };
 
     appendObject_(SHEET_NAMES.dailyLogs, newLog);
+    appendStructuredTaskLogIfNeeded_(newLog);
     bumpUserDataVersion_(newLog.user_id);
 
     return {
@@ -633,7 +768,7 @@ function matchesLogFilters_(row, userId, filters) {
     !!filters.entry_type || !!filters.category || !!filters.activity || !!filters.task;
   if (!requiresNoteParse) return true;
 
-  const parsed = parseRestTaskNoteForFilter_(row.note);
+  const parsed = getStructuredLogFilterFields_(row);
   if (!parsed) return false;
 
   if (filters.entry_type && parsed.entry_type !== filters.entry_type) return false;
@@ -644,7 +779,28 @@ function matchesLogFilters_(row, userId, filters) {
   return true;
 }
 
-function parseRestTaskNoteForFilter_(note) {
+function getStructuredLogFilterFields_(row) {
+  if (!row) return null;
+
+  const hasStructuredFields =
+    row.entry_type !== undefined ||
+    row.category !== undefined ||
+    row.activity !== undefined ||
+    row.task !== undefined;
+
+  if (hasStructuredFields) {
+    return {
+      entry_type: row.entry_type ? String(row.entry_type) : "",
+      category: row.category ? String(row.category) : "",
+      activity: row.activity ? String(row.activity) : "",
+      task: row.task ? String(row.task) : "",
+    };
+  }
+
+  return parseTaskNoteForFilter_(row.note);
+}
+
+function parseTaskNoteForFilter_(note) {
   if (!note) return null;
 
   try {
@@ -816,6 +972,31 @@ function getAllObjects_(sheetName) {
   });
 }
 
+function getAllObjectsIfSheetExists_(sheetName) {
+  const sheet = getSpreadsheet_().getSheetByName(sheetName);
+  if (!sheet) {
+    return [];
+  }
+
+  const headers = getHeaders_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastColumn = sheet.getLastColumn();
+
+  if (lastRow < 2) {
+    return [];
+  }
+
+  const values = sheet.getRange(2, 1, lastRow - 1, lastColumn).getValues();
+
+  return values.map((row) => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
+    });
+    return obj;
+  });
+}
+
 function appendObject_(sheetName, obj) {
   const sheet = getSheet_(sheetName);
   const headers = getHeaders_(sheet);
@@ -825,12 +1006,219 @@ function appendObject_(sheetName, obj) {
   sheet.appendRow(row);
 }
 
+function appendObjects_(sheetName, objects) {
+  if (!objects || objects.length === 0) return;
+
+  const sheet = getSheet_(sheetName);
+  const headers = getHeaders_(sheet);
+  const rows = objects.map((obj) =>
+    headers.map((header) => (obj[header] !== undefined ? obj[header] : ""))
+  );
+
+  sheet
+    .getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
+    .setValues(rows);
+}
+
 function updateRowByIndex_(sheet, rowIndex, obj) {
   const headers = getHeaders_(sheet);
   const row = headers.map((header) =>
     obj[header] !== undefined ? obj[header] : ""
   );
   sheet.getRange(rowIndex, 1, 1, headers.length).setValues([row]);
+}
+
+function appendStructuredTaskLogIfNeeded_(dailyLog) {
+  const spec = getTaskLogSpecByDailyLog_(dailyLog);
+  if (!spec) return;
+
+  const structured = buildStructuredTaskLogRow_(dailyLog, spec);
+  if (!structured) return;
+
+  ensureSheetWithHeaders_(spec.sheetName, STRUCTURED_TASK_LOG_HEADERS);
+  appendObject_(spec.sheetName, structured);
+}
+
+function getTaskLogSpecByDailyLog_(dailyLog) {
+  const parsed = parseTaskNotePayload_(dailyLog && dailyLog.note);
+  return getTaskLogSpecByFields_(
+    parsed && parsed.entry_type,
+    parsed && parsed.category
+  );
+}
+
+function getTaskLogSpecByFields_(entryType, category) {
+  const specs = Object.keys(TASK_LOG_SPECS).map(function (key) {
+    return TASK_LOG_SPECS[key];
+  });
+
+  for (let index = 0; index < specs.length; index += 1) {
+    const spec = specs[index];
+    if (spec.entry_type === entryType && spec.category === category) {
+      return spec;
+    }
+  }
+
+  return null;
+}
+
+function buildStructuredTaskLogRow_(dailyLog, spec) {
+  const parsed = parseTaskNotePayload_(dailyLog && dailyLog.note);
+  if (!parsed) return null;
+
+  if (
+    parsed.entry_type !== spec.entry_type ||
+    parsed.category !== spec.category ||
+    (spec.activity && parsed.activity !== spec.activity) ||
+    !parsed.activity ||
+    !parsed.task
+  ) {
+    return null;
+  }
+
+  const payload = parsed.payload || {};
+  const score = Number(parsed.score);
+  const fallbackAchieved = Number.isFinite(score) ? score > 0 : false;
+  const achieved = getBooleanValue_(payload.achieved, fallbackAchieved);
+  const point = Number(payload.point);
+
+  return {
+    id: generateId_(spec.idPrefix),
+    daily_log_id: dailyLog.id,
+    user_id: dailyLog.user_id,
+    log_date: dailyLog.log_date,
+    entry_type: parsed.entry_type,
+    category: parsed.category,
+    activity: parsed.activity,
+    task: parsed.task,
+    score: Number.isFinite(score) ? score : 0,
+    point: Number.isFinite(point) ? point : achieved ? 1 : 0,
+    achieved: achieved,
+    mood: dailyLog.mood,
+    energy: Number(dailyLog.energy),
+    stress: Number(dailyLog.stress),
+    note: dailyLog.note,
+    created_at: dailyLog.created_at,
+    updated_at: dailyLog.updated_at,
+  };
+}
+
+function parseTaskNotePayload_(note) {
+  if (!note) return null;
+
+  try {
+    const parsed = JSON.parse(String(note));
+    return {
+      entry_type: parsed.entry_type ? String(parsed.entry_type) : "",
+      category: parsed.category ? String(parsed.category) : "",
+      activity: parsed.activity ? String(parsed.activity) : "",
+      task: parsed.task ? String(parsed.task) : "",
+      score: parsed.score,
+      payload: parsed.payload || {},
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function getBooleanValue_(value, fallback) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  if (typeof value === "number") return value !== 0;
+  return fallback;
+}
+
+function ensureSheetWithHeaders_(sheetName, headers) {
+  const spreadsheet = getSpreadsheet_();
+  let sheet = spreadsheet.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+  }
+
+  if (sheet.getLastRow() === 0 && sheet.getLastColumn() === 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sheet;
+  }
+
+  const currentHeaders = getHeaders_(sheet);
+  const sameHeaders =
+    currentHeaders.length === headers.length &&
+    currentHeaders.every(function (header, index) {
+      return header === headers[index];
+    });
+
+  if (!sameHeaders) {
+    throw new Error(`Unexpected headers in sheet: ${sheetName}`);
+  }
+
+  return sheet;
+}
+
+function backfillRestTaskLogs_() {
+  return backfillStructuredTaskLogs_("backfillRestTaskLogs_", TASK_LOG_SPECS.rest);
+}
+
+function backfillMentalTaskLogs_() {
+  return backfillStructuredTaskLogs_("backfillMentalTaskLogs_", TASK_LOG_SPECS.mental);
+}
+
+function backfillSocialTaskLogs_() {
+  return backfillStructuredTaskLogs_("backfillSocialTaskLogs_", TASK_LOG_SPECS.social);
+}
+
+function backfillBalanceTaskLogs_() {
+  return backfillStructuredTaskLogs_("backfillBalanceTaskLogs_", TASK_LOG_SPECS.balance);
+}
+
+function backfillAllStructuredTaskLogs_() {
+  return {
+    success: true,
+    data: {
+      rest: backfillStructuredTaskLogs_("backfillRestTaskLogs_", TASK_LOG_SPECS.rest).data,
+      mental: backfillStructuredTaskLogs_("backfillMentalTaskLogs_", TASK_LOG_SPECS.mental).data,
+      social: backfillStructuredTaskLogs_("backfillSocialTaskLogs_", TASK_LOG_SPECS.social).data,
+      balance: backfillStructuredTaskLogs_("backfillBalanceTaskLogs_", TASK_LOG_SPECS.balance).data,
+    },
+  };
+}
+
+function backfillStructuredTaskLogs_(label, spec) {
+  return withTiming_(label, function () {
+    ensureSheetWithHeaders_(spec.sheetName, STRUCTURED_TASK_LOG_HEADERS);
+
+    const existingRows = getAllObjectsIfSheetExists_(spec.sheetName);
+    const existingDailyLogIds = {};
+    existingRows.forEach(function (row) {
+      if (row.daily_log_id) {
+        existingDailyLogIds[String(row.daily_log_id)] = true;
+      }
+    });
+
+    const sourceLogs = getAllObjects_(SHEET_NAMES.dailyLogs);
+    const rowsToInsert = sourceLogs
+      .map(function (row) {
+        return buildStructuredTaskLogRow_(row, spec);
+      })
+      .filter(function (row) {
+        return row && !existingDailyLogIds[String(row.daily_log_id)];
+      });
+
+    appendObjects_(spec.sheetName, rowsToInsert);
+
+    return {
+      success: true,
+      data: {
+        inserted: rowsToInsert.length,
+        existing: existingRows.length,
+        sheet: spec.sheetName,
+      },
+    };
+  });
 }
 
 function testVersion_() {

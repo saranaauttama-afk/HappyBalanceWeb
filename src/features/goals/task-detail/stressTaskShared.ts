@@ -108,9 +108,13 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
 }
 
 export async function syncStressLevelGoal(userId?: string) {
-  const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+  const logsResponse = await logsService.listMentalTaskLogs(userId ?? undefined, {
+    activity: "stress-level",
+    limit: 240,
+    forceRefresh: true,
+  });
   if (!logsResponse.success) {
-    throw new Error(logsResponse.error || "Could not load daily logs");
+    throw new Error(logsResponse.error || "Could not load stress-level logs");
   }
 
   const latestByTask = new Map<string, number>();

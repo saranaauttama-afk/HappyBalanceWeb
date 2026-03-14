@@ -108,9 +108,13 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
 }
 
 export async function syncPositiveThinkingGoal(userId?: string) {
-  const logsResponse = await logsService.listDailyLogs(userId ?? undefined);
+  const logsResponse = await logsService.listMentalTaskLogs(userId ?? undefined, {
+    activity: "positive-thinking",
+    limit: 240,
+    forceRefresh: true,
+  });
   if (!logsResponse.success) {
-    throw new Error(logsResponse.error || "Could not load daily logs");
+    throw new Error(logsResponse.error || "Could not load positive-thinking logs");
   }
 
   const latestByTask = new Map<string, number>();

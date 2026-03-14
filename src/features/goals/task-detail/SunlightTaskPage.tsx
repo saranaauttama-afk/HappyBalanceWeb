@@ -49,9 +49,13 @@ export default function SunlightTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+        activity: "stress-level",
+        task: "get-sunlight",
+        limit: 90,
+      });
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "Could not load sunlight logs");
       }
 
       const byDate = new Map<string, SunHistoryItem>();

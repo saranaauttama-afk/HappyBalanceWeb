@@ -28,6 +28,14 @@ export interface DailyLog {
   energy: number;
   stress: number;
   note: string;
+  daily_log_id?: string;
+  entry_type?: string;
+  category?: string;
+  activity?: string;
+  task?: string;
+  score?: number;
+  point?: number;
+  achieved?: boolean | string | number;
   created_at?: string;
   updated_at?: string;
 }

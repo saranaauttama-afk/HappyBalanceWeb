@@ -109,15 +109,13 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
 }
 
 export async function syncBalanceActivityGoal(activity: string, userId?: string) {
-  const logsResponse = await logsService.listDailyLogs(userId ?? undefined, {
-    entry_type: "balance_task",
-    category: "balance",
+  const logsResponse = await logsService.listBalanceTaskLogs(userId ?? undefined, {
     activity,
     limit: 240,
     forceRefresh: true,
   });
   if (!logsResponse.success) {
-    throw new Error(logsResponse.error || "Could not load daily logs");
+    throw new Error(logsResponse.error || "Could not load balance activity logs");
   }
 
   const latestByTask = new Map<string, number>();
