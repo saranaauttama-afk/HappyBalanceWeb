@@ -1,6 +1,9 @@
-﻿import { Link, useParams } from "react-router-dom";
+﻿import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import { logsService } from "../../../services/logs.service";
+import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS } from "../tasks/restTasks";
 import { MENTAL_TASKS } from "../tasks/mentalTasks";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
@@ -13,6 +16,14 @@ import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 import { ChevronRight, Smile, Sparkles, Sun } from "lucide-react";
+import {
+  getLogTimestamp as getPositiveThinkingLogTimestamp,
+  parsePositiveThinkingTaskNote,
+} from "../task-detail/positiveThinkingTaskShared";
+import {
+  getLogTimestamp as getStressLogTimestamp,
+  parseStressTaskNote,
+} from "../task-detail/stressTaskShared";
 
 const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
   string,
@@ -105,6 +116,132 @@ export default function GoalActivityPage() {
     category: string;
     activity: string;
   }>();
+  const userId = getCurrentUserId();
+
+  const [positiveThinkingCompletion, setPositiveThinkingCompletion] = useState<Record<string, boolean>>({});
+  const [positiveThinkingLoading, setPositiveThinkingLoading] = useState(false);
+  const [stressCompletion, setStressCompletion] = useState<Record<string, boolean>>({});
+  const [stressLoading, setStressLoading] = useState(false);
+
+  useEffect(() => {
+    if (category !== "mental" || activity !== "positive-thinking") {
+      setPositiveThinkingCompletion({});
+      setPositiveThinkingLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadPositiveThinkingCompletion() {
+      try {
+        setPositiveThinkingLoading(true);
+
+        const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+          activity: "positive-thinking",
+          limit: 240,
+        });
+
+        if (!response.success) {
+          if (!cancelled) {
+            setPositiveThinkingCompletion({});
+          }
+          return;
+        }
+
+        const completionByTask = new Map<string, boolean>();
+        [...(response.data || [])]
+          .sort((a, b) => getPositiveThinkingLogTimestamp(b) - getPositiveThinkingLogTimestamp(a))
+          .forEach((log) => {
+            const parsed = parsePositiveThinkingTaskNote(String(log.note));
+            if (!parsed || completionByTask.has(parsed.task)) return;
+            completionByTask.set(parsed.task, parsed.score > 0);
+          });
+
+        if (!cancelled) {
+          setPositiveThinkingCompletion(Object.fromEntries(completionByTask));
+        }
+      } finally {
+        if (!cancelled) {
+          setPositiveThinkingLoading(false);
+        }
+      }
+    }
+
+    void loadPositiveThinkingCompletion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activity, category, userId]);
+
+  useEffect(() => {
+    if (category !== "mental" || activity !== "stress-level") {
+      setStressCompletion({});
+      setStressLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadStressCompletion() {
+      try {
+        setStressLoading(true);
+
+        const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+          activity: "stress-level",
+          limit: 240,
+        });
+
+        if (!response.success) {
+          if (!cancelled) {
+            setStressCompletion({});
+          }
+          return;
+        }
+
+        const completionByTask = new Map<string, boolean>();
+        [...(response.data || [])]
+          .sort((a, b) => getStressLogTimestamp(b) - getStressLogTimestamp(a))
+          .forEach((log) => {
+            const parsed = parseStressTaskNote(String(log.note));
+            if (!parsed || completionByTask.has(parsed.task)) return;
+            completionByTask.set(parsed.task, parsed.score > 0);
+          });
+
+        if (!cancelled) {
+          setStressCompletion(Object.fromEntries(completionByTask));
+        }
+      } finally {
+        if (!cancelled) {
+          setStressLoading(false);
+        }
+      }
+    }
+
+    void loadStressCompletion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activity, category, userId]);
+
+  const positiveThinkingTasks = useMemo(
+    () =>
+      POSITIVE_THINKING_TASKS.map((task) => ({
+        ...task,
+        completed: positiveThinkingCompletion[task.slug] ?? false,
+      })),
+    [positiveThinkingCompletion]
+  );
+
+  const stressTasks = useMemo(
+    () =>
+      STRESS_TASKS.map((task) => ({
+        ...task,
+        completed: stressCompletion[task.slug] ?? false,
+      })),
+    [stressCompletion]
+  );
 
   if (category === "physical" && activity === "rest") {
     return (
@@ -192,8 +329,8 @@ export default function GoalActivityPage() {
   }
 
   if (category === "mental" && activity === "positive-thinking") {
-    const completedCount = POSITIVE_THINKING_TASKS.filter((task) => task.completed).length;
-    const totalCount = POSITIVE_THINKING_TASKS.length;
+    const completedCount = positiveThinkingTasks.filter((task) => task.completed).length;
+    const totalCount = positiveThinkingTasks.length;
     const progressPercent =
       totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
@@ -212,47 +349,63 @@ export default function GoalActivityPage() {
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
-            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">POSITIVE THINKING</p>
-              <div className="mt-2 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ฝึกมองสิ่งรอบตัวในด้านที่ช่วยให้ใจเบาขึ้น</h2>
-                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อแบบ Yes / No และ 1 หัวข้อรายวันที่เก็บเป็นจำนวนครั้ง</p>
-                </div>
-                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2e6a8b] shadow-sm">
-                  <Sparkles size={22} />
-                </div>
+            <section className="relative overflow-hidden rounded-[28px] border border-white/80 p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)]">
+              <div className="pointer-events-none absolute inset-0">
+                <img
+                  src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=80"
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,0.95)_8%,rgba(255,255,255,0.82)_42%,rgba(255,245,224,0.64)_72%,rgba(227,249,239,0.54)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.52)_0%,rgba(255,255,255,0)_26%)]" />
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.32)_48%,rgba(255,255,255,0.7)_100%)]" />
               </div>
 
-              <div className="mt-4 flex items-center gap-4">
-                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
-                  {completedCount}
+              <div className="relative z-10">
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">POSITIVE THINKING</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-2xl font-extrabold leading-tight text-slate-900">
+                      ฝึกมองสิ่งรอบตัวในด้านที่ช่วยให้ใจเบาขึ้น
+                    </h2>
+                    <p className="mt-1 max-w-xs text-sm text-slate-700">
+                      เก็บกิจกรรมเล็ก ๆ ที่ช่วยให้เราค่อย ๆ มองโลกในมุมที่อ่อนโยนและมีพลังขึ้น
+                    </p>
+                  </div>
+                  <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.38)_100%)] text-[#2e6a8b] shadow-[0_12px_24px_rgba(78,104,96,0.16)] backdrop-blur-md">
+                    <Sparkles size={22} />
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าของหัวข้อนี้</span>
-                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+
+                <div className="mt-5 flex items-center gap-4">
+                  <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_28%,#fff4a8_0%,#f4e46c_44%,#e3d24b_100%)] text-4xl font-extrabold text-slate-900 shadow-[inset_0_10px_22px_rgba(255,255,255,0.42),0_12px_24px_rgba(160,138,46,0.18)]">
+                    {completedCount}
                   </div>
-                  <div className="h-2 rounded-full bg-slate-200">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                  <div className="min-w-0 flex-1 rounded-[24px] border border-white/60 bg-white/55 px-4 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur-sm">
+                    <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
+                      <span>ความคืบหน้าของหัวข้อนี้</span>
+                      <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/80">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
-                  </p>
                 </div>
               </div>
             </section>
 
             <section className="space-y-3">
-              {POSITIVE_THINKING_TASKS.map((task) => {
+              {positiveThinkingTasks.map((task) => {
                 const path =
                   task.slug === "smile-when-disappointed"
                     ? "/goals/mental/positive-thinking/smile-when-disappointed"
                     : `/goals/mental/positive-thinking/${task.slug}`;
-                const isDaily = task.slug === "smile-when-disappointed";
 
                 return (
                   <Link key={task.slug} to={path} className="block">
@@ -261,30 +414,30 @@ export default function GoalActivityPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกรายวันและเก็บจำนวนครั้ง" : "บันทึกผลแบบ Yes / No ภาพรวม"}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.completed
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-slate-100 text-slate-600"
+                                positiveThinkingLoading
+                                  ? "bg-slate-100 text-slate-500"
+                                  : task.completed
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {positiveThinkingLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            {isDaily ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff4ec] px-2.5 py-1 text-xs font-medium text-[#a95f3a]">
-                                <Smile size={12} />
-                                Daily
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                                Yes / No
-                              </span>
-                            )}
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "counter"
+                                  ? "bg-[#fff4ec] text-[#a95f3a]"
+                                  : "bg-[#eef8fd] text-[#2e6a8b]"
+                              }`}
+                            >
+                              {task.type === "counter" ? <Smile size={12} /> : null}
+                              {task.type === "counter" ? "Counter" : "Yes / No"}
+                            </span>
                           </div>
                         </div>
 
@@ -303,8 +456,8 @@ export default function GoalActivityPage() {
     );
   }
   if (category === "mental" && activity === "stress-level") {
-    const completedCount = STRESS_TASKS.filter((task) => task.completed).length;
-    const totalCount = STRESS_TASKS.length;
+    const completedCount = stressTasks.filter((task) => task.completed).length;
+    const totalCount = stressTasks.length;
     const progressPercent =
       totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
@@ -323,47 +476,63 @@ export default function GoalActivityPage() {
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
-            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">STRESS LEVEL</p>
-              <div className="mt-2 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">ค่อย ๆ ลดความตึงเครียดด้วยกิจกรรมที่ทำได้จริง</h2>
-                  <p className="mt-1 text-sm text-slate-600">มีทั้งหัวข้อแบบ Yes / No และ 1 หัวข้อรายวันที่เก็บเป็นจำนวนครั้ง</p>
-                </div>
-                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-[#2e6a8b] shadow-sm">
-                  <Sparkles size={22} />
-                </div>
+            <section className="relative overflow-hidden rounded-[28px] border border-white/80 p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)]">
+              <div className="pointer-events-none absolute inset-0">
+                <img
+                  src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,0.93)_10%,rgba(255,250,232,0.8)_46%,rgba(236,252,247,0.62)_74%,rgba(230,244,255,0.56)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.48)_0%,rgba(255,255,255,0)_30%)]" />
+                <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.28)_48%,rgba(255,255,255,0.7)_100%)]" />
               </div>
 
-              <div className="mt-4 flex items-center gap-4">
-                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eddc4c] text-4xl font-extrabold text-slate-900 shadow-inner">
-                  {completedCount}
+              <div className="relative z-10">
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">STRESS LEVEL</p>
+                <div className="mt-2 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-2xl font-extrabold leading-tight text-slate-900">
+                      ค่อย ๆ ลดความตึงเครียดด้วยกิจกรรมที่ทำได้จริง
+                    </h2>
+                    <p className="mt-1 max-w-xs text-sm text-slate-700">
+                      ให้เวลากับกิจกรรมเรียบง่ายที่ช่วยให้ร่างกายและใจค่อย ๆ ผ่อนลงในแต่ละวัน
+                    </p>
+                  </div>
+                  <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.36)_100%)] text-[#2e6a8b] shadow-[0_12px_24px_rgba(78,104,96,0.16)] backdrop-blur-md">
+                    <Sparkles size={22} />
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                    <span>ความคืบหน้าของหัวข้อนี้</span>
-                    <span className="font-semibold text-slate-900">{progressPercent}%</span>
+
+                <div className="mt-5 flex items-center gap-4">
+                  <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_28%,#fff4a8_0%,#f4e46c_44%,#e3d24b_100%)] text-4xl font-extrabold text-slate-900 shadow-[inset_0_10px_22px_rgba(255,255,255,0.42),0_12px_24px_rgba(160,138,46,0.18)]">
+                    {completedCount}
                   </div>
-                  <div className="h-2 rounded-full bg-slate-200">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                  <div className="min-w-0 flex-1 rounded-[24px] border border-white/60 bg-white/55 px-4 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur-sm">
+                    <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
+                      <span>ความคืบหน้าของหัวข้อนี้</span>
+                      <span className="font-semibold text-slate-900">{progressPercent}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/80">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">
+                      ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
+                    </p>
                   </div>
-                  <p className="mt-2 text-sm font-medium text-slate-700">
-                    ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
-                  </p>
                 </div>
               </div>
             </section>
 
             <section className="space-y-3">
-              {STRESS_TASKS.map((task) => {
+              {stressTasks.map((task) => {
                 const path =
                   task.slug === "get-sunlight"
                     ? "/goals/mental/stress-level/get-sunlight"
                     : `/goals/mental/stress-level/${task.slug}`;
-                const isDaily = task.slug === "get-sunlight";
 
                 return (
                   <Link key={task.slug} to={path} className="block">
@@ -372,30 +541,30 @@ export default function GoalActivityPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกรายวันและเก็บจำนวนครั้ง" : "บันทึกผลแบบ Yes / No ภาพรวม"}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.completed
+                                stressLoading
+                                  ? "bg-slate-100 text-slate-500"
+                                  : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "ทำแล้ว" : "รอบันทึก"}
+                              {stressLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            {isDaily ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
-                                <Sun size={12} />
-                                Daily
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                                Yes / No
-                              </span>
-                            )}
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "counter"
+                                  ? "bg-[#fff8dd] text-[#966300]"
+                                  : "bg-[#eef8fd] text-[#2e6a8b]"
+                              }`}
+                            >
+                              {task.type === "counter" ? <Sun size={12} /> : null}
+                              {task.type === "counter" ? "Counter" : "Yes / No"}
+                            </span>
                           </div>
                         </div>
 

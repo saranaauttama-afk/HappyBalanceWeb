@@ -1,4 +1,13 @@
-﻿import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
+﻿import {
+  CircleCheckBig,
+  CircleX,
+  Coffee,
+  CigaretteOff,
+  Flower2,
+  HeartPulse,
+  Sparkles,
+  Waves,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -15,6 +24,23 @@ import {
   syncStressLevelGoal,
 } from "./stressTaskShared";
 
+function getTaskIcon(task: string) {
+  switch (task) {
+    case "meditation":
+      return Flower2;
+    case "do-favorite-activities":
+      return Sparkles;
+    case "avoid-smoking-alcohol":
+      return CigaretteOff;
+    case "deep-breathing":
+      return Waves;
+    case "warm-drinks":
+      return Coffee;
+    default:
+      return HeartPulse;
+  }
+}
+
 export default function StressTaskPage() {
   const { task } = useParams<{ task?: string }>();
   const userId = getCurrentUserId();
@@ -26,6 +52,8 @@ export default function StressTaskPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+
+  const Icon = getTaskIcon(task ?? "");
 
   const scorePreview = useMemo(() => {
     if (done === null) return null;
@@ -45,7 +73,7 @@ export default function StressTaskPage() {
         limit: 20,
       });
       if (!response.success) {
-        throw new Error(response.error || "Could not load stress-level logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const latestLog = [...(response.data || [])]
@@ -71,7 +99,7 @@ export default function StressTaskPage() {
       setDone(getBoolean(parsed.payload.done, parsed.score > 0));
       setLastSavedDate(latestLog.log_date);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -116,14 +144,14 @@ export default function StressTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncStressLevelGoal(userId ?? undefined);
-      setLastSavedDate(getTodayDate());
+      await loadTaskState();
       setSuccessMessage(done ? "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 100%" : "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 0%");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
@@ -155,10 +183,18 @@ export default function StressTaskPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">เช็กการทำกิจกรรมนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นการประเมินภาพรวม ไม่เน้นบันทึกรายวัน</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <Icon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+                  </div>
+                </div>
+                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -169,13 +205,8 @@ export default function StressTaskPage() {
                       : "bg-rose-50 text-rose-700"
                 }`}
               >
-                {scorePreview === null ? "ยังไม่เลือก" : `${scorePreview}%`}
+                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
               </span>
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
-              <Sparkles size={14} />
-              ตอบแบบ Yes / No
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
@@ -225,6 +256,11 @@ export default function StressTaskPage() {
           >
             {saving ? "กำลังบันทึก..." : "บันทึกผล"}
           </button>
+
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
+            <HeartPulse size={14} />
+            เลือกบันทึกจากสิ่งที่คุณทำได้ในรอบล่าสุดของวันนั้น
+          </div>
         </main>
       </div>
     </MobileShell>

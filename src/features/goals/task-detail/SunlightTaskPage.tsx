@@ -4,6 +4,7 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { STRESS_TASKS } from "../tasks/stressTasks";
 import {
   formatThaiDate,
   getBoolean,
@@ -22,6 +23,8 @@ type SunHistoryItem = {
   point: number;
   achieved: boolean;
 };
+
+const config = STRESS_TASKS.find((item) => item.slug === "get-sunlight");
 
 export default function SunlightTaskPage() {
   const userId = getCurrentUserId();
@@ -55,7 +58,7 @@ export default function SunlightTaskPage() {
         limit: 90,
       });
       if (!response.success) {
-        throw new Error(response.error || "Could not load sunlight logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const byDate = new Map<string, SunHistoryItem>();
@@ -94,7 +97,7 @@ export default function SunlightTaskPage() {
 
       setSunCount(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -137,7 +140,7 @@ export default function SunlightTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save sunlight task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncStressLevelGoal(userId ?? undefined);
@@ -149,7 +152,7 @@ export default function SunlightTaskPage() {
           : "บันทึกสำเร็จ วันนี้ยังไม่มีจำนวนครั้งที่บันทึก"
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
@@ -172,10 +175,18 @@ export default function SunlightTaskPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">บันทึกการเจอแสงแดดวันนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นรายวัน เก็บจำนวนครั้งในแต่ละวัน</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#fff8dd] text-[#966300] shadow-sm">
+                    <Sun size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config?.label ?? "ออกไปเจอแสงแดด"}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config?.subtitle}</p>
+                  </div>
+                </div>
+                {config?.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -186,42 +197,34 @@ export default function SunlightTaskPage() {
               </span>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white px-4 py-4">
-              <p className="text-center text-xs text-slate-500">จำนวนครั้งที่ออกไปเจอแสงแดดวันนี้</p>
-              <div className="mt-2 flex items-center justify-center gap-3">
+            <div className="mt-5 rounded-[28px] border border-[#f5ebcf] bg-[linear-gradient(180deg,#fffdf4_0%,#fff7de_100%)] p-4">
+              <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ได้ออกไปเจอแสงแดดในวันนี้</p>
+              <div className="mt-4 flex items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => setSunCount((prev) => Math.max(prev - 1, 0))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
                   aria-label="ลดจำนวนครั้ง"
                 >
                   -
                 </button>
 
-                <input
-                  type="number"
-                  min={0}
-                  max={30}
-                  value={sunCount}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    if (!Number.isFinite(next)) return;
-                    setSunCount(Math.max(0, Math.round(next)));
-                  }}
-                  className="w-28 rounded-xl border border-slate-200 bg-[#f8fafc] px-3 py-2 text-center text-3xl font-bold text-slate-900"
-                />
+                <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                  <p className="text-3xl font-bold text-slate-900">{sunCount}</p>
+                  <p className="text-xs text-slate-500">ครั้ง</p>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setSunCount((prev) => Math.min(prev + 1, 30))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
                   aria-label="เพิ่มจำนวนครั้ง"
                 >
                   +
                 </button>
               </div>
 
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {[1, 2, 3, 5].map((preset) => (
                   <button
                     key={preset}
@@ -229,7 +232,7 @@ export default function SunlightTaskPage() {
                     onClick={() => setSunCount(preset)}
                     className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
                       sunCount === preset
-                        ? "border-[#d88d80] bg-[#fff1e9] text-[#b46e44]"
+                        ? "border-[#dcb161] bg-[#fff2c8] text-[#9a6a10]"
                         : "border-slate-200 bg-white text-slate-600"
                     }`}
                   >
@@ -237,11 +240,6 @@ export default function SunlightTaskPage() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#fff8dd] px-3 py-1.5 text-xs font-medium text-[#966300]">
-              <Sun size={14} />
-              วันนี้ออกไปเจอแสงแดดแล้ว {sunCount} ครั้ง
             </div>
           </section>
 

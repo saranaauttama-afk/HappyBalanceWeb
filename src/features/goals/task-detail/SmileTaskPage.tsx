@@ -4,6 +4,7 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import {
   formatThaiDate,
   getBoolean,
@@ -22,6 +23,8 @@ type SmileHistoryItem = {
   point: number;
   achieved: boolean;
 };
+
+const config = POSITIVE_THINKING_TASKS.find((item) => item.slug === "smile-when-disappointed");
 
 export default function SmileTaskPage() {
   const userId = getCurrentUserId();
@@ -55,7 +58,7 @@ export default function SmileTaskPage() {
         limit: 90,
       });
       if (!response.success) {
-        throw new Error(response.error || "Could not load smile logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const byDate = new Map<string, SmileHistoryItem>();
@@ -94,7 +97,7 @@ export default function SmileTaskPage() {
 
       setSmileCount(0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -137,7 +140,7 @@ export default function SmileTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save smile task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncPositiveThinkingGoal(userId ?? undefined);
@@ -149,7 +152,7 @@ export default function SmileTaskPage() {
           : "บันทึกสำเร็จ วันนี้ยังไม่มีจำนวนยิ้มที่บันทึก"
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
@@ -172,10 +175,18 @@ export default function SmileTaskPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">บันทึกรอยยิ้มวันนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นรายวัน เก็บจำนวนยิ้มของแต่ละวัน</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <SmilePlus size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config?.label ?? "ยิ้มเสมอเมื่อเจอเรื่องน่าผิดหวัง"}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config?.subtitle}</p>
+                  </div>
+                </div>
+                {config?.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -186,42 +197,34 @@ export default function SmileTaskPage() {
               </span>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white px-4 py-4">
-              <p className="text-center text-xs text-slate-500">จำนวนยิ้มที่บันทึกในวันนี้</p>
-              <div className="mt-2 flex items-center justify-center gap-3">
+            <div className="mt-5 rounded-[28px] border border-[#efe4db] bg-[linear-gradient(180deg,#fffdfb_0%,#fff5ef_100%)] p-4">
+              <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ยังยิ้มและตั้งหลักได้ในวันนี้</p>
+              <div className="mt-4 flex items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => setSmileCount((prev) => Math.max(prev - 1, 0))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
-                  aria-label="ลดจำนวนยิ้ม"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                  aria-label="ลดจำนวนครั้ง"
                 >
                   -
                 </button>
 
-                <input
-                  type="number"
-                  min={0}
-                  max={30}
-                  value={smileCount}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    if (!Number.isFinite(next)) return;
-                    setSmileCount(Math.max(0, Math.round(next)));
-                  }}
-                  className="w-28 rounded-xl border border-slate-200 bg-[#f8fafc] px-3 py-2 text-center text-3xl font-bold text-slate-900"
-                />
+                <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                  <p className="text-3xl font-bold text-slate-900">{smileCount}</p>
+                  <p className="text-xs text-slate-500">ครั้ง</p>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setSmileCount((prev) => Math.min(prev + 1, 30))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
-                  aria-label="เพิ่มจำนวนยิ้ม"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                  aria-label="เพิ่มจำนวนครั้ง"
                 >
                   +
                 </button>
               </div>
 
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {[1, 3, 5, 7].map((preset) => (
                   <button
                     key={preset}
@@ -237,11 +240,6 @@ export default function SmileTaskPage() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
-              <SmilePlus size={14} />
-              วันนี้ยิ้มแล้ว {smileCount} ครั้ง
             </div>
           </section>
 
