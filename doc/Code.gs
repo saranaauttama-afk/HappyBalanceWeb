@@ -2,12 +2,33 @@ const SHEET_NAMES = {
   users: "users",
   goals: "goals",
   dailyLogs: "daily_logs",
+  restTaskLogs: "rest_task_logs",
   appointments: "appointments",
   monthlyGoals: "monthly_goals",
   articles: "articles",
 };
-const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-13";
-const APP_SCRIPT_DEPLOYED_AT = "2026-03-13T00:20:00+07:00";
+const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-14";
+const APP_SCRIPT_DEPLOYED_AT = "2026-03-14T10:45:00+07:00";
+
+const REST_TASK_LOG_HEADERS = [
+  "id",
+  "daily_log_id",
+  "user_id",
+  "log_date",
+  "entry_type",
+  "category",
+  "activity",
+  "task",
+  "score",
+  "point",
+  "achieved",
+  "mood",
+  "energy",
+  "stress",
+  "note",
+  "created_at",
+  "updated_at",
+];
 
 function doGet(e) {
   try {
@@ -405,7 +426,13 @@ function listRestTaskLogs_(userId, task, limitParam, fromParam, toParam) {
       };
     }
 
-    const rows = getAllObjects_(SHEET_NAMES.dailyLogs)
+    const structuredRows = getAllObjectsIfSheetExists_(SHEET_NAMES.restTaskLogs);
+    const sourceRows =
+      structuredRows.length > 0
+        ? structuredRows
+        : getAllObjects_(SHEET_NAMES.dailyLogs);
+
+    const rows = sourceRows
       .filter((row) => matchesLogFilters_(row, userId, normalized))
       .sort(compareLogRowsDesc_)
       .slice(0, normalized.limit > 0 ? normalized.limit : undefined);
@@ -444,6 +471,7 @@ function createDailyLog_(payload) {
     };
 
     appendObject_(SHEET_NAMES.dailyLogs, newLog);
+    appendRestTaskLogIfNeeded_(newLog);
     bumpUserDataVersion_(newLog.user_id);
 
     return {
@@ -633,7 +661,7 @@ function matchesLogFilters_(row, userId, filters) {
     !!filters.entry_type || !!filters.category || !!filters.activity || !!filters.task;
   if (!requiresNoteParse) return true;
 
-  const parsed = parseRestTaskNoteForFilter_(row.note);
+  const parsed = getStructuredLogFilterFields_(row);
   if (!parsed) return false;
 
   if (filters.entry_type && parsed.entry_type !== filters.entry_type) return false;
@@ -642,6 +670,27 @@ function matchesLogFilters_(row, userId, filters) {
   if (filters.task && parsed.task !== filters.task) return false;
 
   return true;
+}
+
+function getStructuredLogFilterFields_(row) {
+  if (!row) return null;
+
+  const hasStructuredFields =
+    row.entry_type !== undefined ||
+    row.category !== undefined ||
+    row.activity !== undefined ||
+    row.task !== undefined;
+
+  if (hasStructuredFields) {
+    return {
+      entry_type: row.entry_type ? String(row.entry_type) : "",
+      category: row.category ? String(row.category) : "",
+      activity: row.activity ? String(row.activity) : "",
+      task: row.task ? String(row.task) : "",
+    };
+  }
+
+  return parseRestTaskNoteForFilter_(row.note);
 }
 
 function parseRestTaskNoteForFilter_(note) {
@@ -816,6 +865,31 @@ function getAllObjects_(sheetName) {
   });
 }
 
+function getAllObjectsIfSheetExists_(sheetName) {
+  const sheet = getSpreadsheet_().getSheetByName(sheetName);
+  if (!sheet) {
+    return [];
+  }
+
+  const headers = getHeaders_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastColumn = sheet.getLastColumn();
+
+  if (lastRow < 2) {
+    return [];
+  }
+
+  const values = sheet.getRange(2, 1, lastRow - 1, lastColumn).getValues();
+
+  return values.map((row) => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
+    });
+    return obj;
+  });
+}
+
 function appendObject_(sheetName, obj) {
   const sheet = getSheet_(sheetName);
   const headers = getHeaders_(sheet);
@@ -825,12 +899,160 @@ function appendObject_(sheetName, obj) {
   sheet.appendRow(row);
 }
 
+function appendObjects_(sheetName, objects) {
+  if (!objects || objects.length === 0) return;
+
+  const sheet = getSheet_(sheetName);
+  const headers = getHeaders_(sheet);
+  const rows = objects.map((obj) =>
+    headers.map((header) => (obj[header] !== undefined ? obj[header] : ""))
+  );
+
+  sheet
+    .getRange(sheet.getLastRow() + 1, 1, rows.length, headers.length)
+    .setValues(rows);
+}
+
 function updateRowByIndex_(sheet, rowIndex, obj) {
   const headers = getHeaders_(sheet);
   const row = headers.map((header) =>
     obj[header] !== undefined ? obj[header] : ""
   );
   sheet.getRange(rowIndex, 1, 1, headers.length).setValues([row]);
+}
+
+function appendRestTaskLogIfNeeded_(dailyLog) {
+  const structured = buildRestTaskLogRow_(dailyLog);
+  if (!structured) return;
+
+  ensureSheetWithHeaders_(SHEET_NAMES.restTaskLogs, REST_TASK_LOG_HEADERS);
+  appendObject_(SHEET_NAMES.restTaskLogs, structured);
+}
+
+function buildRestTaskLogRow_(dailyLog) {
+  const parsed = parseRestTaskNotePayload_(dailyLog && dailyLog.note);
+  if (!parsed) return null;
+
+  if (
+    parsed.entry_type !== "rest_task" ||
+    parsed.category !== "physical" ||
+    parsed.activity !== "rest" ||
+    !parsed.task
+  ) {
+    return null;
+  }
+
+  const payload = parsed.payload || {};
+  const score = Number(parsed.score);
+  const fallbackAchieved = Number.isFinite(score) ? score > 0 : false;
+  const achieved = getBooleanValue_(payload.achieved, fallbackAchieved);
+  const point = Number(payload.point);
+
+  return {
+    id: generateId_("restlog"),
+    daily_log_id: dailyLog.id,
+    user_id: dailyLog.user_id,
+    log_date: dailyLog.log_date,
+    entry_type: parsed.entry_type,
+    category: parsed.category,
+    activity: parsed.activity,
+    task: parsed.task,
+    score: Number.isFinite(score) ? score : 0,
+    point: Number.isFinite(point) ? point : achieved ? 1 : 0,
+    achieved: achieved,
+    mood: dailyLog.mood,
+    energy: Number(dailyLog.energy),
+    stress: Number(dailyLog.stress),
+    note: dailyLog.note,
+    created_at: dailyLog.created_at,
+    updated_at: dailyLog.updated_at,
+  };
+}
+
+function parseRestTaskNotePayload_(note) {
+  if (!note) return null;
+
+  try {
+    const parsed = JSON.parse(String(note));
+    return {
+      entry_type: parsed.entry_type ? String(parsed.entry_type) : "",
+      category: parsed.category ? String(parsed.category) : "",
+      activity: parsed.activity ? String(parsed.activity) : "",
+      task: parsed.task ? String(parsed.task) : "",
+      score: parsed.score,
+      payload: parsed.payload || {},
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+function getBooleanValue_(value, fallback) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    const normalized = value.toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+  return fallback;
+}
+
+function ensureSheetWithHeaders_(sheetName, headers) {
+  const spreadsheet = getSpreadsheet_();
+  let sheet = spreadsheet.getSheetByName(sheetName);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+  }
+
+  if (sheet.getLastRow() === 0 && sheet.getLastColumn() === 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sheet;
+  }
+
+  const currentHeaders = getHeaders_(sheet);
+  const sameHeaders =
+    currentHeaders.length === headers.length &&
+    currentHeaders.every(function (header, index) {
+      return header === headers[index];
+    });
+
+  if (!sameHeaders) {
+    throw new Error(`Unexpected headers in sheet: ${sheetName}`);
+  }
+
+  return sheet;
+}
+
+function backfillRestTaskLogs_() {
+  return withTiming_("backfillRestTaskLogs_", function () {
+    ensureSheetWithHeaders_(SHEET_NAMES.restTaskLogs, REST_TASK_LOG_HEADERS);
+
+    const existingRows = getAllObjectsIfSheetExists_(SHEET_NAMES.restTaskLogs);
+    const existingDailyLogIds = {};
+    existingRows.forEach(function (row) {
+      if (row.daily_log_id) {
+        existingDailyLogIds[String(row.daily_log_id)] = true;
+      }
+    });
+
+    const sourceLogs = getAllObjects_(SHEET_NAMES.dailyLogs);
+    const rowsToInsert = sourceLogs
+      .map(buildRestTaskLogRow_)
+      .filter(function (row) {
+        return row && !existingDailyLogIds[String(row.daily_log_id)];
+      });
+
+    appendObjects_(SHEET_NAMES.restTaskLogs, rowsToInsert);
+
+    return {
+      success: true,
+      data: {
+        inserted: rowsToInsert.length,
+        existing: existingRows.length,
+      },
+    };
+  });
 }
 
 function testVersion_() {

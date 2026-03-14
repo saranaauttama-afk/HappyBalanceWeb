@@ -57,10 +57,40 @@ Columns:
 
 Actions:
 - listDailyLogs(userId, from?, to?, limit?, entry_type?, category?, activity?, task?)
-- listRestTaskLogs(userId, task?, limit?, from?, to?)
 - createDailyLog(user_id, log_date, mood, energy, stress, note)
 
-## Sheet 4: appointments
+## Sheet 4: rest_task_logs
+Dedicated read-optimized mirror for `physical/rest` task history.
+
+Columns:
+- id (string, PK)
+- daily_log_id (string, FK daily_logs.id)
+- user_id (string, FK users.id)
+- log_date (ISO date)
+- entry_type (string)
+- category (string)
+- activity (string)
+- task (string slug)
+- score (number)
+- point (number)
+- achieved (boolean)
+- mood (string)
+- energy (number)
+- stress (number)
+- note (string)
+- created_at (ISO datetime)
+- updated_at (ISO datetime)
+
+Actions:
+- listRestTaskLogs(userId, task?, limit?, from?, to?)
+
+Notes:
+- `createDailyLog` remains the write action used by frontend.
+- When `note.entry_type === "rest_task"`, Apps Script now writes to `daily_logs` and mirrors a structured row into `rest_task_logs`.
+- `listRestTaskLogs` reads `rest_task_logs` first and falls back to `daily_logs` only when the dedicated sheet is still empty.
+- One-time migration helper available in Apps Script: `backfillRestTaskLogs_()`.
+
+## Sheet 5: appointments
 Columns:
 - id (string, PK)
 - user_id (string, FK users.id)
@@ -75,7 +105,7 @@ Actions:
 - listAppointments(userId)
 - createAppointment(user_id, appointment_date, type, status, note)
 
-## Sheet 5: monthly_goals
+## Sheet 6: monthly_goals
 Columns:
 - id (string, PK)
 - user_id (string, FK users.id)
@@ -88,7 +118,7 @@ Actions:
 - listMonthlyGoals(userId, month_key?)
 - upsertMonthlyGoal(user_id, month_key, goal_text)
 
-## Sheet 6: articles
+## Sheet 7: articles
 Columns:
 - id (string, PK)
 - title (string)
@@ -100,7 +130,7 @@ Columns:
 Actions:
 - listArticles(limit?)
 
-## Optional Sheet 7: task_logs (next phase)
+## Optional Sheet 8: task_logs (next phase)
 Use this when task-detail pages need dedicated analytics instead of storing summaries in daily_logs.note.
 
 Columns:
@@ -122,9 +152,10 @@ Recommended actions:
 
 ## Notes for current codebase (as of 2026-03-09)
 - Core pages now save to goals and daily_logs actions directly.
-- Some task-detail pages currently save via createDailyLog as an interim approach.
+- Rest task-detail pages now read from `rest_task_logs` via `listRestTaskLogs`, while writes still go through `createDailyLog`.
+- Some non-rest task-detail pages currently save via createDailyLog as an interim approach.
 - Next migration step: switch those pages to createTaskLog once Apps Script supports task_logs.
 - Profile avatar upload now uses `uploadProfileAvatar` and stores file on Google Drive.
 - Optional Apps Script property: `PROFILE_AVATAR_FOLDER_ID` (if not set, files go to Drive root).
 - Appointments monthly goal now saves to `monthly_goals` (Google Sheets) via `upsertMonthlyGoal`.
-- `listGoals`, `listDailyLogs`, and `listRestTaskLogs` now support short-lived read cache (Apps Script `CacheService`) with user-version invalidation after writes.
+- `listGoals`, `listDailyLogs`, and `listRestTaskLogs` support short-lived read cache (Apps Script `CacheService`) with user-version invalidation after writes.

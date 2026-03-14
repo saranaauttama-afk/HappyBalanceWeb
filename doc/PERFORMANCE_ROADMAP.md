@@ -3,11 +3,11 @@
 ## Goal
 Reduce page-load and save-to-feedback latency in goals/rest flows, while keeping current Google Sheets backend.
 
-## Status (2026-03-12)
+## Status (2026-03-14)
 - Phase 0: done in code (frontend + Apps Script timing logs), baseline note added.
 - Phase 1: done in code (`listRestTaskLogs`, filter params, read cache + invalidation).
 - Phase 2: done in code for rest flow (`ActivityTaskPage`, `RestActivityPage` scoped fetch + faster save UX).
-- Phase 3: partially done (rest sync no longer scans full `daily_logs`, now reads scoped rest logs).
+- Phase 3: done for rest flow (`rest_task_logs` mirror sheet + read-first endpoint).
 - Phase 4: pending.
 
 ## Current Symptoms
@@ -64,6 +64,18 @@ Success criteria:
   2. Store per-task latest score in a dedicated sheet.
 - Recompute aggregate score from compact table instead of full `daily_logs`.
 
+Delivered in current implementation:
+- Added dedicated `rest_task_logs` sheet as read-optimized mirror for `physical/rest`.
+- `createDailyLog` now mirrors rest-task rows into `rest_task_logs`.
+- `listRestTaskLogs` now reads `rest_task_logs` first and falls back to `daily_logs` only when the mirror is still empty.
+- Added one-time migration helper `backfillRestTaskLogs_()` for existing historical rows.
+
+Rollout checklist:
+1. Deploy the latest Apps Script version containing `rest_task_logs`.
+2. Open the Apps Script editor once and run `backfillRestTaskLogs_()` manually.
+3. Confirm the new `rest_task_logs` sheet was created and populated.
+4. Re-test one rest task page and compare first-load latency before/after.
+
 Success criteria:
 - Save flow network calls reduced.
 - `syncRestGoalProgress` no longer depends on full log scan.
@@ -97,3 +109,7 @@ Success criteria:
 - Documented before/after latency metrics.
 - No functional regression in log save/history display.
 - Task pages no longer fetch full `daily_logs` by default.
+
+## Next Recommended Step
+- Measure latency again after deploying Apps Script with `rest_task_logs`.
+- If still slow, repeat the same split pattern for the highest-volume non-rest flows instead of optimizing frontend first.
