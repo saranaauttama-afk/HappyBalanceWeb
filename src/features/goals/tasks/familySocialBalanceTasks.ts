@@ -6,7 +6,6 @@ export interface FamilySocialBalanceTaskConfig {
   subtitle: string;
   type: FamilySocialBalanceTaskType;
   helperText?: string;
-  completed?: boolean;
 }
 
 export const FAMILY_SOCIAL_BALANCE_TASKS: FamilySocialBalanceTaskConfig[] = [
@@ -21,7 +20,6 @@ export const FAMILY_SOCIAL_BALANCE_TASKS: FamilySocialBalanceTaskConfig[] = [
     label: "เปิดใจให้กว้างรับฟังสิ่งที่อีกฝ่ายพูด",
     subtitle: "ฟังกันด้วยความตั้งใจโดยไม่รีบตัดสิน",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "say-thanks-or-sorry",
@@ -41,13 +39,11 @@ export const FAMILY_SOCIAL_BALANCE_TASKS: FamilySocialBalanceTaskConfig[] = [
     label: "พูดให้กำลังใจผู้อื่น",
     subtitle: "เติมแรงใจเล็ก ๆ ให้คนรอบตัวในจังหวะที่เหมาะสม",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "create-joy-with-laughter",
     label: "สร้างความรู้สึกดี ๆ ด้วยเสียงหัวเราะ",
     subtitle: "ชวนบรรยากาศรอบตัวให้ผ่อนคลายและอบอุ่นขึ้น",
     type: "boolean",
-    completed: true,
   },
 ];

@@ -1,6 +1,15 @@
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog, Goal } from "../../../types/models";
+import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
+import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
+import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
+
+const BALANCE_ACTIVITY_TASK_COUNT: Record<string, number> = {
+  "family-social-balance": FAMILY_SOCIAL_BALANCE_TASKS.length,
+  "work-balance": WORK_BALANCE_TASKS.length,
+  "personal-life-balance": PERSONAL_LIFE_BALANCE_TASKS.length,
+};
 
 type BalanceTaskNotePayload = {
   entry_type: "balance_task";
@@ -128,11 +137,9 @@ export async function syncBalanceActivityGoal(activity: string, userId?: string)
       latestByTask.set(parsed.task, parsed.score);
     });
 
-  const scores = Array.from(latestByTask.values());
-  const averageScore =
-    scores.length === 0
-      ? 0
-      : Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  const totalTaskCount = BALANCE_ACTIVITY_TASK_COUNT[activity] ?? latestByTask.size;
+  const totalScore = Array.from(latestByTask.values()).reduce((sum, score) => sum + score, 0);
+  const averageScore = totalTaskCount === 0 ? 0 : Math.round(totalScore / totalTaskCount);
 
   const goalsResponse = await goalsService.listGoals(userId ?? undefined);
   if (!goalsResponse.success) {

@@ -6,7 +6,6 @@ export interface WorkplaceRelationshipTaskConfig {
   subtitle: string;
   type: WorkplaceRelationshipTaskType;
   helperText?: string;
-  completed?: boolean;
 }
 
 export const WORKPLACE_RELATIONSHIP_TASKS: WorkplaceRelationshipTaskConfig[] = [
@@ -27,7 +26,6 @@ export const WORKPLACE_RELATIONSHIP_TASKS: WorkplaceRelationshipTaskConfig[] = [
     label: "รับฟังความคิดเห็น",
     subtitle: "ฟังมุมมองของเพื่อนร่วมงานอย่างตั้งใจเพื่อทำงานร่วมกันได้ดีขึ้น",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "share-items-with-colleagues",

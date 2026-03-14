@@ -4,8 +4,6 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { REST_TASKS } from "../tasks/restTasks";
-import { MENTAL_TASKS } from "../tasks/mentalTasks";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import { STRESS_TASKS } from "../tasks/stressTasks";
 import { SOCIAL_TASKS } from "../tasks/socialTasks";
@@ -24,6 +22,14 @@ import {
   getLogTimestamp as getStressLogTimestamp,
   parseStressTaskNote,
 } from "../task-detail/stressTaskShared";
+import {
+  getLogTimestamp as getSocialLogTimestamp,
+  parseSocialTaskNote,
+} from "../task-detail/socialTaskShared";
+import {
+  getLogTimestamp as getBalanceLogTimestamp,
+  parseBalanceTaskNote,
+} from "../task-detail/balanceTaskShared";
 
 const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
   string,
@@ -122,6 +128,10 @@ export default function GoalActivityPage() {
   const [positiveThinkingLoading, setPositiveThinkingLoading] = useState(false);
   const [stressCompletion, setStressCompletion] = useState<Record<string, boolean>>({});
   const [stressLoading, setStressLoading] = useState(false);
+  const [socialCompletion, setSocialCompletion] = useState<Record<string, boolean>>({});
+  const [socialLoading, setSocialLoading] = useState(false);
+  const [balanceCompletion, setBalanceCompletion] = useState<Record<string, boolean>>({});
+  const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(() => {
     if (category !== "mental" || activity !== "positive-thinking") {
@@ -225,6 +235,116 @@ export default function GoalActivityPage() {
     };
   }, [activity, category, userId]);
 
+  useEffect(() => {
+    if (
+      category !== "social" ||
+      !activity ||
+      !["family-relationship", "community-participation", "workplace-relationship"].includes(activity)
+    ) {
+      setSocialCompletion({});
+      setSocialLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadSocialCompletion() {
+      try {
+        setSocialLoading(true);
+
+        const response = await logsService.listSocialTaskLogs(userId ?? undefined, {
+          activity,
+          limit: 240,
+        });
+
+        if (!response.success) {
+          if (!cancelled) {
+            setSocialCompletion({});
+          }
+          return;
+        }
+
+        const completionByTask = new Map<string, boolean>();
+        [...(response.data || [])]
+          .sort((a, b) => getSocialLogTimestamp(b) - getSocialLogTimestamp(a))
+          .forEach((log) => {
+            const parsed = parseSocialTaskNote(String(log.note));
+            if (!parsed || parsed.activity !== activity || completionByTask.has(parsed.task)) return;
+            completionByTask.set(parsed.task, parsed.score > 0);
+          });
+
+        if (!cancelled) {
+          setSocialCompletion(Object.fromEntries(completionByTask));
+        }
+      } finally {
+        if (!cancelled) {
+          setSocialLoading(false);
+        }
+      }
+    }
+
+    void loadSocialCompletion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activity, category, userId]);
+
+  useEffect(() => {
+    if (
+      category !== "balance" ||
+      !activity ||
+      !["family-social-balance", "work-balance", "personal-life-balance"].includes(activity)
+    ) {
+      setBalanceCompletion({});
+      setBalanceLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadBalanceCompletion() {
+      try {
+        setBalanceLoading(true);
+
+        const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
+          activity,
+          limit: 240,
+        });
+
+        if (!response.success) {
+          if (!cancelled) {
+            setBalanceCompletion({});
+          }
+          return;
+        }
+
+        const completionByTask = new Map<string, boolean>();
+        [...(response.data || [])]
+          .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
+          .forEach((log) => {
+            const parsed = parseBalanceTaskNote(String(log.note));
+            if (!parsed || parsed.activity !== activity || completionByTask.has(parsed.task)) return;
+            completionByTask.set(parsed.task, parsed.score > 0);
+          });
+
+        if (!cancelled) {
+          setBalanceCompletion(Object.fromEntries(completionByTask));
+        }
+      } finally {
+        if (!cancelled) {
+          setBalanceLoading(false);
+        }
+      }
+    }
+
+    void loadBalanceCompletion();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activity, category, userId]);
+
   const positiveThinkingTasks = useMemo(
     () =>
       POSITIVE_THINKING_TASKS.map((task) => ({
@@ -243,40 +363,59 @@ export default function GoalActivityPage() {
     [stressCompletion]
   );
 
-  if (category === "physical" && activity === "rest") {
-    return (
-      <MobileShell>
-        <AppHeader title="การพักผ่อน" showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">🛏️</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
-                7
-              </div>
-              <span className="text-4xl">🛏️</span>
-            </div>
-          </div>
+  const familyRelationshipTasks = useMemo(
+    () =>
+      FAMILY_RELATIONSHIP_TASKS.map((task) => ({
+        ...task,
+        completed: socialCompletion[task.slug] ?? false,
+      })),
+    [socialCompletion]
+  );
 
-          <div className="space-y-3">
-            {REST_TASKS.map((task) => (
-              <Link
-                key={task.slug}
-                to={`/goals/physical/rest/${task.slug}`}
-                className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                  task.completed
-                    ? "border-green-400 bg-green-50 text-slate-900"
-                    : "border-slate-200 bg-white text-slate-600"
-                }`}
-              >
-                {task.label}
-              </Link>
-            ))}
-          </div>
-        </main>
-      </MobileShell>
-    );
-  }
+  const workplaceRelationshipTasks = useMemo(
+    () =>
+      WORKPLACE_RELATIONSHIP_TASKS.map((task) => ({
+        ...task,
+        completed: socialCompletion[task.slug] ?? false,
+      })),
+    [socialCompletion]
+  );
+
+  const familySocialBalanceTasks = useMemo(
+    () =>
+      FAMILY_SOCIAL_BALANCE_TASKS.map((task) => ({
+        ...task,
+        completed: balanceCompletion[task.slug] ?? false,
+      })),
+    [balanceCompletion]
+  );
+
+  const workBalanceTasks = useMemo(
+    () =>
+      WORK_BALANCE_TASKS.map((task) => ({
+        ...task,
+        completed: balanceCompletion[task.slug] ?? false,
+      })),
+    [balanceCompletion]
+  );
+
+  const personalLifeBalanceTasks = useMemo(
+    () =>
+      PERSONAL_LIFE_BALANCE_TASKS.map((task) => ({
+        ...task,
+        completed: balanceCompletion[task.slug] ?? false,
+      })),
+    [balanceCompletion]
+  );
+
+  const communityParticipationTask = useMemo(() => {
+    const task = SOCIAL_TASKS.find((item) => item.slug === "community-participation");
+    if (!task) return null;
+    return {
+      ...task,
+      completed: socialCompletion["community-participation-overall"] ?? false,
+    };
+  }, [socialCompletion]);
 
   if (category === "physical" && activity) {
     const physicalConfig = PHYSICAL_UNDER_CONSTRUCTION_MAP[activity];
@@ -583,8 +722,8 @@ export default function GoalActivityPage() {
     );
   }
     if (category === "social" && activity === "family-relationship") {
-    const completedCount = FAMILY_RELATIONSHIP_TASKS.filter((task) => task.completed).length;
-    const totalCount = FAMILY_RELATIONSHIP_TASKS.length;
+    const completedCount = familyRelationshipTasks.filter((task) => task.completed).length;
+    const totalCount = familyRelationshipTasks.length;
     const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
     return (
@@ -646,7 +785,7 @@ export default function GoalActivityPage() {
             </section>
 
             <section className="space-y-3">
-              {FAMILY_RELATIONSHIP_TASKS.map((task) => {
+              {familyRelationshipTasks.map((task) => {
                 const path =
                   task.slug === "listen-and-accept"
                     ? "/goals/social/family-relationship/listen-and-accept"
@@ -663,12 +802,14 @@ export default function GoalActivityPage() {
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.completed
+                                socialLoading
+                                  ? "bg-slate-100 text-slate-500"
+                                  : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                              {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -698,7 +839,7 @@ export default function GoalActivityPage() {
   }
 
     if (category === "social" && activity === "community-participation") {
-    const currentTask = SOCIAL_TASKS.find((task) => task.slug === "community-participation");
+    const currentTask = communityParticipationTask;
     const completedCount = currentTask?.completed ? 1 : 0;
     const totalCount = 1;
     const progressPercent = completedCount === 1 ? 100 : 0;
@@ -773,9 +914,22 @@ export default function GoalActivityPage() {
                   <p className="mt-1 text-sm text-slate-500">
                     {currentTask?.subtitle ?? "เปิดใจมีส่วนร่วมกับผู้คนและกิจกรรมรอบตัวอย่างเหมาะสม"}
                   </p>
-                  <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                    Yes / No
-                  </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                        socialLoading
+                          ? "bg-slate-100 text-slate-500"
+                          : currentTask?.completed
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {socialLoading ? "กำลังโหลด" : currentTask?.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                    </span>
+                    <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
+                      Yes / No
+                    </span>
+                  </div>
                 </div>
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
                   <ChevronRight size={16} />
@@ -789,8 +943,8 @@ export default function GoalActivityPage() {
   }
 
     if (category === "social" && activity === "workplace-relationship") {
-    const completedCount = WORKPLACE_RELATIONSHIP_TASKS.filter((task) => task.completed).length;
-    const totalCount = WORKPLACE_RELATIONSHIP_TASKS.length;
+    const completedCount = workplaceRelationshipTasks.filter((task) => task.completed).length;
+    const totalCount = workplaceRelationshipTasks.length;
     const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
     return (
@@ -852,7 +1006,7 @@ export default function GoalActivityPage() {
             </section>
 
             <section className="space-y-3">
-              {WORKPLACE_RELATIONSHIP_TASKS.map((task) => {
+              {workplaceRelationshipTasks.map((task) => {
                 const path =
                   task.slug === "share-items-with-colleagues"
                     ? "/goals/social/workplace-relationship/share-items-with-colleagues"
@@ -870,12 +1024,14 @@ export default function GoalActivityPage() {
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.completed
+                                socialLoading
+                                  ? "bg-slate-100 text-slate-500"
+                                  : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                              {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -905,8 +1061,8 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "family-social-balance") {
-    const completedCount = FAMILY_SOCIAL_BALANCE_TASKS.filter((task) => task.completed).length;
-    const totalCount = FAMILY_SOCIAL_BALANCE_TASKS.length;
+    const completedCount = familySocialBalanceTasks.filter((task) => task.completed).length;
+    const totalCount = familySocialBalanceTasks.length;
     const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
     return (
@@ -969,7 +1125,7 @@ export default function GoalActivityPage() {
             </section>
 
             <section className="space-y-3">
-              {FAMILY_SOCIAL_BALANCE_TASKS.map((task) => {
+              {familySocialBalanceTasks.map((task) => {
                 const path =
                   task.slug === "say-thanks-or-sorry"
                     ? "/goals/balance/family-social-balance/say-thanks-or-sorry"
@@ -987,12 +1143,14 @@ export default function GoalActivityPage() {
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.completed
+                                balanceLoading
+                                  ? "bg-slate-100 text-slate-500"
+                                  : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {task.completed ? "Done" : "Pending"}
+                              {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -1022,8 +1180,8 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "work-balance") {
-    const completedCount = WORK_BALANCE_TASKS.filter((task) => task.completed).length;
-    const totalCount = WORK_BALANCE_TASKS.length;
+    const completedCount = workBalanceTasks.filter((task) => task.completed).length;
+    const totalCount = workBalanceTasks.length;
     const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
     return (
@@ -1087,7 +1245,7 @@ export default function GoalActivityPage() {
             </section>
 
             <section className="space-y-3">
-              {WORK_BALANCE_TASKS.map((task) => (
+              {workBalanceTasks.map((task) => (
                 <Link key={task.slug} to={`/goals/balance/work-balance/${task.slug}`} className="block">
                   <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
@@ -1099,12 +1257,14 @@ export default function GoalActivityPage() {
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              task.completed
+                              balanceLoading
+                                ? "bg-slate-100 text-slate-500"
+                                : task.completed
                                 ? "bg-emerald-50 text-emerald-700"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            {task.completed ? "Done" : "Pending"}
+                            {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                           </span>
                           <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
                             {task.type === "boolean" ? "Yes / No" : task.type}
@@ -1127,8 +1287,8 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "personal-life-balance") {
-    const completedCount = PERSONAL_LIFE_BALANCE_TASKS.filter((task) => task.completed).length;
-    const totalCount = PERSONAL_LIFE_BALANCE_TASKS.length;
+    const completedCount = personalLifeBalanceTasks.filter((task) => task.completed).length;
+    const totalCount = personalLifeBalanceTasks.length;
     const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
     return (
@@ -1190,7 +1350,7 @@ export default function GoalActivityPage() {
             </section>
 
             <section className="space-y-3">
-              {PERSONAL_LIFE_BALANCE_TASKS.map((task) => (
+              {personalLifeBalanceTasks.map((task) => (
                 <Link
                   key={task.slug}
                   to={`/goals/balance/personal-life-balance/${task.slug}`}
@@ -1205,12 +1365,14 @@ export default function GoalActivityPage() {
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              task.completed
+                              balanceLoading
+                                ? "bg-slate-100 text-slate-500"
+                                : task.completed
                                 ? "bg-emerald-50 text-emerald-700"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            {task.completed ? "Done" : "Pending"}
+                            {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                           </span>
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -1381,38 +1543,11 @@ export default function GoalActivityPage() {
   }
 
   if (category === "mental") {
-    const currentTask = MENTAL_TASKS.find((task) => task.slug === activity);
-
     return (
       <MobileShell>
         <AppHeader title={getMentalTitle(activity)} showBack showBell />
-        <main className="space-y-4 px-4 py-4">
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="text-4xl">🧠</span>
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-pink-200 text-4xl font-bold text-slate-900">
-                6
-              </div>
-              <span className="text-4xl">🧠</span>
-            </div>
-          </div>
-
-          {currentTask ? (
-            <Link
-              to={`/goals/mental/${currentTask.slug}/task`}
-              className={`block rounded-2xl border px-4 py-4 text-center text-base font-medium ${
-                currentTask.completed
-                  ? "border-pink-300 bg-pink-50 text-slate-900"
-                  : "border-slate-200 bg-white text-slate-600"
-              }`}
-            >
-              {currentTask.label}
-            </Link>
-          ) : (
-            <div className="rounded-2xl bg-white px-4 py-6 text-center text-slate-500 shadow-sm">
-              ยังไม่มีข้อมูลกิจกรรม
-            </div>
-          )}
+        <main className="px-4 py-6 text-center text-slate-500">
+          ยังไม่มีข้อมูลกิจกรรม
         </main>
       </MobileShell>
     );

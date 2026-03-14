@@ -6,7 +6,6 @@ export interface PersonalLifeBalanceTaskConfig {
   subtitle: string;
   type: PersonalLifeBalanceTaskType;
   helperText?: string;
-  completed?: boolean;
 }
 
 export const PERSONAL_LIFE_BALANCE_TASKS: PersonalLifeBalanceTaskConfig[] = [
@@ -22,7 +21,6 @@ export const PERSONAL_LIFE_BALANCE_TASKS: PersonalLifeBalanceTaskConfig[] = [
     label: "ฟังเพลงที่ชอบ",
     subtitle: "เติมบรรยากาศดี ๆ ให้ตัวเองในวันทั่วไป",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "watch-favorite-movie",
@@ -36,7 +34,6 @@ export const PERSONAL_LIFE_BALANCE_TASKS: PersonalLifeBalanceTaskConfig[] = [
     subtitle: "ดูแลตัวเองด้วยกิจกรรมผ่อนคลายเล็ก ๆ",
     helperText: "อุณหภูมิประมาณ 27-37 องศาเซลเซียส ระยะเวลาไม่เกิน 15 นาที",
     type: "counter",
-    completed: true,
   },
   {
     slug: "read-interesting-book",

@@ -1,10 +1,9 @@
-﻿export interface StressTaskConfig {
+export interface StressTaskConfig {
   slug: string;
   label: string;
   subtitle: string;
   type: "boolean" | "counter";
   helperText?: string;
-  completed?: boolean;
 }
 
 export const STRESS_TASKS: StressTaskConfig[] = [
@@ -19,14 +18,12 @@ export const STRESS_TASKS: StressTaskConfig[] = [
     label: "ทำกิจกรรมต่าง ๆ ที่ชอบ",
     subtitle: "ให้เวลากับกิจกรรมที่ช่วยเติมพลังและคลายความตึงเครียด",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "avoid-smoking-alcohol",
     label: "งดสูบบุหรี่และดื่มแอลกอฮอล์",
     subtitle: "ลดสิ่งกระตุ้นที่ยิ่งทำให้ร่างกายและอารมณ์อ่อนล้า",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "deep-breathing",
@@ -40,7 +37,6 @@ export const STRESS_TASKS: StressTaskConfig[] = [
     subtitle: "บันทึกจำนวนครั้งที่ได้ออกไปรับแสงธรรมชาติในแต่ละวัน",
     type: "counter",
     helperText: "อย่างน้อย 1 ครั้งในวันนั้น จะได้ 1 คะแนน",
-    completed: true,
   },
   {
     slug: "warm-drinks",

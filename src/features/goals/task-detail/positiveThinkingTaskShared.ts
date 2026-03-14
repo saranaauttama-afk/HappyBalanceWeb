@@ -1,6 +1,7 @@
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog, Goal } from "../../../types/models";
+import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 
 type PositiveThinkingNotePayload = {
   entry_type: "mental_task";
@@ -127,11 +128,9 @@ export async function syncPositiveThinkingGoal(userId?: string) {
       latestByTask.set(parsed.task, parsed.score);
     });
 
-  const scores = Array.from(latestByTask.values());
-  const averageScore =
-    scores.length === 0
-      ? 0
-      : Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  const totalTaskCount = POSITIVE_THINKING_TASKS.length;
+  const totalScore = Array.from(latestByTask.values()).reduce((sum, score) => sum + score, 0);
+  const averageScore = totalTaskCount === 0 ? 0 : Math.round(totalScore / totalTaskCount);
 
   const goalsResponse = await goalsService.listGoals(userId ?? undefined);
   if (!goalsResponse.success) {

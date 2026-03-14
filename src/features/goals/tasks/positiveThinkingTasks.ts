@@ -1,10 +1,9 @@
-﻿export interface PositiveThinkingTaskConfig {
+export interface PositiveThinkingTaskConfig {
   slug: string;
   label: string;
   subtitle: string;
   type: "boolean" | "counter";
   helperText?: string;
-  completed?: boolean;
 }
 
 export const POSITIVE_THINKING_TASKS: PositiveThinkingTaskConfig[] = [
@@ -13,7 +12,6 @@ export const POSITIVE_THINKING_TASKS: PositiveThinkingTaskConfig[] = [
     label: "ยอมรับความแตกต่างของผู้อื่น",
     subtitle: "เปิดใจรับมุมมองและความต่างของผู้อื่นอย่างอ่อนโยน",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "smile-when-disappointed",
@@ -27,7 +25,6 @@ export const POSITIVE_THINKING_TASKS: PositiveThinkingTaskConfig[] = [
     label: "ให้อภัยตนเองและผู้อื่น",
     subtitle: "วางความค้างคาเพื่อให้ใจเบาและเดินต่อได้",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "choose-constructive-news",
@@ -40,7 +37,6 @@ export const POSITIVE_THINKING_TASKS: PositiveThinkingTaskConfig[] = [
     label: "ขอบคุณเรื่องดีเล็ก ๆ ที่ทำให้เรามีความสุข",
     subtitle: "มองเห็นเรื่องดีเล็ก ๆ แล้วขอบคุณสิ่งที่ทำให้ใจมีความสุข",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "leave-toxic-environment",

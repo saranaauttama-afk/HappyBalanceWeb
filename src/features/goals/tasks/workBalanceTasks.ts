@@ -3,7 +3,6 @@ export interface WorkBalanceTaskConfig {
   label: string;
   subtitle: string;
   type: "boolean";
-  completed?: boolean;
 }
 
 export const WORK_BALANCE_TASKS: WorkBalanceTaskConfig[] = [
@@ -24,14 +23,12 @@ export const WORK_BALANCE_TASKS: WorkBalanceTaskConfig[] = [
     label: "หลีกเลี่ยงการทำหลายอย่างพร้อมกัน",
     subtitle: "โฟกัสทีละอย่างเพื่อลดความล้าและความผิดพลาดระหว่างทำงาน",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "take-short-breaks",
     label: "พักเบรกสั้น ๆ ระหว่างการทำงาน",
     subtitle: "เว้นช่วงเล็กน้อยให้สมองและร่างกายได้รีเซ็ตระหว่างวัน",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "reduce-social-media",

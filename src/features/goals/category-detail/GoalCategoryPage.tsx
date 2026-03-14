@@ -6,8 +6,29 @@ import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
 import { goalsService } from "../../../services/goals.service";
+import { logsService } from "../../../services/logs.service";
 import type { Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
+import {
+  getLogTimestamp as getMentalLogTimestamp,
+  parsePositiveThinkingTaskNote,
+} from "../task-detail/positiveThinkingTaskShared";
+import { parseStressTaskNote } from "../task-detail/stressTaskShared";
+import {
+  getLogTimestamp as getSocialLogTimestamp,
+  parseSocialTaskNote,
+} from "../task-detail/socialTaskShared";
+import {
+  getLogTimestamp as getBalanceLogTimestamp,
+  parseBalanceTaskNote,
+} from "../task-detail/balanceTaskShared";
+import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
+import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
+import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
+import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
+import { STRESS_TASKS } from "../tasks/stressTasks";
+import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
+import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
 
 type ActivityItem = {
   label: string;
@@ -25,6 +46,11 @@ type CategoryConfig = {
   softCard: string;
   progressColor: string;
   activities: ActivityItem[];
+};
+
+type ActivityProgress = {
+  currentValue: number;
+  targetValue: number;
 };
 
 const CATEGORY_MAP: Record<string, CategoryConfig> = {
@@ -156,6 +182,12 @@ function getActivityScore(goal?: Goal) {
   return Math.round(Math.min(current / target, 1) * 100);
 }
 
+function getActivityScoreFromProgress(progress?: ActivityProgress) {
+  if (!progress) return 0;
+  if (progress.targetValue <= 0) return 0;
+  return Math.round(Math.min(progress.currentValue / progress.targetValue, 1) * 100);
+}
+
 function getScoreStatus(score: number) {
   if (score >= 80) return "ดีมาก";
   if (score >= 60) return "ดี";
@@ -186,6 +218,7 @@ export default function GoalCategoryPage() {
   const userId = getCurrentUserId();
 
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [liveActivityProgress, setLiveActivityProgress] = useState<Record<string, ActivityProgress>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -211,6 +244,179 @@ export default function GoalCategoryPage() {
     void loadGoals();
   }, [loadGoals]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLiveActivityProgress() {
+      if (!category || !["mental", "social", "balance"].includes(category)) {
+        setLiveActivityProgress({});
+        return;
+      }
+
+      try {
+        if (category === "mental") {
+          const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+            limit: 480,
+            forceRefresh: true,
+          });
+
+          if (!response.success) {
+            if (!cancelled) setLiveActivityProgress({});
+            return;
+          }
+
+          const positiveLatestByTask = new Map<string, number>();
+          const stressLatestByTask = new Map<string, number>();
+
+          [...(response.data || [])]
+            .sort((a, b) => getMentalLogTimestamp(b) - getMentalLogTimestamp(a))
+            .forEach((log) => {
+              const positiveEntry = parsePositiveThinkingTaskNote(String(log.note));
+              if (positiveEntry && !positiveLatestByTask.has(positiveEntry.task)) {
+                positiveLatestByTask.set(positiveEntry.task, positiveEntry.score);
+                return;
+              }
+
+              const stressEntry = parseStressTaskNote(String(log.note));
+              if (stressEntry && !stressLatestByTask.has(stressEntry.task)) {
+                stressLatestByTask.set(stressEntry.task, stressEntry.score);
+              }
+            });
+
+          const positiveScore = Math.round(
+            Array.from(positiveLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
+              Math.max(POSITIVE_THINKING_TASKS.length, 1)
+          );
+          const stressScore = Math.round(
+            Array.from(stressLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
+              Math.max(STRESS_TASKS.length, 1)
+          );
+
+          if (!cancelled) {
+            setLiveActivityProgress({
+              "positive-thinking": { currentValue: positiveScore, targetValue: 100 },
+              "stress-level": { currentValue: stressScore, targetValue: 100 },
+            });
+          }
+          return;
+        }
+
+        if (category === "social") {
+          const response = await logsService.listSocialTaskLogs(userId ?? undefined, {
+            limit: 480,
+            forceRefresh: true,
+          });
+
+          if (!response.success) {
+            if (!cancelled) setLiveActivityProgress({});
+            return;
+          }
+
+          const activityTaskCount: Record<string, number> = {
+            "family-relationship": FAMILY_RELATIONSHIP_TASKS.length,
+            "community-participation": 1,
+            "workplace-relationship": WORKPLACE_RELATIONSHIP_TASKS.length,
+          };
+          const latestByActivity = new Map<string, Map<string, number>>();
+
+          [...(response.data || [])]
+            .sort((a, b) => getSocialLogTimestamp(b) - getSocialLogTimestamp(a))
+            .forEach((log) => {
+              const parsed = parseSocialTaskNote(String(log.note));
+              if (!parsed) return;
+
+              const latestByTask = latestByActivity.get(parsed.activity) ?? new Map<string, number>();
+              if (!latestByTask.has(parsed.task)) {
+                latestByTask.set(parsed.task, parsed.score);
+              }
+              latestByActivity.set(parsed.activity, latestByTask);
+            });
+
+          const nextProgress = Object.fromEntries(
+            Object.entries(activityTaskCount).map(([activityKey, totalTaskCount]) => {
+              const totalScore = Array.from(latestByActivity.get(activityKey)?.values() || []).reduce(
+                (sum, score) => sum + score,
+                0
+              );
+              return [
+                activityKey,
+                {
+                  currentValue: Math.round(totalScore / Math.max(totalTaskCount, 1)),
+                  targetValue: 100,
+                },
+              ];
+            })
+          ) as Record<string, ActivityProgress>;
+
+          if (!cancelled) {
+            setLiveActivityProgress(nextProgress);
+          }
+          return;
+        }
+
+        const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
+          limit: 480,
+          forceRefresh: true,
+        });
+
+        if (!response.success) {
+          if (!cancelled) setLiveActivityProgress({});
+          return;
+        }
+
+        const activityTaskCount: Record<string, number> = {
+          "family-social-balance": FAMILY_SOCIAL_BALANCE_TASKS.length,
+          "work-balance": WORK_BALANCE_TASKS.length,
+          "personal-life-balance": PERSONAL_LIFE_BALANCE_TASKS.length,
+        };
+        const latestByActivity = new Map<string, Map<string, number>>();
+
+        [...(response.data || [])]
+          .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
+          .forEach((log) => {
+            const parsed = parseBalanceTaskNote(String(log.note));
+            if (!parsed) return;
+
+            const latestByTask = latestByActivity.get(parsed.activity) ?? new Map<string, number>();
+            if (!latestByTask.has(parsed.task)) {
+              latestByTask.set(parsed.task, parsed.score);
+            }
+            latestByActivity.set(parsed.activity, latestByTask);
+          });
+
+        const nextProgress = Object.fromEntries(
+          Object.entries(activityTaskCount).map(([activityKey, totalTaskCount]) => {
+            const totalScore = Array.from(latestByActivity.get(activityKey)?.values() || []).reduce(
+              (sum, score) => sum + score,
+              0
+            );
+            return [
+              activityKey,
+              {
+                currentValue: Math.round(totalScore / Math.max(totalTaskCount, 1)),
+                targetValue: 100,
+              },
+            ];
+          })
+        ) as Record<string, ActivityProgress>;
+
+        if (!cancelled) {
+          setLiveActivityProgress(nextProgress);
+        }
+      } catch {
+        if (!cancelled) {
+          setLiveActivityProgress({});
+        }
+      }
+    }
+
+    void loadLiveActivityProgress();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category, userId]);
+
   const categoryGoals = useMemo(() => {
     return goals.filter((goal) => goal.category === (category ?? "physical"));
   }, [category, goals]);
@@ -226,12 +432,13 @@ export default function GoalCategoryPage() {
   const chartItems = useMemo(() => {
     return config.activities.map((activity) => {
       const matchedGoal = goalByActivity.get(activity.slug);
+      const liveProgress = liveActivityProgress[activity.slug];
       return {
         label: activity.label,
-        score: getActivityScore(matchedGoal),
+        score: liveProgress ? getActivityScoreFromProgress(liveProgress) : getActivityScore(matchedGoal),
       };
     });
-  }, [config.activities, goalByActivity]);
+  }, [config.activities, goalByActivity, liveActivityProgress]);
 
   const overallScore = useMemo(() => {
     if (chartItems.length === 0) return 0;
@@ -336,10 +543,13 @@ export default function GoalCategoryPage() {
           <section className="space-y-3">
             {config.activities.map((activity) => {
               const matchedGoal = goalByActivity.get(activity.slug);
-              const score = getActivityScore(matchedGoal);
+              const liveProgress = liveActivityProgress[activity.slug];
+              const score = liveProgress
+                ? getActivityScoreFromProgress(liveProgress)
+                : getActivityScore(matchedGoal);
               const statusText = getScoreStatus(score);
-              const currentValue = Number(matchedGoal?.current_value) || 0;
-              const targetValue = Number(matchedGoal?.target_value) || 0;
+              const currentValue = liveProgress?.currentValue ?? (Number(matchedGoal?.current_value) || 0);
+              const targetValue = liveProgress?.targetValue ?? (Number(matchedGoal?.target_value) || 0);
 
               return (
                 <Link key={activity.slug} to={`/goals/${category}/${activity.slug}`} className="block">

@@ -1,10 +1,9 @@
-﻿export type MentalTaskType = "scale" | "boolean" | "text";
+export type MentalTaskType = "scale" | "boolean" | "text";
 
 export interface MentalTaskConfig {
   slug: string;
   label: string;
   type: MentalTaskType;
-  completed?: boolean;
 }
 
 export const MENTAL_TASKS: MentalTaskConfig[] = [
@@ -12,7 +11,6 @@ export const MENTAL_TASKS: MentalTaskConfig[] = [
     slug: "positive-thinking",
     label: "การมองโลกในแง่บวก",
     type: "scale",
-    completed: true,
   },
   {
     slug: "stress-level",
@@ -23,7 +21,6 @@ export const MENTAL_TASKS: MentalTaskConfig[] = [
     slug: "life-satisfaction",
     label: "ระดับความพึงพอใจในชีวิต",
     type: "scale",
-    completed: true,
   },
   {
     slug: "self-worth",

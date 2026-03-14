@@ -1,6 +1,14 @@
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog, Goal } from "../../../types/models";
+import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
+import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
+
+const SOCIAL_ACTIVITY_TASK_COUNT: Record<string, number> = {
+  "family-relationship": FAMILY_RELATIONSHIP_TASKS.length,
+  "community-participation": 1,
+  "workplace-relationship": WORKPLACE_RELATIONSHIP_TASKS.length,
+};
 
 type SocialTaskNotePayload = {
   entry_type: "social_task";
@@ -128,11 +136,9 @@ export async function syncSocialActivityGoal(activity: string, userId?: string) 
       latestByTask.set(parsed.task, parsed.score);
     });
 
-  const scores = Array.from(latestByTask.values());
-  const averageScore =
-    scores.length === 0
-      ? 0
-      : Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  const totalTaskCount = SOCIAL_ACTIVITY_TASK_COUNT[activity] ?? latestByTask.size;
+  const totalScore = Array.from(latestByTask.values()).reduce((sum, score) => sum + score, 0);
+  const averageScore = totalTaskCount === 0 ? 0 : Math.round(totalScore / totalTaskCount);
 
   const goalsResponse = await goalsService.listGoals(userId ?? undefined);
   if (!goalsResponse.success) {

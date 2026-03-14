@@ -6,7 +6,6 @@ export interface FamilyRelationshipTaskConfig {
   subtitle: string;
   type: FamilyRelationshipTaskType;
   helperText?: string;
-  completed?: boolean;
 }
 
 export const FAMILY_RELATIONSHIP_TASKS: FamilyRelationshipTaskConfig[] = [
@@ -15,7 +14,6 @@ export const FAMILY_RELATIONSHIP_TASKS: FamilyRelationshipTaskConfig[] = [
     label: "ยิ้มแย้มแจ่มใสกับทุกคนในบ้าน",
     subtitle: "เริ่มต้นบรรยากาศดี ๆ ในบ้านจากสีหน้าและท่าทีที่อ่อนโยน",
     type: "boolean",
-    completed: true,
   },
   {
     slug: "take-responsibility",
@@ -41,7 +39,6 @@ export const FAMILY_RELATIONSHIP_TASKS: FamilyRelationshipTaskConfig[] = [
     subtitle: "เก็บจำนวนครั้งที่ตั้งใจฟังและเปิดใจรับความคิดเห็นในแต่ละวัน",
     helperText: "บันทึกจำนวนครั้งที่รับฟังและยอมรับความคิดเห็น อย่างน้อย 1 ครั้งจะได้ 1 คะแนน",
     type: "counter",
-    completed: true,
   },
   {
     slug: "no-aggressive-behavior",
