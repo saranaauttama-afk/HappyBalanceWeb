@@ -1,4 +1,4 @@
-﻿import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
+import { CircleCheckBig, CircleX, Ear, Handshake, MessageCircleMore, PackageOpen, Smile, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -15,6 +15,25 @@ import {
   syncSocialActivityGoal,
 } from "./socialTaskShared";
 
+const activityKey = "workplace-relationship";
+
+function getTaskIcon(task: string) {
+  switch (task) {
+    case "compliment-colleagues":
+      return Sparkles;
+    case "greet-others-first":
+      return Smile;
+    case "listen-to-opinions":
+      return Ear;
+    case "start-conversation":
+      return MessageCircleMore;
+    case "share-information":
+      return Handshake;
+    default:
+      return PackageOpen;
+  }
+}
+
 export default function WorkplaceRelationshipTaskPage() {
   const { task } = useParams<{ task?: string }>();
   const userId = getCurrentUserId();
@@ -27,7 +46,7 @@ export default function WorkplaceRelationshipTaskPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const activityKey = "workplace-relationship";
+  const Icon = getTaskIcon(task ?? "");
 
   const scorePreview = useMemo(() => {
     if (done === null) return null;
@@ -122,6 +141,7 @@ export default function WorkplaceRelationshipTaskPage() {
       }
 
       await syncSocialActivityGoal(activityKey, userId ?? undefined);
+      await loadTaskState();
       setLastSavedDate(getTodayDate());
       setSuccessMessage(done ? "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 100%" : "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 0%");
     } catch (err) {
@@ -157,10 +177,18 @@ export default function WorkplaceRelationshipTaskPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">เช็กการทำกิจกรรมนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นการประเมินภาพรวม ไม่เน้นบันทึกรายวัน</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <Icon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+                  </div>
+                </div>
+                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -173,11 +201,6 @@ export default function WorkplaceRelationshipTaskPage() {
               >
                 {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
               </span>
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
-              <Sparkles size={14} />
-              ตอบแบบ Yes / No
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">

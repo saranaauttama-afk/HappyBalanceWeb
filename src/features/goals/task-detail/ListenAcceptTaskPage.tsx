@@ -1,4 +1,4 @@
-﻿import { Ear, SmilePlus } from "lucide-react";
+import { Ear, SmilePlus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
@@ -161,7 +161,7 @@ export default function ListenAcceptTaskPage() {
   return (
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
-        <AppHeader title="ฟังผู้อื่นและยอมรับความคิดเห็น" showBack showBell variant="soft" />
+        <AppHeader title="ฟังผู้อื่นพูดและยอมรับในความคิดเห็นของผู้อื่น" showBack showBell variant="soft" />
 
         <main className="space-y-4 px-4 py-4">
           {error ? (
@@ -175,10 +175,24 @@ export default function ListenAcceptTaskPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">บันทึกการรับฟังวันนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นรายวัน เก็บจำนวนครั้งในแต่ละวัน</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <Ear size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">
+                      ฟังผู้อื่นพูดและยอมรับในความคิดเห็นของผู้อื่น
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      เก็บจำนวนครั้งที่ตั้งใจฟังและเปิดใจรับความคิดเห็นในแต่ละวัน
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-slate-500">
+                  บันทึกจำนวนครั้งที่รับฟังและยอมรับความคิดเห็น อย่างน้อย 1 ครั้งจะได้ 1 คะแนน
+                </p>
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -189,62 +203,45 @@ export default function ListenAcceptTaskPage() {
               </span>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white px-4 py-4">
-              <p className="text-center text-xs text-slate-500">จำนวนครั้งที่รับฟังและยอมรับความคิดเห็นผู้อื่นวันนี้</p>
-              <div className="mt-2 flex items-center justify-center gap-3">
+            <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
+              <p className="text-center text-sm text-slate-500">จำนวนครั้งที่รับฟังและยอมรับความคิดเห็นผู้อื่นวันนี้</p>
+              <div className="mt-4 flex items-center justify-center gap-3">
                 <button
                   type="button"
                   onClick={() => setListenCount((prev) => Math.max(prev - 1, 0))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
                   aria-label="ลดจำนวนครั้ง"
                 >
                   -
                 </button>
 
-                <input
-                  type="number"
-                  min={0}
-                  max={30}
-                  value={listenCount}
-                  onChange={(event) => {
-                    const next = Number(event.target.value);
-                    if (!Number.isFinite(next)) return;
-                    setListenCount(Math.max(0, Math.round(next)));
-                  }}
-                  className="w-28 rounded-xl border border-slate-200 bg-[#f8fafc] px-3 py-2 text-center text-3xl font-bold text-slate-900"
-                />
+                <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                  <p className="text-3xl font-bold text-slate-900">{listenCount}</p>
+                  <p className="text-xs text-slate-500">ครั้ง</p>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setListenCount((prev) => Math.min(prev + 1, 30))}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xl font-semibold text-slate-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
                   aria-label="เพิ่มจำนวนครั้ง"
                 >
                   +
                 </button>
               </div>
 
-              <div className="mt-3 flex flex-wrap justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {[1, 2, 3, 5].map((preset) => (
                   <button
                     key={preset}
                     type="button"
                     onClick={() => setListenCount(preset)}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                      listenCount === preset
-                        ? "border-[#d88d80] bg-[#fff1e9] text-[#b46e44]"
-                        : "border-slate-200 bg-white text-slate-600"
-                    }`}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
                   >
                     {preset} ครั้ง
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
-              <Ear size={14} />
-              วันนี้รับฟังแล้ว {listenCount} ครั้ง
             </div>
           </section>
 

@@ -482,8 +482,6 @@ export default function GoalActivityPage() {
                   task.slug === "listen-and-accept"
                     ? "/goals/social/family-relationship/listen-and-accept"
                     : `/goals/social/family-relationship/${task.slug}`;
-                const isDaily = task.slug === "listen-and-accept";
-
                 return (
                   <Link key={task.slug} to={path} className="block">
                     <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
@@ -491,9 +489,7 @@ export default function GoalActivityPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes / No"}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
@@ -505,15 +501,15 @@ export default function GoalActivityPage() {
                             >
                               {task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            {isDaily ? (
-                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
-                                Daily
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                                Yes / No
-                              </span>
-                            )}
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "counter"
+                                  ? "bg-[#fff5ea] text-[#9a5b34]"
+                                  : "bg-[#eef8fd] text-[#2e6a8b]"
+                              }`}
+                            >
+                              {task.type === "counter" ? "Counter" : "Yes / No"}
+                            </span>
                           </div>
                         </div>
 
@@ -602,8 +598,12 @@ export default function GoalActivityPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold leading-7 text-slate-900">บันทึกผลกิจกรรมนี้</h3>
-                  <p className="mt-1 text-sm text-slate-500">ตอบแบบ Yes / No แล้วบันทึกผลในครั้งนี้</p>
+                  <h3 className="text-lg font-semibold leading-7 text-slate-900">
+                    {currentTask?.label ?? "การมีส่วนร่วมในชุมชนและสังคมรอบข้าง"}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {currentTask?.subtitle ?? "เปิดใจมีส่วนร่วมกับผู้คนและกิจกรรมรอบตัวอย่างเหมาะสม"}
+                  </p>
                   <span className="mt-3 inline-flex rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
                     Yes / No
                   </span>
@@ -688,7 +688,6 @@ export default function GoalActivityPage() {
                   task.slug === "share-items-with-colleagues"
                     ? "/goals/social/workplace-relationship/share-items-with-colleagues"
                     : `/goals/social/workplace-relationship/${task.slug}`;
-                const isDaily = task.slug === "share-items-with-colleagues";
 
                 return (
                   <Link key={task.slug} to={path} className="block">
@@ -697,9 +696,7 @@ export default function GoalActivityPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "บันทึกจำนวนครั้งแบบรายวัน" : "บันทึกผลแบบ Yes / No"}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
@@ -711,15 +708,15 @@ export default function GoalActivityPage() {
                             >
                               {task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            {isDaily ? (
-                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
-                                Daily
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                                Yes / No
-                              </span>
-                            )}
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "counter"
+                                  ? "bg-[#fff5ea] text-[#9a5b34]"
+                                  : "bg-[#eef8fd] text-[#2e6a8b]"
+                              }`}
+                            >
+                              {task.type === "counter" ? "Counter" : "Yes / No"}
+                            </span>
                           </div>
                         </div>
 
