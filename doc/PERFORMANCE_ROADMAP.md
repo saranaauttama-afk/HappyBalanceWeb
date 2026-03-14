@@ -5,9 +5,9 @@ Reduce page-load and save-to-feedback latency in goals/rest flows, while keeping
 
 ## Status (2026-03-14)
 - Phase 0: done in code (frontend + Apps Script timing logs), baseline note added.
-- Phase 1: done in code (`listRestTaskLogs`, filter params, read cache + invalidation).
-- Phase 2: done in code for rest flow (`ActivityTaskPage`, `RestActivityPage` scoped fetch + faster save UX).
-- Phase 3: done for rest flow (`rest_task_logs` mirror sheet + read-first endpoint).
+- Phase 1: done in code (`listRestTaskLogs`, `listMentalTaskLogs`, `listSocialTaskLogs`, `listBalanceTaskLogs`, filter params, read cache + invalidation).
+- Phase 2: done in code for task-detail flows that rely on structured task logs (`rest`, `mental`, `social`, `balance`).
+- Phase 3: done for `rest`, `mental`, `social`, and `balance` mirror sheets.
 - Phase 4: pending.
 
 ## Current Symptoms
@@ -66,15 +66,18 @@ Success criteria:
 
 Delivered in current implementation:
 - Added dedicated `rest_task_logs` sheet as read-optimized mirror for `physical/rest`.
+- Added dedicated `mental_task_logs`, `social_task_logs`, and `balance_task_logs` sheets for structured task-history reads.
 - `createDailyLog` now mirrors rest-task rows into `rest_task_logs`.
-- `listRestTaskLogs` now reads `rest_task_logs` first and falls back to `daily_logs` only when the mirror is still empty.
-- Added one-time migration helper `backfillRestTaskLogs_()` for existing historical rows.
+- `createDailyLog` now also mirrors `mental_task`, `social_task`, and `balance_task` rows into their dedicated sheets.
+- `listRestTaskLogs`, `listMentalTaskLogs`, `listSocialTaskLogs`, and `listBalanceTaskLogs` now read dedicated mirror sheets first and fall back to `daily_logs` only when the mirror is still empty.
+- Added one-time migration helpers `backfillRestTaskLogs_()`, `backfillMentalTaskLogs_()`, `backfillSocialTaskLogs_()`, `backfillBalanceTaskLogs_()`, and `backfillAllStructuredTaskLogs_()`.
+- Updated task-detail/shared goal-sync flows in `mental`, `social`, and `balance` to stop fetching full `daily_logs` by default.
 
 Rollout checklist:
-1. Deploy the latest Apps Script version containing `rest_task_logs`.
-2. Open the Apps Script editor once and run `backfillRestTaskLogs_()` manually.
-3. Confirm the new `rest_task_logs` sheet was created and populated.
-4. Re-test one rest task page and compare first-load latency before/after.
+1. Deploy the latest Apps Script version containing all structured task log sheets.
+2. Open the Apps Script editor once and run `backfillAllStructuredTaskLogs_()` manually.
+3. Confirm the new `rest_task_logs`, `mental_task_logs`, `social_task_logs`, and `balance_task_logs` sheets were created and populated.
+4. Re-test one task page from each category and compare first-load latency before/after.
 
 Success criteria:
 - Save flow network calls reduced.
@@ -111,5 +114,6 @@ Success criteria:
 - Task pages no longer fetch full `daily_logs` by default.
 
 ## Next Recommended Step
-- Measure latency again after deploying Apps Script with `rest_task_logs`.
-- If still slow, repeat the same split pattern for the highest-volume non-rest flows instead of optimizing frontend first.
+- Measure latency again after deploying Apps Script with all structured task log sheets.
+- If a remaining slow path still depends on `daily_logs`, split that read pattern next instead of optimizing frontend first.
+- Consider a summary endpoint for overview pages only after the task-detail cold paths are verified improved.

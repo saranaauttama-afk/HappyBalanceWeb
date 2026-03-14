@@ -42,9 +42,13 @@ export default function BalanceTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
+        activity: activityKey,
+        task: taskKey,
+        limit: 20,
+      });
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "Could not load balance task logs");
       }
 
       const latestLog = [...(response.data || [])]
@@ -168,7 +172,7 @@ export default function BalanceTaskPage() {
                       : "bg-rose-50 text-rose-700"
                 }`}
               >
-                {scorePreview === null ? "ยังไม่เลือก" : `${scorePreview}%`}
+                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
               </span>
             </div>
 

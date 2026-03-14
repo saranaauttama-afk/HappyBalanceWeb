@@ -24,6 +24,15 @@ type RestTaskLogsFilters = {
   forceRefresh?: boolean;
 };
 
+type StructuredTaskLogsFilters = {
+  activity?: string;
+  task?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  forceRefresh?: boolean;
+};
+
 type CacheEntry = {
   expiresAt: number;
   response: ApiResponse<DailyLog[]>;
@@ -109,6 +118,63 @@ export const logsService = {
     }
 
     const response = await api.get<DailyLog[]>("listRestTaskLogs", params);
+    setCachedRead(cacheKey, response);
+    return response;
+  },
+
+  async listMentalTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
+    const resolvedUserId = userId ?? DEMO_USER_ID;
+    const { forceRefresh, ...rawFilters } = filters;
+    const params = {
+      userId: resolvedUserId,
+      ...rawFilters,
+    };
+    const cacheKey = buildReadCacheKey("listMentalTaskLogs", resolvedUserId, rawFilters);
+
+    if (!forceRefresh) {
+      const cached = getCachedRead(cacheKey);
+      if (cached) return cached;
+    }
+
+    const response = await api.get<DailyLog[]>("listMentalTaskLogs", params);
+    setCachedRead(cacheKey, response);
+    return response;
+  },
+
+  async listSocialTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
+    const resolvedUserId = userId ?? DEMO_USER_ID;
+    const { forceRefresh, ...rawFilters } = filters;
+    const params = {
+      userId: resolvedUserId,
+      ...rawFilters,
+    };
+    const cacheKey = buildReadCacheKey("listSocialTaskLogs", resolvedUserId, rawFilters);
+
+    if (!forceRefresh) {
+      const cached = getCachedRead(cacheKey);
+      if (cached) return cached;
+    }
+
+    const response = await api.get<DailyLog[]>("listSocialTaskLogs", params);
+    setCachedRead(cacheKey, response);
+    return response;
+  },
+
+  async listBalanceTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
+    const resolvedUserId = userId ?? DEMO_USER_ID;
+    const { forceRefresh, ...rawFilters } = filters;
+    const params = {
+      userId: resolvedUserId,
+      ...rawFilters,
+    };
+    const cacheKey = buildReadCacheKey("listBalanceTaskLogs", resolvedUserId, rawFilters);
+
+    if (!forceRefresh) {
+      const cached = getCachedRead(cacheKey);
+      if (cached) return cached;
+    }
+
+    const response = await api.get<DailyLog[]>("listBalanceTaskLogs", params);
     setCachedRead(cacheKey, response);
     return response;
   },

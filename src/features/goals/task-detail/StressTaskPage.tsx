@@ -39,9 +39,13 @@ export default function StressTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+        activity: "stress-level",
+        task,
+        limit: 20,
+      });
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "Could not load stress-level logs");
       }
 
       const latestLog = [...(response.data || [])]

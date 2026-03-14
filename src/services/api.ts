@@ -7,6 +7,9 @@ const SHOULD_LOG_TIMING =
 const TIMED_ACTIONS = new Set([
   "listDailyLogs",
   "listRestTaskLogs",
+  "listMentalTaskLogs",
+  "listSocialTaskLogs",
+  "listBalanceTaskLogs",
   "listGoals",
   "createDailyLog",
   "updateGoal",

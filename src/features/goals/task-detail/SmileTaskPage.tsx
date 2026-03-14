@@ -49,9 +49,13 @@ export default function SmileTaskPage() {
       setLoading(true);
       setError(null);
 
-      const response = await logsService.listDailyLogs(userId ?? undefined);
+      const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
+        activity: "positive-thinking",
+        task: "smile-when-disappointed",
+        limit: 90,
+      });
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "Could not load smile logs");
       }
 
       const byDate = new Map<string, SmileHistoryItem>();
