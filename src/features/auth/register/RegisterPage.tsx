@@ -1,12 +1,15 @@
-﻿import { Link, useNavigate } from "react-router-dom";
+﻿import { LockKeyhole, Mail, Phone, Sparkles, UserRound } from "lucide-react";
 import { useState } from "react";
-import MobileShell from "../../../components/layout/MobileShell";
+import { Link, useNavigate } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
+import MobileShell from "../../../components/layout/MobileShell";
 import { authService } from "../../../services/auth.service";
 import { setCurrentUser } from "../../../utils/authSession";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const heroImage =
+    "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1400&q=80";
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -70,12 +73,31 @@ export default function RegisterPage() {
         />
 
         <div className="relative z-10 px-5 py-6">
-          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
-            <h2 className="text-3xl font-bold text-slate-900">สร้างบัญชีใหม่</h2>
-            <p className="mt-2 text-sm text-slate-600">กรอกข้อมูลเพื่อเริ่มใช้งาน Happy Balance</p>
+          <section className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
+            <img
+              src={heroImage}
+              alt=""
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[72%_center] opacity-[0.8]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(96deg,rgba(255,255,255,0.95)_0%,rgba(255,255,255,0.88)_28%,rgba(255,255,255,0.62)_46%,rgba(255,255,255,0.12)_66%,rgba(255,255,255,0)_100%)]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[48%] bg-[linear-gradient(90deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.06)_100%)]" />
+
+            <div className="relative z-10">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-white/72 px-3 py-1 text-xs font-semibold tracking-[0.12em] text-[#1f6658] backdrop-blur-sm">
+                <Sparkles size={13} />
+                CREATE YOUR SPACE
+              </p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-900">สร้างบัญชีใหม่</h2>
+              <p className="mt-2 max-w-[15rem] rounded-2xl border border-white/60 bg-white/52 px-4 py-3 text-sm leading-6 text-slate-700 backdrop-blur-[2px]">
+                เริ่มต้นใช้งาน Happy Balance เพื่อดูเป้าหมาย บันทึกประจำวัน และติดตามสุขสมดุลของคุณในที่เดียว
+              </p>
+            </div>
           </section>
 
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-4 space-y-4 rounded-3xl border border-white/75 bg-white/88 p-5 shadow-[0_18px_42px_rgba(31,47,61,0.12)] backdrop-blur"
+          >
             {error ? (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                 {error}
@@ -84,68 +106,83 @@ export default function RegisterPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">ชื่อ</label>
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="เปิดใจ พร้อมฟัง"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <UserRound size={18} className="text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="เปิดใจ พร้อมฟัง"
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">อีเมล</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="openheart@gmail.com"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <Mail size={18} className="text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="openheart@gmail.com"
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">เบอร์โทรศัพท์</label>
-              <input
-                type="tel"
-                required
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="08xxxxxxxx"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <Phone size={18} className="text-slate-400" />
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="08xxxxxxxx"
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">รหัสผ่าน</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="********"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <LockKeyhole size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">พิมพ์รหัสผ่านอีกครั้ง</label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="********"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <LockKeyhole size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={saving}
-              className={`w-full rounded-2xl px-4 py-3 font-medium text-white ${
+              className={`w-full rounded-2xl px-4 py-3 font-semibold text-white shadow-[0_14px_30px_rgba(216,141,128,0.3)] transition ${
                 saving ? "bg-slate-400" : "bg-[#d88d80] hover:brightness-105"
               }`}
             >
@@ -169,7 +206,7 @@ export default function RegisterPage() {
           <div className="flex items-center justify-center gap-4">
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
               aria-label="สร้างบัญชีผ่าน Facebook"
             >
               f
@@ -177,7 +214,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
               aria-label="สร้างบัญชีผ่าน Apple ID"
             >
               
@@ -185,7 +222,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-lg shadow-sm hover:bg-slate-50"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
               aria-label="สร้างบัญชีผ่าน Gmail"
             >
               G

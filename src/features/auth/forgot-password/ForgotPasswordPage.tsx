@@ -1,9 +1,13 @@
-﻿import { Link } from "react-router-dom";
+import { Mail, Sparkles } from "lucide-react";
 import { useState } from "react";
-import MobileShell from "../../../components/layout/MobileShell";
+import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
+import MobileShell from "../../../components/layout/MobileShell";
 
 export default function ForgotPasswordPage() {
+  const heroImage =
+    "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1400&q=80";
+  const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
@@ -13,54 +17,81 @@ export default function ForgotPasswordPage() {
 
   return (
     <MobileShell>
-      <AppHeader
-        title="HAPPY BALANCE"
-        subtitle="Road to Better Balance"
-        showBack
-        variant="soft"
-      />
+      <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+        <div className="pointer-events-none absolute -left-20 top-20 h-60 w-60 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 bottom-16 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-      <div className="px-5 py-6">
-        <div className="mb-6 text-center">
-          <h2 className="text-3xl font-bold text-slate-900">ลืมรหัสผ่าน</h2>
-          <p className="mt-2 text-sm text-slate-500">รหัสผ่านใหม่</p>
-        </div>
+        <AppHeader
+          title="HAPPY BALANCE"
+          subtitle="Road to Better Balance"
+          showBack
+          variant="soft"
+        />
 
-        {submitted ? (
-          <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm leading-6 text-slate-700">
-              ระบบได้ส่งข้อมูลสำหรับเปลี่ยนรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว
-            </p>
+        <div className="relative z-10 px-5 py-6">
+          <section className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
+            <img
+              src={heroImage}
+              alt=""
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[72%_center] opacity-[0.78]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(96deg,rgba(255,255,255,0.95)_0%,rgba(255,255,255,0.88)_28%,rgba(255,255,255,0.62)_46%,rgba(255,255,255,0.12)_66%,rgba(255,255,255,0)_100%)]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[48%] bg-[linear-gradient(90deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.06)_100%)]" />
 
-            <Link
-              to="/login"
-              className="block w-full rounded-2xl bg-rose-300 px-4 py-3 text-center font-medium text-white hover:bg-rose-400"
-            >
-              กลับไปเข้าสู่ระบบ
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                อีเมล
-              </label>
-              <input
-                type="email"
-                required
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="openheart@gmail.com"
-              />
+            <div className="relative z-10">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-white/72 px-3 py-1 text-xs font-semibold tracking-[0.12em] text-[#1f6658] backdrop-blur-sm">
+                <Sparkles size={13} />
+                RESET ACCESS
+              </p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-900">ลืมรหัสผ่าน</h2>
+              <p className="mt-2 max-w-[15rem] rounded-2xl border border-white/60 bg-white/52 px-4 py-3 text-sm leading-6 text-slate-700 backdrop-blur-[2px]">
+                กรอกอีเมลของคุณ แล้วระบบจะส่งข้อมูลสำหรับตั้งค่ารหัสผ่านใหม่ให้ทางอีเมล
+              </p>
             </div>
+          </section>
 
-            <button
-              type="submit"
-              className="w-full rounded-2xl bg-rose-300 px-4 py-3 font-medium text-white hover:bg-rose-400"
+          {submitted ? (
+            <div className="mt-4 space-y-4 rounded-3xl border border-white/75 bg-white/88 p-5 shadow-[0_18px_42px_rgba(31,47,61,0.12)] backdrop-blur">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-700">
+                ระบบได้ส่งข้อมูลสำหรับเปลี่ยนรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว
+              </div>
+
+              <Link
+                to="/login"
+                className="block w-full rounded-2xl bg-[#d88d80] px-4 py-3 text-center font-semibold text-white shadow-[0_14px_30px_rgba(216,141,128,0.3)] transition hover:brightness-105"
+              >
+                กลับไปเข้าสู่ระบบ
+              </Link>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="mt-4 space-y-4 rounded-3xl border border-white/75 bg-white/88 p-5 shadow-[0_18px_42px_rgba(31,47,61,0.12)] backdrop-blur"
             >
-              ส่ง
-            </button>
-          </form>
-        )}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">อีเมล</label>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                  <Mail size={18} className="text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                    placeholder="openheart@gmail.com"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-2xl bg-[#d88d80] px-4 py-3 font-semibold text-white shadow-[0_14px_30px_rgba(216,141,128,0.3)] transition hover:brightness-105"
+              >
+                ส่งลิงก์รีเซ็ต
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </MobileShell>
   );
