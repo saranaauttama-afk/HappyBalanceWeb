@@ -808,7 +808,6 @@ export default function GoalActivityPage() {
                   task.slug === "say-thanks-or-sorry"
                     ? "/goals/balance/family-social-balance/say-thanks-or-sorry"
                     : `/goals/balance/family-social-balance/${task.slug}`;
-                const isDaily = task.slug === "say-thanks-or-sorry";
 
                 return (
                   <Link key={task.slug} to={path} className="block">
@@ -817,9 +816,7 @@ export default function GoalActivityPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {isDaily ? "Daily count log" : "Yes/No summary log"}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
@@ -831,15 +828,15 @@ export default function GoalActivityPage() {
                             >
                               {task.completed ? "Done" : "Pending"}
                             </span>
-                            {isDaily ? (
-                              <span className="rounded-full bg-[#fff8dd] px-2.5 py-1 text-xs font-medium text-[#966300]">
-                                Daily
-                              </span>
-                            ) : (
-                              <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                                Yes / No
-                              </span>
-                            )}
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "counter"
+                                  ? "bg-[#fff5ea] text-[#9a5b34]"
+                                  : "bg-[#eef8fd] text-[#2e6a8b]"
+                              }`}
+                            >
+                              {task.type === "counter" ? "Counter" : "Yes / No"}
+                            </span>
                           </div>
                         </div>
 
@@ -931,7 +928,7 @@ export default function GoalActivityPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                        <p className="mt-1 text-sm text-slate-500">Yes/No summary log</p>
+                        <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <span
@@ -944,7 +941,7 @@ export default function GoalActivityPage() {
                             {task.completed ? "Done" : "Pending"}
                           </span>
                           <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                            Yes / No
+                            {task.type === "boolean" ? "Yes / No" : task.type}
                           </span>
                         </div>
                       </div>

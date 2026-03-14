@@ -18,6 +18,15 @@ import {
 
 const activityKey = "personal-life-balance";
 
+type CounterHistoryItem = {
+  id: string;
+  date: string;
+  count: number;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
 function getTaskIcon(task: string) {
   switch (task) {
     case "mute-phone-after-work":
@@ -40,6 +49,7 @@ export default function PersonalLifeBalanceTaskPage() {
 
   const [done, setDone] = useState<boolean | null>(null);
   const [countValue, setCountValue] = useState(0);
+  const [history, setHistory] = useState<CounterHistoryItem[]>([]);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -57,6 +67,15 @@ export default function PersonalLifeBalanceTaskPage() {
     return done ? 100 : 0;
   }, [config, countValue, done]);
 
+  const monthlyPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    return history
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [history]);
+
   const loadTaskState = useCallback(async () => {
     if (!task || !config) return;
 
@@ -67,16 +86,19 @@ export default function PersonalLifeBalanceTaskPage() {
       const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
         activity: activityKey,
         task,
-        limit: 20,
+        limit: config.type === "counter" ? 90 : 20,
       });
       if (!response.success) {
         throw new Error(response.error || "Could not load task logs");
       }
 
-      const latestLog = [...(response.data || [])].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))[0];
+      const sortedLogs = [...(response.data || [])].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a));
+      const latestLog = sortedLogs[0];
+
       if (!latestLog) {
         setDone(null);
         setCountValue(0);
+        setHistory([]);
         setLastSavedDate(null);
         return;
       }
@@ -85,16 +107,44 @@ export default function PersonalLifeBalanceTaskPage() {
       if (!parsed) {
         setDone(null);
         setCountValue(0);
+        setHistory([]);
         setLastSavedDate(null);
         return;
       }
 
       if (config.type === "counter") {
+        const byDate = new Map<string, CounterHistoryItem>();
+        sortedLogs.forEach((log) => {
+          const current = parseBalanceTaskNote(String(log.note));
+          if (!current || current.activity !== activityKey || current.task !== task) return;
+
+          const count = Math.max(0, Math.round(getNumber(current.payload.count, 0)));
+          const achieved = getBoolean(current.payload.achieved, count > 0 || current.score > 0);
+          const point = getNumber(current.payload.point, achieved ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            count,
+            score: current.score,
+            point: point > 0 ? 1 : 0,
+            achieved,
+          });
+        });
+
+        const nextHistory = Array.from(byDate.values())
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 14);
+
+        setHistory(nextHistory);
         setCountValue(Math.max(0, Math.round(getNumber(parsed.payload.count, 0))));
         setDone(null);
       } else {
         setDone(getBoolean(parsed.payload.done, parsed.score > 0));
         setCountValue(0);
+        setHistory([]);
       }
 
       setLastSavedDate(latestLog.log_date);
@@ -124,6 +174,9 @@ export default function PersonalLifeBalanceTaskPage() {
       setSaving(true);
 
       const score = config.type === "counter" ? (countValue > 0 ? 100 : 0) : done ? 100 : 0;
+      const achieved = score > 0;
+      const point = achieved ? 1 : 0;
+
       const response = await logsService.createDailyLog({
         user_id: userId ?? undefined,
         log_date: getTodayDate(),
@@ -145,8 +198,9 @@ export default function PersonalLifeBalanceTaskPage() {
             config.type === "counter"
               ? {
                   count: countValue,
-                  achieved: countValue > 0,
-                  is_daily: false,
+                  achieved,
+                  point,
+                  is_daily: true,
                 }
               : {
                   done,
@@ -160,12 +214,13 @@ export default function PersonalLifeBalanceTaskPage() {
       }
 
       await syncBalanceActivityGoal(activityKey, userId ?? undefined);
+      await loadTaskState();
       setLastSavedDate(getTodayDate());
       setSuccessMessage(
         config.type === "counter"
           ? countValue > 0
-            ? `บันทึกสำเร็จ กิจกรรมนี้ถูกบันทึกไว้ ${countValue} ครั้ง`
-            : "บันทึกสำเร็จ แต่ยังไม่มีจำนวนที่ทำกิจกรรม"
+            ? `บันทึกสำเร็จ วันนี้ทำกิจกรรมนี้ ${countValue} ครั้ง ได้ +1 คะแนน`
+            : "บันทึกสำเร็จ วันนี้ยังไม่มีจำนวนที่บันทึก"
           : done
             ? "บันทึกสำเร็จ หัวข้อนี้ได้ 100%"
             : "บันทึกสำเร็จ หัวข้อนี้ได้ 0%"
@@ -205,13 +260,16 @@ export default function PersonalLifeBalanceTaskPage() {
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
-                  <Icon size={14} />
-                  {config.type === "counter" ? "บันทึกแบบนับจำนวน" : "ตอบแบบ Yes / No"}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <Icon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+                  </div>
                 </div>
-                <h2 className="mt-3 text-lg font-semibold text-slate-900">{config.label}</h2>
-                <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
-                {config.helperText ? <p className="mt-2 text-sm text-slate-500">{config.helperText}</p> : null}
+                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
 
               <span
@@ -229,7 +287,7 @@ export default function PersonalLifeBalanceTaskPage() {
 
             {config.type === "counter" ? (
               <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
-                <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้</p>
+                <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้วันนี้</p>
                 <div className="mt-4 flex items-center justify-center gap-3">
                   <button
                     type="button"
@@ -317,6 +375,46 @@ export default function PersonalLifeBalanceTaskPage() {
           >
             {saving ? "กำลังบันทึก..." : "บันทึกผล"}
           </button>
+
+          {config.type === "counter" ? (
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  เดือนนี้ได้ {monthlyPoints} คะแนน
+                </span>
+              </div>
+
+              {loading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : history.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกไว้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {history.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved ? "border-emerald-200 bg-emerald-50/70" : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">ทำกิจกรรมนี้ {item.count} ครั้ง</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
         </main>
       </div>
     </MobileShell>
