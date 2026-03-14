@@ -45,6 +45,36 @@ export const PERSONAL_LIFE_BALANCE_TASKS: PersonalLifeBalanceTaskConfig[] = [
     type: "boolean",
   },
   {
+    slug: "read-novel",
+    label: "อ่านนิยาย",
+    subtitle: "ปล่อยใจไปกับเรื่องราวที่ช่วยให้ผ่อนคลาย",
+    type: "boolean",
+  },
+  {
+    slug: "cook-or-bake",
+    label: "ทำอาหาร/ ทำขนม",
+    subtitle: "ใช้เวลาอยู่กับครัวและความสุขเล็ก ๆ ของตัวเอง",
+    type: "boolean",
+  },
+  {
+    slug: "clean-the-house",
+    label: "ทำความสะอาดบ้าน",
+    subtitle: "จัดพื้นที่รอบตัวให้โล่งและสบายขึ้น",
+    type: "boolean",
+  },
+  {
+    slug: "sit-and-relax",
+    label: "นั่งผ่อนคลาย",
+    subtitle: "พักนิ่ง ๆ ให้ร่างกายและใจได้ช้าลงบ้าง",
+    type: "boolean",
+  },
+  {
+    slug: "reduce-phone-usage",
+    label: "ลดการใช้โทรศัพท์",
+    subtitle: "เว้นระยะจากหน้าจอเพื่อกลับมาอยู่กับตัวเองมากขึ้น",
+    type: "boolean",
+  },
+  {
     slug: "develop-own-skill",
     label: "เพิ่มทักษะให้ตนเอง",
     subtitle: "ขยับตัวเองไปข้างหน้าทีละนิดในแบบที่อยากเป็น",

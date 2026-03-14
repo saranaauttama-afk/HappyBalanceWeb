@@ -1,4 +1,4 @@
-import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
+﻿import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -44,7 +44,7 @@ export default function SocialTaskPage() {
 
       const response = await logsService.listDailyLogs(userId ?? undefined);
       if (!response.success) {
-        throw new Error(response.error || "Could not load daily logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const latestLog = [...(response.data || [])]
@@ -70,7 +70,7 @@ export default function SocialTaskPage() {
       setDone(getBoolean(parsed.payload.done, parsed.score > 0));
       setLastSavedDate(latestLog.log_date);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -115,14 +115,14 @@ export default function SocialTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncSocialActivityGoal(activityKey, userId ?? undefined);
       setLastSavedDate(getTodayDate());
       setSuccessMessage(done ? "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 100%" : "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 0%");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
@@ -168,7 +168,7 @@ export default function SocialTaskPage() {
                       : "bg-rose-50 text-rose-700"
                 }`}
               >
-                {scorePreview === null ? "ยังไม่เลือก" : `${scorePreview}%`}
+                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
               </span>
             </div>
 

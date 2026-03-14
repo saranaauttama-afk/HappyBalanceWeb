@@ -6,6 +6,7 @@ import {
   CircleCheckBig,
   CircleX,
   Droplets,
+  Hourglass,
   MoonStar,
   Sunrise,
 } from "lucide-react";
@@ -89,6 +90,27 @@ type NoFood4HoursBeforeBedHistoryItem = {
   score: number;
   point: number;
   achieved: boolean;
+};
+
+const REST_GENERIC_COPY: Record<
+  string,
+  {
+    eyebrow: string;
+    title: string;
+    description: string;
+    doneLabel: string;
+    pendingLabel: string;
+    saveLabel: string;
+  }
+> = {
+  "limit-screen-time": {
+    eyebrow: "SCREEN TIME",
+    title: "คืนนี้ลดเวลาอยู่กับหน้าจอก่อนนอนได้ไหม",
+    description: "ตั้งใจให้อยู่กับหน้าจอก่อนนอนไม่เกิน 60 นาที แล้วบันทึกผลของวันนี้",
+    doneLabel: "ทำได้แล้ว",
+    pendingLabel: "ยังทำไม่ได้",
+    saveLabel: "บันทึกผลวันนี้",
+  },
 };
 
 function pad(value: number) {
@@ -922,7 +944,7 @@ export default function ActivityTaskPage() {
       return (
         <input
           type="number"
-          placeholder="Enter a number"
+          placeholder="กรอกตัวเลข"
           className="w-full rounded-xl border p-3"
           value={typeof value === "number" ? value : ""}
           onChange={(e) => {
@@ -934,25 +956,45 @@ export default function ActivityTaskPage() {
     }
 
     return (
-      <div className="flex gap-4">
+      <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          className={`flex-1 rounded-xl p-3 ${
-            value === true ? "bg-green-400 text-white" : "bg-slate-100"
+          className={`rounded-[22px] border px-4 py-4 text-left transition ${
+            value === true
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_12px_24px_rgba(22,163,74,0.10)]"
+              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
           }`}
           onClick={() => setValue(true)}
         >
-          Done
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">ทำได้แล้ว</p>
+              <p className="mt-1 text-xs opacity-80">วันนี้หยุดใช้หน้าจอได้ตามที่ตั้งใจ</p>
+            </div>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80">
+              <CircleCheckBig size={18} />
+            </span>
+          </div>
         </button>
 
         <button
           type="button"
-          className={`flex-1 rounded-xl p-3 ${
-            value === false ? "bg-rose-400 text-white" : "bg-slate-100"
+          className={`rounded-[22px] border px-4 py-4 text-left transition ${
+            value === false
+              ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_12px_24px_rgba(244,63,94,0.10)]"
+              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
           }`}
           onClick={() => setValue(false)}
         >
-          Not yet
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">ยังทำไม่ได้</p>
+              <p className="mt-1 text-xs opacity-80">วันนี้ยังใช้หน้าจอก่อนนอนเกินเป้าหมาย</p>
+            </div>
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80">
+              <CircleX size={18} />
+            </span>
+          </div>
         </button>
       </div>
     );
@@ -1226,7 +1268,7 @@ export default function ActivityTaskPage() {
       }
 
       if (value === null) {
-        setError("Please enter or select a value first");
+        setError("กรุณาเลือกคำตอบก่อนบันทึก");
         return;
       }
 
@@ -1256,7 +1298,7 @@ export default function ActivityTaskPage() {
           : { task, value },
       });
 
-      setSuccessMessage("Task result saved");
+      setSuccessMessage("บันทึกผลสำเร็จ");
       runPostSaveSync();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -2120,32 +2162,70 @@ export default function ActivityTaskPage() {
   if (!config) {
     return (
       <MobileShell>
-        <AppHeader title="Task not found" showBack />
-        <main className="p-6 text-center text-slate-500">Requested task was not found.</main>
+        <AppHeader title="ไม่พบกิจกรรม" showBack />
+        <main className="p-6 text-center text-slate-500">ไม่พบกิจกรรมที่ต้องการ</main>
       </MobileShell>
     );
   }
 
   return (
     <MobileShell>
-      <AppHeader title={activeConfig.label} showBack showBell />
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+        <AppHeader title={activeConfig.label} showBack showBell variant="soft" />
 
-      <main className="space-y-6 px-4 py-6">
-        {renderStatusBanner()}
+        <main className="space-y-4 px-4 py-4">
+          {renderStatusBanner()}
 
-        <div className="rounded-2xl bg-white p-6 shadow">{renderGenericInput(activeConfig)}</div>
+          <section className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">
+                  {REST_GENERIC_COPY[activeConfig.slug]?.eyebrow ?? "DAILY CHECK"}
+                </p>
+                <h2 className="mt-2 text-xl font-bold text-slate-900">
+                  {REST_GENERIC_COPY[activeConfig.slug]?.title ?? activeConfig.label}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {REST_GENERIC_COPY[activeConfig.slug]?.description ?? "บันทึกผลของกิจกรรมนี้สำหรับวันนี้"}
+                </p>
+              </div>
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff6ec] text-[#a95f3a] shadow-sm">
+                <Hourglass size={20} />
+              </span>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          className={`w-full rounded-xl py-3 font-semibold text-white ${
-            saving ? "bg-slate-400" : "bg-rose-400"
-          }`}
-        >
-          {saving ? "Saving..." : "Save"}
-        </button>
-      </main>
+            <div className="mt-4 rounded-2xl bg-[#f8fbfd] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-slate-600">สถานะของวันนี้</span>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    value === null
+                      ? "bg-slate-100 text-slate-600"
+                      : value
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {value === null ? "ยังไม่ได้เลือก" : value ? "ทำได้" : "ยังไม่ผ่าน"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4">{renderGenericInput(activeConfig)}</div>
+          </section>
+
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving || value === null}
+            className={`w-full rounded-2xl py-4 font-semibold text-white ${
+              saving || value === null ? "bg-slate-400" : "bg-[#c6968c]"
+            }`}
+          >
+            {saving ? "กำลังบันทึก..." : REST_GENERIC_COPY[activeConfig.slug]?.saveLabel ?? "บันทึกผลวันนี้"}
+          </button>
+        </main>
+      </div>
     </MobileShell>
   );
 }
