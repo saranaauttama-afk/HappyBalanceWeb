@@ -51,6 +51,35 @@ const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
     ],
   },
 };
+
+const MENTAL_UNDER_CONSTRUCTION_MAP: Record<
+  string,
+  {
+    title: string;
+    subtitle: string;
+    emoji: string;
+    tips: string[];
+  }
+> = {
+  "life-satisfaction": {
+    title: "ระดับความพึงพอใจในชีวิต",
+    subtitle: "เตรียมหน้าสำหรับติดตามมุมมองความพึงพอใจต่อชีวิตในภาพรวม",
+    emoji: "🌷",
+    tips: [
+      "กำลังเตรียมแบบประเมินและฟอร์มบันทึกสำหรับดูแนวโน้มในแต่ละช่วงเวลา",
+      "กำลังออกแบบคะแนนเพื่อให้สะท้อนบนกราฟสุขภาวะทางใจ",
+    ],
+  },
+  "self-worth": {
+    title: "การรู้สึกมีคุณค่าในตนเอง",
+    subtitle: "เตรียมหน้าสำหรับติดตามการรับรู้คุณค่าและความมั่นใจในตัวเอง",
+    emoji: "💗",
+    tips: [
+      "กำลังเตรียมชุดคำถามและการบันทึกผลที่เข้าใจง่ายสำหรับผู้ใช้",
+      "กำลังเชื่อมข้อมูลเพื่ออัปเดตคะแนนสุขภาวะทางใจให้ครบทุกหัวข้อ",
+    ],
+  },
+};
 function getMentalTitle(activity?: string) {
   if (activity === "positive-thinking") return "การมองโลกในแง่บวก";
   if (activity === "stress-level") return "ระดับความเครียด";
@@ -80,15 +109,15 @@ export default function GoalActivityPage() {
   if (category === "physical" && activity === "rest") {
     return (
       <MobileShell>
-        <AppHeader title="ÃƒÂ Ã‚Â¸Ã‚ÂÃƒÂ Ã‚Â¸Ã‚Â²ÃƒÂ Ã‚Â¸Ã‚Â£ÃƒÂ Ã‚Â¸Ã…Â¾ÃƒÂ Ã‚Â¸Ã‚Â±ÃƒÂ Ã‚Â¸Ã‚ÂÃƒÂ Ã‚Â¸Ã…â€œÃƒÂ Ã‚Â¹Ã‹â€ ÃƒÂ Ã‚Â¸Ã‚Â­ÃƒÂ Ã‚Â¸Ã¢â€žÂ¢" showBack showBell />
+        <AppHeader title="การพักผ่อน" showBack showBell />
         <main className="space-y-4 px-4 py-4">
           <div className="flex flex-col items-center justify-center rounded-3xl bg-white py-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <span className="text-4xl">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â</span>
+              <span className="text-4xl">🛏️</span>
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-300 text-4xl font-bold text-slate-900">
                 7
               </div>
-              <span className="text-4xl">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â</span>
+              <span className="text-4xl">🛏️</span>
             </div>
           </div>
 
@@ -1128,6 +1157,60 @@ export default function GoalActivityPage() {
                 </Link>
               ))}
             </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
+  if (category === "mental" && activity && MENTAL_UNDER_CONSTRUCTION_MAP[activity]) {
+    const mentalConfig = MENTAL_UNDER_CONSTRUCTION_MAP[activity];
+
+    return (
+      <MobileShell>
+        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
+
+          <AppHeader
+            title={mentalConfig.title}
+            showBack
+            showBell
+            variant="soft"
+            subtitle="กำลังพัฒนาหน้านี้ให้พร้อมใช้งานเต็มรูปแบบ"
+          />
+
+          <main className="relative z-10 space-y-4 px-4 py-4">
+            <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.92)_0%,rgba(245,253,255,0.88)_48%,rgba(237,251,243,0.9)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">UNDER CONSTRUCTION</p>
+              <div className="mt-3 flex items-center gap-3">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
+                  {mentalConfig.emoji}
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">{mentalConfig.title}</h2>
+                  <p className="mt-1 text-sm text-slate-600">{mentalConfig.subtitle}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <h3 className="text-base font-semibold text-slate-900">สิ่งที่จะมีในหน้านี้</h3>
+              <div className="mt-3 space-y-2">
+                {mentalConfig.tips.map((tip) => (
+                  <div key={tip} className="rounded-2xl border border-[#dcecf5] bg-[#f6fbff] px-3 py-2 text-sm text-slate-600">
+                    {tip}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <Link
+              to="/goals/mental"
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-[#c8e2ef] bg-[#eef8fd] px-4 py-3 text-sm font-medium text-[#2e6a8b]"
+            >
+              กลับไปหน้าสุขภาวะทางใจ
+            </Link>
           </main>
         </div>
       </MobileShell>
