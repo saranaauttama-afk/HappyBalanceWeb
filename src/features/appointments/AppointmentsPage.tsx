@@ -54,6 +54,43 @@ function parseDateValue(value: string) {
   return parsed;
 }
 
+function getLogTimestamp(log: DailyLog) {
+  const createdAt = log.created_at ? new Date(log.created_at).getTime() : Number.NaN;
+  if (Number.isFinite(createdAt)) return createdAt;
+
+  const updatedAt = log.updated_at ? new Date(log.updated_at).getTime() : Number.NaN;
+  if (Number.isFinite(updatedAt)) return updatedAt;
+
+  const logDate = log.log_date ? new Date(log.log_date).getTime() : Number.NaN;
+  if (Number.isFinite(logDate)) return logDate;
+
+  return 0;
+}
+
+function isStructuredTaskNote(note: unknown) {
+  if (typeof note !== "string") return false;
+  const trimmed = note.trim();
+  if (!trimmed.startsWith("{")) return false;
+
+  try {
+    const parsed = JSON.parse(trimmed) as {
+      entry_type?: unknown;
+      category?: unknown;
+      activity?: unknown;
+      task?: unknown;
+    };
+
+    return (
+      typeof parsed.entry_type === "string" &&
+      typeof parsed.category === "string" &&
+      typeof parsed.activity === "string" &&
+      typeof parsed.task === "string"
+    );
+  } catch {
+    return false;
+  }
+}
+
 function getStartOfToday() {
   const today = new Date();
   return new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -212,15 +249,24 @@ export default function AppointmentsPage() {
   const selectedDateKey = useMemo(() => toDateKey(selectedDate), [selectedDate]);
   const monthKey = useMemo(() => toMonthKey(monthDate), [monthDate]);
 
+  const journalLogs = useMemo(
+    () => dailyLogs.filter((item) => !isStructuredTaskNote(item.note)),
+    [dailyLogs]
+  );
+
   const dailyLogByDate = useMemo(() => {
     const map = new Map<string, DailyLog>();
-    dailyLogs.forEach((item) => {
+    [...journalLogs]
+      .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+      .forEach((item) => {
       const parsedDate = parseDateValue(String(item.log_date));
       if (!parsedDate) return;
-      map.set(toDateKey(parsedDate), item);
-    });
+      const key = toDateKey(parsedDate);
+      if (map.has(key)) return;
+      map.set(key, item);
+      });
     return map;
-  }, [dailyLogs]);
+  }, [journalLogs]);
 
   const selectedDailyLog = useMemo(
     () => dailyLogByDate.get(selectedDateKey) ?? null,
@@ -374,7 +420,7 @@ export default function AppointmentsPage() {
 
   const dailyLogDaySet = useMemo(() => {
     const keys = new Set<string>();
-    dailyLogs.forEach((item) => {
+    journalLogs.forEach((item) => {
       const date = parseDateValue(String(item.log_date));
       if (!date) return;
       if (date.getFullYear() !== monthDate.getFullYear()) return;
@@ -382,7 +428,7 @@ export default function AppointmentsPage() {
       keys.add(toDateKey(date));
     });
     return keys;
-  }, [dailyLogs, monthDate]);
+  }, [journalLogs, monthDate]);
 
   const pendingCount = useMemo(
     () => appointments.filter((item) => item.status === "pending").length,
@@ -483,7 +529,7 @@ export default function AppointmentsPage() {
               </div>
               <div className="rounded-2xl bg-emerald-50 px-2 py-3">
                 <p className="text-xs text-emerald-700">บันทึกแล้ว</p>
-                <p className="text-lg font-semibold text-emerald-800">{dailyLogs.length}</p>
+                <p className="text-lg font-semibold text-emerald-800">{journalLogs.length}</p>
               </div>
             </div>
           </InfoCard>

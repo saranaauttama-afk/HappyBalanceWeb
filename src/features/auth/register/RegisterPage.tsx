@@ -62,7 +62,12 @@ export default function RegisterPage() {
         <div className="pointer-events-none absolute -left-20 top-20 h-60 w-60 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-16 bottom-16 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-        <AppHeader title="Road to HAPPY BALANCE" showBack />
+        <AppHeader
+          title="HAPPY BALANCE"
+          subtitle="Road to Better Balance"
+          showBack
+          variant="soft"
+        />
 
         <div className="relative z-10 px-5 py-6">
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">

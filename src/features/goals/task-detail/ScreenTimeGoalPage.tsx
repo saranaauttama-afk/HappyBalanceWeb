@@ -1,4 +1,4 @@
-import { Minus, Plus, Sparkles, Smartphone } from "lucide-react";
+﻿import { Minus, Plus, Sparkles, Smartphone } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
@@ -43,7 +43,7 @@ export default function ScreenTimeGoalPage() {
 
       const response = await goalsService.listGoals(userId ?? undefined);
       if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายได้");
+        throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายการใช้หน้าจอก่อนนอนได้");
       }
 
       const goals = response.data || [];
@@ -95,14 +95,14 @@ export default function ScreenTimeGoalPage() {
           });
 
       if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายได้");
+        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายการใช้หน้าจอก่อนนอนได้");
       }
 
       if (!existingGoalId && response.data?.id) {
         setExistingGoalId(response.data.id);
       }
 
-      setSuccessMessage("บันทึกเป้าหน้าจอเรียบร้อย");
+      setSuccessMessage("บันทึกเป้าหมายการใช้หน้าจอก่อนนอนเรียบร้อยแล้ว");
       await loadGoal();
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
@@ -119,7 +119,13 @@ export default function ScreenTimeGoalPage() {
         <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#d3e9ff]/30 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-        <AppHeader title="เป้าหน้าจอก่อนนอน" showBack showBell variant="soft" />
+        <AppHeader
+          title="เป้าหมายจำกัดหน้าจอก่อนนอน"
+          subtitle="กำหนดเวลาสูงสุดก่อนเข้านอนให้เหมาะกับการพักผ่อน"
+          showBack
+          showBell
+          variant="soft"
+        />
 
         <main className="relative z-10 space-y-4 px-4 py-4">
           {error ? (
@@ -135,12 +141,19 @@ export default function ScreenTimeGoalPage() {
           ) : null}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-center gap-2 text-slate-900">
-              <Smartphone size={18} />
-              <h2 className="text-base font-semibold">ตั้งเป้าไม่เกิน (นาที/วัน)</h2>
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf4ff] text-[#4a6da7]">
+                <Smartphone size={18} />
+              </span>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">เวลาหน้าจอก่อนนอนที่ต้องการ</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  กำหนดเวลาสูงสุดต่อวัน แล้วใช้เป็นเกณฑ์ในหน้าการพักผ่อนเพื่อเช็กว่าคืนนี้ทำได้ตามเป้าหมายหรือไม่
+                </p>
+              </div>
             </div>
 
-            <div className="mt-3 rounded-2xl bg-[#f2f9fd] px-3 py-3 text-center">
+            <div className="mt-4 rounded-2xl bg-[#f2f9fd] px-3 py-3 text-center">
               {isInitialLoading ? (
                 <div className="mx-auto h-8 w-24 animate-pulse rounded-lg bg-[#d3e7f2]" />
               ) : (
@@ -207,7 +220,7 @@ export default function ScreenTimeGoalPage() {
               saving || loadingGoal ? "cursor-not-allowed bg-slate-400" : "bg-[#6ea8c5]"
             }`}
           >
-            {saving ? "กำลังบันทึก..." : loadingGoal ? "กำลังโหลด..." : "บันทึกเป้าหมาย"}
+            {saving ? "กำลังบันทึก..." : loadingGoal ? "กำลังโหลด..." : "บันทึกเป้าหมายหน้าจอ"}
           </button>
 
           <div className="rounded-2xl border border-white/70 bg-white/70 p-3 text-xs text-slate-500">
@@ -215,7 +228,7 @@ export default function ScreenTimeGoalPage() {
               <Sparkles size={14} />
               หมายเหตุ:
             </span>{" "}
-            ใช้ข้อความสั้น: เป้าหน้าจอไม่เกินก่อนนอน
+            เป้าหมายนี้จะถูกใช้เป็นเกณฑ์ในหัวข้อจำกัดเวลาการใช้หน้าจอก่อนนอนในหน้าการพักผ่อน
           </div>
         </main>
       </div>

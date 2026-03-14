@@ -106,6 +106,10 @@ export default function AppRoutes() {
           path="/profile/settings/water-goal"
           element={<WaterGoalSettingsPage />}
         />
+        <Route
+          path="/profile/settings/screen-time-goal"
+          element={<ScreenTimeGoalPage />}
+        />
         <Route path="/goals/mental/:activity/task" element={<MentalTaskPage />} />
         <Route
           path="/goals/mental/positive-thinking/smile-when-disappointed"

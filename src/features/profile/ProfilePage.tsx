@@ -3,11 +3,12 @@ import {
   ChevronRight,
   ChartColumn,
   CircleHelp,
+  LogOut,
   NotebookPen,
   SlidersHorizontal,
   UserRound,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
 import BottomNav from "../../components/layout/BottomNav";
@@ -15,7 +16,7 @@ import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
-import { getCurrentUserId } from "../../utils/authSession";
+import { clearCurrentUser, getCurrentUserId } from "../../utils/authSession";
 
 const MAX_AVATAR_SIZE_MB = 2;
 const MAX_AVATAR_DIMENSION = 720;
@@ -118,6 +119,7 @@ async function buildOptimizedAvatarDataUrl(file: File) {
 
 export default function ProfilePage() {
   const userId = getCurrentUserId();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [user, setUser] = useState<User | null>(null);
@@ -199,6 +201,11 @@ export default function ProfilePage() {
     } finally {
       setAvatarUploading(false);
     }
+  }
+
+  function handleLogout() {
+    clearCurrentUser();
+    navigate("/", { replace: true });
   }
 
   return (
@@ -333,6 +340,27 @@ export default function ProfilePage() {
               </Link>
             ))}
           </div>
+
+          <button type="button" onClick={handleLogout} className="block w-full text-left">
+            <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(31,47,61,0.14)]`}>
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#f4c7c3] via-[#f7d8d2] to-[#fff0ed]" />
+
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#fff1ef] text-[#b85045]">
+                    <LogOut size={18} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-slate-800">ออกจากระบบ</span>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">สิ้นสุดการใช้งานและกลับไปหน้าเริ่มต้น</p>
+                  </div>
+                </div>
+
+                <ChevronRight size={18} className="text-slate-400" />
+              </div>
+            </InfoCard>
+          </button>
         </main>
 
         <BottomNav variant="soft" />

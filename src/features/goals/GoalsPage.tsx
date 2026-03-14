@@ -102,6 +102,8 @@ export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const snapshotImage =
+    "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1400&q=80";
 
   const scores = useMemo(() => calculateWellbeingScores(goals), [goals]);
 
@@ -214,36 +216,46 @@ export default function GoalsPage() {
           ) : (
             <>
               <section className="relative overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.9)_0%,rgba(245,253,255,0.86)_48%,rgba(237,251,243,0.88)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
+                <img
+                  src={snapshotImage}
+                  alt=""
+                  className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-24"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.94)_10%,rgba(248,252,255,0.88)_44%,rgba(239,250,245,0.8)_100%)]" />
                 <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#9ad4be]/20 blur-3xl" />
-                <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">GOALS SNAPSHOT</p>
-                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">สถานะเป้าหมายสุขสมดุล</h2>
-                <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
+                <div className="pointer-events-none absolute -left-10 bottom-4 h-32 w-32 rounded-full bg-white/35 blur-3xl" />
 
-                <div className="mt-4 rounded-2xl border border-white/80 bg-white/75 p-3">
-                  <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
-                    <span>ความคืบหน้าโดยรวม</span>
-                    <span className="font-semibold text-slate-900">{overallProgress}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-200">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                      style={{ width: `${overallProgress}%` }}
-                    />
-                  </div>
-                </div>
+                <div className="relative z-10">
+                  <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">GOALS SNAPSHOT</p>
+                  <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">สถานะเป้าหมายสุขสมดุล</h2>
+                  <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-2xl bg-[#f8fafc] px-2 py-3">
-                    <p className="text-xs text-slate-500">หมวดทั้งหมด</p>
-                    <p className="text-lg font-bold text-slate-900">{summaries.length}</p>
+                  <div className="mt-4 rounded-2xl border border-white/85 bg-white/76 p-3 shadow-[0_12px_28px_rgba(31,47,61,0.08)] backdrop-blur-sm">
+                    <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
+                      <span>ความคืบหน้าโดยรวม</span>
+                      <span className="font-semibold text-slate-900">{overallProgress}%</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-200/90">
+                      <div
+                        className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                        style={{ width: `${overallProgress}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="rounded-2xl bg-[#ecfdf3] px-2 py-3">
-                    <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
-                    <p className="text-lg font-bold text-[#166534]">{goals.length}</p>
-                  </div>
-                  <div className="rounded-2xl bg-[#fff7ed] px-2 py-3">
-                    <p className="text-xs text-slate-500">อัปเดตล่าสุด</p>
-                    <p className="text-xs font-bold text-[#9a3412]">วันนี้</p>
+
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                    <div className="rounded-2xl border border-white/75 bg-[#f8fafc]/86 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                      <p className="text-xs text-slate-500">หมวดทั้งหมด</p>
+                      <p className="text-lg font-bold text-slate-900">{summaries.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/75 bg-[#ecfdf3]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                      <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
+                      <p className="text-lg font-bold text-[#166534]">{goals.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/75 bg-[#fff7ed]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                      <p className="text-xs text-slate-500">อัปเดตล่าสุด</p>
+                      <p className="text-xs font-bold text-[#9a3412]">วันนี้</p>
+                    </div>
                   </div>
                 </div>
               </section>

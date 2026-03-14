@@ -1,8 +1,11 @@
-﻿import { useNavigate } from "react-router-dom";
+﻿import { Activity, Brain, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import MobileShell from "../../../components/layout/MobileShell";
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const heroImage =
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=80";
 
   return (
     <MobileShell>
@@ -10,30 +13,52 @@ export default function Welcome() {
         <div className="pointer-events-none absolute -left-16 top-10 h-56 w-56 rounded-full bg-[#ffc9a3]/25 blur-3xl" />
         <div className="pointer-events-none absolute -right-10 bottom-10 h-52 w-52 rounded-full bg-[#7dcdb8]/25 blur-3xl" />
 
-        <section className="relative z-10 rounded-[28px] border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(51,87,81,0.16)] backdrop-blur">
-          <p className="inline-flex rounded-full bg-[#e6f6ef] px-3 py-1 text-xs font-bold tracking-[0.14em] text-[#1f6658]">
-            HAPPY BALANCE
-          </p>
+        <section className="relative z-10 overflow-hidden rounded-[28px] border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(51,87,81,0.16)] backdrop-blur">
+          <img
+            src={heroImage}
+            alt=""
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[70%_center] opacity-[0.92]"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(94deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.8)_20%,rgba(255,255,255,0.5)_35%,rgba(255,255,255,0.08)_58%,rgba(255,255,255,0)_100%)]" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-[44%] bg-[linear-gradient(90deg,rgba(255,255,255,0.3)_0%,rgba(255,255,255,0.08)_100%)]" />
+          <div className="pointer-events-none absolute bottom-3 right-3 h-40 w-44 rounded-[34px] border border-white/20 bg-white/8 backdrop-blur-[1.5px]" />
 
-          <h1 className="mt-4 text-[2rem] font-extrabold leading-tight text-[#1c3140]">
-            Road to
-            <br />
-            Better Balance
-          </h1>
+          <div className="relative z-10">
+            <p className="inline-flex rounded-full bg-[#e6f6ef]/92 px-3 py-1 text-xs font-bold tracking-[0.14em] text-[#1f6658] backdrop-blur-sm">
+              HAPPY BALANCE
+            </p>
 
-          <p className="mt-4 text-sm leading-6 text-[#415760]">
-            นวัตกรรมการปรึกษาเชิงจิตวิทยาเพื่อเสริมสร้างภาวะสุขสมดุลของบุคคลวัยทำงาน
-          </p>
+            <h1 className="mt-4 max-w-[12rem] text-[2rem] font-extrabold leading-tight text-[#183042]">
+              Road to
+              <br />
+              Better Balance
+            </h1>
 
-          <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs">
-            <div className="rounded-2xl bg-[#f7fbff] px-2 py-3">
-              <p className="font-bold text-[#224560]">Body</p>
+            <div className="mt-4 max-w-[15rem] rounded-2xl border border-white/60 bg-white/54 px-4 py-3 shadow-[0_12px_28px_rgba(31,47,61,0.06)] backdrop-blur-[2px]">
+              <p className="text-[15px] font-semibold leading-6 text-[#28424f]">
+                นวัตกรรมการปรึกษาเชิงจิตวิทยาเพื่อเสริมสร้างภาวะสุขสมดุลของบุคคลวัยทำงาน
+              </p>
             </div>
-            <div className="rounded-2xl bg-[#f8fff8] px-2 py-3">
-              <p className="font-bold text-[#24543f]">Mind</p>
-            </div>
-            <div className="rounded-2xl bg-[#fff9f4] px-2 py-3">
-              <p className="font-bold text-[#6f4c2a]">Life</p>
+
+            <div className="mt-6 grid grid-cols-3 gap-2 text-center text-xs">
+              <div className="rounded-2xl border border-white/75 bg-[#f7fbff]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                <p className="inline-flex items-center gap-1.5 font-bold text-[#224560]">
+                  <Activity size={14} />
+                  Body
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/75 bg-[#f8fff8]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                <p className="inline-flex items-center gap-1.5 font-bold text-[#24543f]">
+                  <Brain size={14} />
+                  Mind
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/75 bg-[#fff9f4]/88 px-2 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.06)] backdrop-blur-sm">
+                <p className="inline-flex items-center gap-1.5 font-bold text-[#6f4c2a]">
+                  <Sparkles size={14} />
+                  Life
+                </p>
+              </div>
             </div>
           </div>
         </section>

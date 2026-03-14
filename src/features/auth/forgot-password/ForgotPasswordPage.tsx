@@ -13,7 +13,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <MobileShell>
-      <AppHeader title="Road to HAPPY BALANCE" showBack />
+      <AppHeader
+        title="HAPPY BALANCE"
+        subtitle="Road to Better Balance"
+        showBack
+        variant="soft"
+      />
 
       <div className="px-5 py-6">
         <div className="mb-6 text-center">

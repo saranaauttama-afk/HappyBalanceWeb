@@ -1415,10 +1415,6 @@ export default function ActivityTaskPage() {
               )}
             </section>
 
-            <p className="text-xs text-slate-500">
-              ข้อมูลนี้บันทึกลง <span className="font-semibold">daily_logs</span> และซิงก์สำเนาสำหรับงานพักผ่อนไปที่{" "}
-              <span className="font-semibold">rest_task_logs</span> เพื่อให้หน้าโหลดเร็วขึ้น
-            </p>
           </main>
         </div>
       </MobileShell>
@@ -1621,10 +1617,6 @@ export default function ActivityTaskPage() {
               )}
             </section>
 
-            <p className="text-xs text-slate-500">
-              ข้อมูลนี้บันทึกลง <span className="font-semibold">daily_logs</span> และซิงก์สำเนาสำหรับงานพักผ่อนไปที่{" "}
-              <span className="font-semibold">rest_task_logs</span> เพื่อให้หน้าโหลดเร็วขึ้น
-            </p>
           </main>
         </div>
       </MobileShell>

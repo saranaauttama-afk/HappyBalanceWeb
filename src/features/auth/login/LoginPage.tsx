@@ -1,12 +1,15 @@
-﻿import { Link, useNavigate } from "react-router-dom";
+﻿import { LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { useState } from "react";
-import MobileShell from "../../../components/layout/MobileShell";
+import { Link, useNavigate } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
+import MobileShell from "../../../components/layout/MobileShell";
 import { authService } from "../../../services/auth.service";
 import { setCurrentUser } from "../../../utils/authSession";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const heroImage =
+    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1400&q=80";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
@@ -45,15 +48,39 @@ export default function LoginPage() {
         <div className="pointer-events-none absolute -left-20 top-20 h-60 w-60 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
         <div className="pointer-events-none absolute -right-16 bottom-16 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
 
-        <AppHeader title="Road to HAPPY BALANCE" showBack />
+        <AppHeader
+          title="HAPPY BALANCE"
+          subtitle="Road to Better Balance"
+          showBack
+          variant="soft"
+        />
 
         <div className="relative z-10 px-5 py-6">
-          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
-            <h2 className="text-3xl font-bold text-slate-900">เข้าสู่ระบบ</h2>
-            <p className="mt-2 text-sm text-slate-600">ยินดีต้อนรับกลับ กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ</p>
+          <section className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_50px_rgba(31,47,61,0.14)] backdrop-blur">
+            <img
+              src={heroImage}
+              alt=""
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[72%_center] opacity-[0.78]"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(96deg,rgba(255,255,255,0.95)_0%,rgba(255,255,255,0.88)_28%,rgba(255,255,255,0.62)_46%,rgba(255,255,255,0.12)_66%,rgba(255,255,255,0)_100%)]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[48%] bg-[linear-gradient(90deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.06)_100%)]" />
+
+            <div className="relative z-10">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-white/72 px-3 py-1 text-xs font-semibold tracking-[0.12em] text-[#1f6658] backdrop-blur-sm">
+                <Sparkles size={13} />
+                WELCOME BACK
+              </p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-900">เข้าสู่ระบบ</h2>
+              <p className="mt-2 max-w-[15rem] rounded-2xl border border-white/60 bg-white/52 px-4 py-3 text-sm leading-6 text-slate-700 backdrop-blur-[2px]">
+                ยินดีต้อนรับกลับ เข้าสู่ระบบเพื่อดูเป้าหมาย สุขสมดุล และบันทึกประจำวันของคุณ
+              </p>
+            </div>
           </section>
 
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-4 space-y-4 rounded-3xl border border-white/75 bg-white/88 p-5 shadow-[0_18px_42px_rgba(31,47,61,0.12)] backdrop-blur"
+          >
             {error ? (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
                 {error}
@@ -62,26 +89,32 @@ export default function LoginPage() {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">อีเมล</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="openheart@gmail.com"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <Mail size={18} className="text-slate-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="openheart@gmail.com"
+                />
+              </div>
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">รหัสผ่าน</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                placeholder="••••••••"
-              />
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#f9fbfc] px-4 py-3 transition focus-within:border-[#87b4a5] focus-within:bg-white">
+                <LockKeyhole size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-transparent text-slate-900 outline-none placeholder:text-slate-400"
+                  placeholder="••••••••"
+                />
+              </div>
             </div>
 
             <div className="text-right">
@@ -93,7 +126,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={saving}
-              className={`w-full rounded-2xl px-4 py-3 font-medium text-white ${
+              className={`w-full rounded-2xl px-4 py-3 font-semibold text-white shadow-[0_14px_30px_rgba(216,141,128,0.3)] transition ${
                 saving ? "bg-slate-400" : "bg-[#d88d80] hover:brightness-105"
               }`}
             >
@@ -118,7 +151,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-lg text-slate-400"
+              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
               aria-label="เข้าสู่ระบบผ่าน Facebook"
               title="Coming soon"
             >
@@ -128,7 +161,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-lg text-slate-400"
+              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
               aria-label="เข้าสู่ระบบผ่าน Apple ID"
               title="Coming soon"
             >
@@ -138,7 +171,7 @@ export default function LoginPage() {
             <button
               type="button"
               disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-lg text-slate-400"
+              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
               aria-label="เข้าสู่ระบบผ่าน Gmail"
               title="Coming soon"
             >

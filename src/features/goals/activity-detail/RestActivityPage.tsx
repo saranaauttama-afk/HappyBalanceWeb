@@ -182,6 +182,12 @@ export default function RestActivityPage() {
     }).length;
   }, [taskScoreMap]);
 
+  const latestLogDate = useMemo(() => {
+    const latestLog = [...logs].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))[0];
+    if (!latestLog?.log_date) return null;
+    return formatThaiDate(new Date(latestLog.log_date));
+  }, [logs]);
+
   return (
     <MobileShell>
       <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
@@ -212,37 +218,66 @@ export default function RestActivityPage() {
             </InfoCard>
           ) : null}
 
-          <section className="relative overflow-hidden rounded-[28px] border border-white/80 bg-[linear-gradient(145deg,rgba(255,255,255,0.9)_0%,rgba(245,253,255,0.86)_48%,rgba(237,251,243,0.88)_100%)] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)] backdrop-blur">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#9ad4be]/20 blur-3xl" />
-            <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">REST OVERVIEW</p>
-            <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">ความคืบหน้าด้านการพักผ่อน</h2>
-            <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
-
-            <div className="mt-4 rounded-2xl border border-white/80 bg-white/75 p-3">
-              <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
-                <span>คะแนนรวมกิจกรรมการพักผ่อน</span>
-                <span className="font-semibold text-slate-900">{overallScore}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-slate-200">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                  style={{ width: `${overallScore}%` }}
-                />
-              </div>
+          <section className="relative overflow-hidden rounded-[28px] border border-white/80 p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)]">
+            <div className="pointer-events-none absolute inset-0">
+              <img
+                src="https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=1200&q=80"
+                alt=""
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,0.94)_8%,rgba(246,251,255,0.84)_42%,rgba(237,247,255,0.66)_72%,rgba(232,247,239,0.58)_100%)]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5)_0%,rgba(255,255,255,0)_28%)]" />
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.3)_48%,rgba(255,255,255,0.72)_100%)]" />
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-2xl bg-[#eef7fd] px-2 py-3">
-                <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
-                <p className="text-lg font-bold text-slate-900">{REST_TASKS.length}</p>
+            <div className="relative z-10">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">REST OVERVIEW</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-2xl font-extrabold leading-tight text-slate-900">จัดจังหวะการพักผ่อนให้ร่างกายได้ค่อย ๆ ฟื้นพลัง</h2>
+                  <p className="mt-1 max-w-xs text-sm text-slate-700">
+                    ติดตามการนอน น้ำ และพฤติกรรมก่อนนอน เพื่อให้คะแนนสะท้อนคุณภาพการพักผ่อนจริง
+                  </p>
+                </div>
+                <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.36)_100%)] text-[#2e6a8b] shadow-[0_12px_24px_rgba(78,104,96,0.16)] backdrop-blur-md">
+                  <MoonStar size={22} />
+                </div>
               </div>
-              <div className="rounded-2xl bg-[#ecfdf3] px-2 py-3">
-                <p className="text-xs text-slate-500">ทำได้ดี</p>
-                <p className="text-lg font-bold text-[#166534]">{completedTaskCount}</p>
+
+              <div className="mt-5 flex items-center gap-4">
+                <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_28%,#fff4a8_0%,#f4e46c_44%,#e3d24b_100%)] text-4xl font-extrabold text-slate-900 shadow-[inset_0_10px_22px_rgba(255,255,255,0.42),0_12px_24px_rgba(160,138,46,0.18)]">
+                  {completedTaskCount}
+                </div>
+                <div className="min-w-0 flex-1 rounded-[24px] border border-white/60 bg-white/55 px-4 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur-sm">
+                  <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
+                    <span>คะแนนรวมกิจกรรมการพักผ่อน</span>
+                    <span className="font-semibold text-slate-900">{overallScore}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/80">
+                    <div
+                      className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
+                      style={{ width: `${overallScore}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-800">
+                    ทำได้ดี {completedTaskCount} / {REST_TASKS.length} หัวข้อ
+                  </p>
+                </div>
               </div>
-              <div className="rounded-2xl bg-[#fff7ed] px-2 py-3">
-                <p className="text-xs text-slate-500">คะแนนล่าสุด</p>
-                <p className="text-lg font-bold text-[#9a3412]">{latestAverageScore}%</p>
+
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                  <p className="text-xs text-slate-500">คะแนนล่าสุด</p>
+                  <p className="mt-1 text-lg font-bold text-[#9a3412]">{latestAverageScore}%</p>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                  <p className="text-xs text-slate-500">บันทึกล่าสุด</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-800">{latestLogDate ?? "ยังไม่มีข้อมูล"}</p>
+                </div>
+                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3 sm:block hidden">
+                  <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{REST_TASKS.length}</p>
+                </div>
               </div>
             </div>
           </section>
@@ -315,7 +350,7 @@ export default function RestActivityPage() {
                           <h3 className="text-base font-semibold text-slate-900">{task.label}</h3>
                         </div>
 
-                        <p className="mt-2 text-sm text-slate-500">{score === undefined ? "ยังไม่มีการบันทึกล่าสุด" : `คะแนนล่าสุด ${score}%`}</p>
+                        <p className="mt-2 text-sm text-slate-500">{task.subtitle}</p>
 
                         <div className="mt-3 h-2 rounded-full bg-slate-200">
                           <div
@@ -325,10 +360,25 @@ export default function RestActivityPage() {
                         </div>
 
                         <div className="mt-2 flex items-center justify-between gap-2">
-                          <p className="text-sm text-slate-500">แตะเพื่อบันทึกกิจกรรมและอัปเดตคะแนน</p>
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.chipClass}`}>
-                            {status.label}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.chipClass}`}>
+                              {status.label}
+                            </span>
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                task.type === "boolean"
+                                  ? "bg-[#eef8fd] text-[#2e6a8b]"
+                                  : task.type === "water"
+                                    ? "bg-[#eef7ff] text-[#396f8c]"
+                                    : "bg-[#fff5ea] text-[#9a5b34]"
+                              }`}
+                            >
+                              {task.type === "boolean" ? "Yes / No" : task.type === "water" ? "Water" : "Counter"}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-500">
+                            {score === undefined ? "ยังไม่มีการบันทึกล่าสุด" : `คะแนนล่าสุด ${score}%`}
+                          </p>
                         </div>
                       </div>
 

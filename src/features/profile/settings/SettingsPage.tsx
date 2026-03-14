@@ -1,4 +1,4 @@
-import { ChevronRight, Droplets, MoonStar } from "lucide-react";
+﻿import { ChevronRight, Droplets, MoonStar, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
@@ -22,6 +22,15 @@ const settingMenus = [
     accent: "from-[#c7e8f5] via-[#dff4fb] to-[#f3fcff]",
     iconBg: "bg-[#e8f7ff]",
     iconColor: "text-[#3f7a96]",
+  },
+  {
+    label: "จำกัดเวลาการใช้หน้าจอก่อนนอน",
+    description: "กำหนดเวลาสูงสุดของการใช้หน้าจอก่อนเข้านอน",
+    to: "/profile/settings/screen-time-goal",
+    Icon: Smartphone,
+    accent: "from-[#d6e5ff] via-[#e7f1ff] to-[#f5f9ff]",
+    iconBg: "bg-[#edf4ff]",
+    iconColor: "text-[#4a6da7]",
   },
 ];
 
@@ -54,7 +63,7 @@ export default function SettingsPage() {
                 ปรับเป้าหมายให้เหมาะกับไลฟ์สไตล์ของคุณ
               </h2>
               <p className="text-sm leading-6 text-slate-500">
-                ตั้งค่าเป้าหมายการนอนและการดื่มน้ำ เพื่อช่วยติดตามสุขสมดุลในทุกวันได้ง่ายขึ้น
+                ตั้งค่าเป้าหมายการนอน การดื่มน้ำ และเวลาหน้าจอก่อนนอน เพื่อช่วยติดตามสุขสมดุลในทุกวันได้ง่ายขึ้น
               </p>
             </div>
           </InfoCard>
@@ -76,12 +85,8 @@ export default function SettingsPage() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-base font-semibold text-slate-900">
-                          {item.label}
-                        </h2>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          {item.description}
-                        </p>
+                        <h2 className="text-base font-semibold text-slate-900">{item.label}</h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
                       </div>
                     </div>
 
