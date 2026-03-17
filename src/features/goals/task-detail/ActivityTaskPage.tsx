@@ -1900,7 +1900,7 @@ export default function ActivityTaskPage() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">เช็กการงีบระหว่างวัน</h2>
-                  <p className="text-sm text-slate-500">หลังบ่าย 3 โมง วันนี้งีบเกิน 1 ชั่วโมงหรือไม่</p>
+                  <p className="text-sm text-slate-500">หลังบ่าย 3 โมง วันนี้งีบไม่เกิน 1 ชั่วโมงหรือไม่</p>
                 </div>
                 <span
                   className={`rounded-full px-2.5 py-1 text-xs font-medium ${
