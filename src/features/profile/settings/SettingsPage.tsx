@@ -51,6 +51,7 @@ export default function SettingsPage() {
           showBack
           showBell
           variant="soft"
+          backTo="/profile"
         />
 
         <main className="relative z-10 space-y-4 px-4 py-6">

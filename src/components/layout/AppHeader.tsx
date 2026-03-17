@@ -7,6 +7,7 @@ interface AppHeaderProps {
   showBack?: boolean;
   subtitle?: string;
   variant?: "default" | "soft";
+  backTo?: string;
 }
 
 export default function AppHeader({
@@ -15,6 +16,7 @@ export default function AppHeader({
   showBack = false,
   subtitle,
   variant = "default",
+  backTo,
 }: AppHeaderProps) {
   const navigate = useNavigate();
   const isSoft = variant === "soft";
@@ -32,7 +34,13 @@ export default function AppHeader({
           {showBack && (
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (backTo) {
+                  navigate(backTo, { replace: true });
+                  return;
+                }
+                navigate(-1);
+              }}
               className={`rounded-xl p-2 transition ${
                 isSoft ? "bg-white/60 hover:bg-white/90" : "hover:bg-slate-100"
               }`}

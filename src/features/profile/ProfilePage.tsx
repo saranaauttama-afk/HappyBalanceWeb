@@ -20,6 +20,7 @@ import { clearCurrentUser, getCurrentUserId } from "../../utils/authSession";
 
 const MAX_AVATAR_SIZE_MB = 2;
 const MAX_AVATAR_DIMENSION = 720;
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const menuItems = [
   {
@@ -117,6 +118,25 @@ async function buildOptimizedAvatarDataUrl(file: File) {
   return canvas.toDataURL("image/jpeg", 0.88);
 }
 
+function getAvatarUploadErrorMessage(error: unknown) {
+  const fallback = "Could not upload profile photo.";
+  const message = error instanceof Error ? error.message : fallback;
+
+  if (/permission|driveapp|access denied|insufficient/i.test(message)) {
+    return "Google Drive permission is missing. Re-deploy Apps Script and authorize Drive access.";
+  }
+
+  if (/mime|file type|unsupported/i.test(message)) {
+    return "Only JPG, PNG, and WEBP files are supported.";
+  }
+
+  if (/too large|payload too large|size/i.test(message)) {
+    return `Image size must be smaller than ${MAX_AVATAR_SIZE_MB}MB.`;
+  }
+
+  return message || fallback;
+}
+
 export default function ProfilePage() {
   const userId = getCurrentUserId();
   const navigate = useNavigate();
@@ -136,7 +156,7 @@ export default function ProfilePage() {
       const response = await profileService.getUser(userId ?? undefined);
 
       if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบัญชีผู้ใช้งานได้");
+        throw new Error(response.error || "Could not load profile data.");
       }
 
       setUser(response.data);
@@ -170,8 +190,8 @@ export default function ProfilePage() {
     event.target.value = "";
     setAvatarError(null);
 
-    if (!file.type.startsWith("image/")) {
-      setAvatarError("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setAvatarError("Only JPG, PNG, and WEBP files are supported.");
       return;
     }
 
@@ -197,7 +217,7 @@ export default function ProfilePage() {
 
       setUser(response.data);
     } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : "ไม่สามารถอัปโหลดรูปโปรไฟล์ได้");
+      setAvatarError(getAvatarUploadErrorMessage(err));
     } finally {
       setAvatarUploading(false);
     }

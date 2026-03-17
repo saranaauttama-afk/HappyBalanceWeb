@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { authService } from "../../../services/auth.service";
-import { setCurrentUser } from "../../../utils/authSession";
+import { getPostAuthRedirectPath, setCurrentUser } from "../../../utils/authSession";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -51,7 +51,8 @@ export default function RegisterPage() {
       }
 
       setCurrentUser(response.data);
-      navigate("/home");
+      const redirectPath = await getPostAuthRedirectPath(response.data);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {

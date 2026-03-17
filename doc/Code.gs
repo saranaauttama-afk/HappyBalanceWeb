@@ -256,6 +256,12 @@ function uploadProfileAvatar_(payload) {
   const imageBase64 = String(payload.image_base64 || "").trim();
   const fileName = String(payload.file_name || "avatar.jpg");
   const mimeType = String(payload.mime_type || "image/jpeg");
+  const allowedMimeTypes = {
+    "image/jpeg": true,
+    "image/png": true,
+    "image/webp": true,
+  };
+  const maxAvatarBytes = 2 * 1024 * 1024;
 
   if (!id) {
     throw new Error("Missing user id");
@@ -263,6 +269,10 @@ function uploadProfileAvatar_(payload) {
 
   if (!imageBase64) {
     throw new Error("Missing image_base64");
+  }
+
+  if (!allowedMimeTypes[mimeType]) {
+    throw new Error("Unsupported avatar file type");
   }
 
   const sheet = getSheet_(SHEET_NAMES.users);
@@ -279,15 +289,32 @@ function uploadProfileAvatar_(payload) {
   }
 
   const parsedImage = parseImagePayload_(imageBase64, mimeType);
+  if (!allowedMimeTypes[parsedImage.mimeType]) {
+    throw new Error("Unsupported avatar file type");
+  }
+
+  const decodedBytes = Utilities.base64Decode(parsedImage.base64);
+  if (decodedBytes.length > maxAvatarBytes) {
+    throw new Error("Avatar file is too large");
+  }
+
   const blob = Utilities.newBlob(
-    Utilities.base64Decode(parsedImage.base64),
+    decodedBytes,
     parsedImage.mimeType,
     buildAvatarFileName_(id, fileName, parsedImage.mimeType)
   );
 
-  const folder = getAvatarFolder_();
-  const file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  let folder;
+  let file;
+  try {
+    folder = getAvatarFolder_();
+    file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (error) {
+    throw new Error(
+      "Avatar upload permission denied. Re-deploy Apps Script as 'Execute as: Me' and authorize Drive access."
+    );
+  }
   const avatarUrl = `https://drive.google.com/uc?export=view&id=${file.getId()}`;
 
   const updated = {
