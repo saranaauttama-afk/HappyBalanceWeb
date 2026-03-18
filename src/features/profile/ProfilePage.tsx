@@ -137,6 +137,33 @@ function getAvatarUploadErrorMessage(error: unknown) {
   return message || fallback;
 }
 
+function extractGoogleDriveFileId(url: string) {
+  const trimmed = String(url || "").trim();
+  if (!trimmed) return "";
+
+  const byPath = trimmed.match(/\/d\/([^/]+)/);
+  if (byPath?.[1]) return byPath[1];
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.searchParams.get("id") || "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function getRenderableAvatarUrl(avatarUrl?: string) {
+  const source = String(avatarUrl || "").trim();
+  if (!source) return "";
+
+  const driveFileId = extractGoogleDriveFileId(source);
+  if (driveFileId) {
+    return `https://drive.google.com/thumbnail?id=${driveFileId}&sz=w512`;
+  }
+
+  return source;
+}
+
 export default function ProfilePage() {
   const userId = getCurrentUserId();
   const navigate = useNavigate();
@@ -147,6 +174,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarRenderFailed, setAvatarRenderFailed] = useState(false);
 
   async function loadUser() {
     try {
@@ -170,6 +198,10 @@ export default function ProfilePage() {
   useEffect(() => {
     void loadUser();
   }, [userId]);
+
+  useEffect(() => {
+    setAvatarRenderFailed(false);
+  }, [user?.avatar_url]);
 
   const initials =
     user?.full_name
@@ -216,6 +248,7 @@ export default function ProfilePage() {
       }
 
       setUser(response.data);
+      setAvatarRenderFailed(false);
     } catch (err) {
       setAvatarError(getAvatarUploadErrorMessage(err));
     } finally {
@@ -227,6 +260,8 @@ export default function ProfilePage() {
     clearCurrentUser();
     navigate("/", { replace: true });
   }
+
+  const avatarSrc = getRenderableAvatarUrl(user?.avatar_url);
 
   return (
     <MobileShell>
@@ -273,11 +308,13 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4">
                   <div className="relative">
                     <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-[linear-gradient(135deg,#f8c6a3_0%,#d7f2e8_100%)] text-2xl font-bold text-[#1f2f3d] ring-4 ring-white/80 shadow-md">
-                      {user.avatar_url ? (
+                      {avatarSrc && !avatarRenderFailed ? (
                         <img
-                          src={user.avatar_url}
+                          src={avatarSrc}
                           alt="Profile avatar"
                           className="h-full w-full object-cover"
+                          onError={() => setAvatarRenderFailed(true)}
+                          referrerPolicy="no-referrer"
                         />
                       ) : (
                         initials
