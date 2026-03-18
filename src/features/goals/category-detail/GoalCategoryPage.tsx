@@ -1,4 +1,4 @@
-﻿import { Activity, Brain, ChevronRight, Scale, Users } from "lucide-react";
+import { Activity, Brain, ChevronRight, LoaderCircle, Scale, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -22,10 +22,16 @@ import {
   getLogTimestamp as getBalanceLogTimestamp,
   parseBalanceTaskNote,
 } from "../task-detail/balanceTaskShared";
+import {
+  getLogTimestamp as getScaffoldedLogTimestamp,
+  parseScaffoldedTaskNote,
+} from "../task-detail/scaffoldedTaskShared";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
+import { REST_TASKS } from "../tasks/restTasks";
+import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
 import { STRESS_TASKS } from "../tasks/stressTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
@@ -212,13 +218,73 @@ function formatThaiDate(value: Date) {
   });
 }
 
+function parseRestTaskScore(note: string) {
+  if (!note) return null;
+
+  try {
+    const parsed = JSON.parse(note) as {
+      entry_type?: string;
+      category?: string;
+      activity?: string;
+      task?: string;
+      score?: number;
+    };
+
+    if (parsed.entry_type !== "rest_task") return null;
+    if (parsed.category !== "physical") return null;
+    if (parsed.activity !== "rest") return null;
+    if (!parsed.task) return null;
+
+    const score = Number(parsed.score);
+    if (!Number.isFinite(score)) return null;
+
+    return {
+      task: parsed.task,
+      score: Math.max(0, Math.min(100, Math.round(score))),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function parsePhysicalTaskActivity(note: string) {
+  if (!note) return null;
+
+  try {
+    const parsed = JSON.parse(note) as {
+      entry_type?: string;
+      category?: string;
+      activity?: string;
+      task?: string;
+      score?: number;
+    };
+
+    if (parsed.entry_type !== "physical_task") return null;
+    if (parsed.category !== "physical") return null;
+    if (!parsed.activity || !parsed.task) return null;
+
+    const score = Number(parsed.score);
+    if (!Number.isFinite(score)) return null;
+
+    return {
+      activity: parsed.activity,
+      task: parsed.task,
+      score: Math.max(0, Math.min(100, Math.round(score))),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function GoalCategoryPage() {
   const { category } = useParams<{ category: string }>();
   const config = CATEGORY_MAP[category ?? "physical"] ?? CATEGORY_MAP.physical;
   const userId = getCurrentUserId();
+  const usesLiveProgress = ["physical", "mental", "social", "balance"].includes(category ?? "");
 
   const [goals, setGoals] = useState<Goal[]>([]);
   const [liveActivityProgress, setLiveActivityProgress] = useState<Record<string, ActivityProgress>>({});
+  const [liveProgressLoading, setLiveProgressLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -248,12 +314,118 @@ export default function GoalCategoryPage() {
     let cancelled = false;
 
     async function loadLiveActivityProgress() {
-      if (!category || !["mental", "social", "balance"].includes(category)) {
+      if (!category || !usesLiveProgress) {
         setLiveActivityProgress({});
+        setLiveProgressLoading(false);
         return;
       }
 
       try {
+        if (!cancelled) {
+          setLiveProgressLoading(true);
+        }
+
+        if (category === "physical") {
+          const [restResponse, physicalResponse] = await Promise.all([
+            logsService.listRestTaskLogs(userId ?? undefined, {
+              limit: 480,
+              forceRefresh: true,
+            }),
+            logsService.listDailyLogs(userId ?? undefined, {
+              entry_type: "physical_task",
+              category: "physical",
+              limit: 480,
+              forceRefresh: true,
+            }),
+          ]);
+
+          if (!restResponse.success || !physicalResponse.success) {
+            if (!cancelled) setLiveActivityProgress({});
+            return;
+          }
+
+          const restLatestByTask = new Map<string, number>();
+          [...(restResponse.data || [])]
+            .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
+            .forEach((log) => {
+              const parsed = parseRestTaskScore(String(log.note));
+              if (!parsed || restLatestByTask.has(parsed.task)) return;
+              restLatestByTask.set(parsed.task, parsed.score);
+            });
+
+          const physicalActivityKeys = ["food-intake", "exercise", "body-hygiene"] as const;
+          const physicalTaskCounts = Object.fromEntries(
+            physicalActivityKeys.map((activityKey) => [
+              activityKey,
+              getScaffoldedActivityConfig("physical", activityKey)?.tasks.length ?? 0,
+            ])
+          ) as Record<(typeof physicalActivityKeys)[number], number>;
+
+          const physicalLatestByActivity = new Map<string, Map<string, number>>();
+          [...(physicalResponse.data || [])]
+            .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
+            .forEach((log) => {
+              const parsedPhysicalTask = parsePhysicalTaskActivity(String(log.note));
+              const activityKey = String(parsedPhysicalTask?.activity || "");
+              if (!physicalActivityKeys.includes(activityKey as (typeof physicalActivityKeys)[number])) {
+                return;
+              }
+
+              const parsed =
+                parsedPhysicalTask ??
+                parseScaffoldedTaskNote(String(log.note), "physical", activityKey);
+              if (!parsed) return;
+
+              const latestByTask = physicalLatestByActivity.get(activityKey) ?? new Map<string, number>();
+              if (!latestByTask.has(parsed.task)) {
+                latestByTask.set(parsed.task, parsed.score);
+              }
+              physicalLatestByActivity.set(activityKey, latestByTask);
+            });
+
+          const nextProgress = {
+            rest: {
+              currentValue: Math.round(
+                Array.from(restLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
+                  Math.max(REST_TASKS.length, 1)
+              ),
+              targetValue: 100,
+            },
+            "food-intake": {
+              currentValue: Math.round(
+                Array.from(physicalLatestByActivity.get("food-intake")?.values() || []).reduce(
+                  (sum, score) => sum + score,
+                  0
+                ) / Math.max(physicalTaskCounts["food-intake"], 1)
+              ),
+              targetValue: 100,
+            },
+            exercise: {
+              currentValue: Math.round(
+                Array.from(physicalLatestByActivity.get("exercise")?.values() || []).reduce(
+                  (sum, score) => sum + score,
+                  0
+                ) / Math.max(physicalTaskCounts.exercise, 1)
+              ),
+              targetValue: 100,
+            },
+            "body-hygiene": {
+              currentValue: Math.round(
+                Array.from(physicalLatestByActivity.get("body-hygiene")?.values() || []).reduce(
+                  (sum, score) => sum + score,
+                  0
+                ) / Math.max(physicalTaskCounts["body-hygiene"], 1)
+              ),
+              targetValue: 100,
+            },
+          } satisfies Record<string, ActivityProgress>;
+
+          if (!cancelled) {
+            setLiveActivityProgress(nextProgress);
+          }
+          return;
+        }
+
         if (category === "mental") {
           const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
             limit: 480,
@@ -407,6 +579,10 @@ export default function GoalCategoryPage() {
         if (!cancelled) {
           setLiveActivityProgress({});
         }
+      } finally {
+        if (!cancelled) {
+          setLiveProgressLoading(false);
+        }
       }
     }
 
@@ -415,7 +591,7 @@ export default function GoalCategoryPage() {
     return () => {
       cancelled = true;
     };
-  }, [category, userId]);
+  }, [category, userId, usesLiveProgress]);
 
   const categoryGoals = useMemo(() => {
     return goals.filter((goal) => goal.category === (category ?? "physical"));
@@ -435,10 +611,15 @@ export default function GoalCategoryPage() {
       const liveProgress = liveActivityProgress[activity.slug];
       return {
         label: activity.label,
-        score: liveProgress ? getActivityScoreFromProgress(liveProgress) : getActivityScore(matchedGoal),
+        score:
+          liveProgress && !liveProgressLoading
+            ? getActivityScoreFromProgress(liveProgress)
+            : usesLiveProgress && liveProgressLoading
+              ? 0
+              : getActivityScore(matchedGoal),
       };
     });
-  }, [config.activities, goalByActivity, liveActivityProgress]);
+  }, [config.activities, goalByActivity, liveActivityProgress, liveProgressLoading, usesLiveProgress]);
 
   const overallScore = useMemo(() => {
     if (chartItems.length === 0) return 0;
@@ -528,8 +709,11 @@ export default function GoalCategoryPage() {
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-slate-900">{config.statusTitle}</h3>
 
-              {loading ? (
-                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">กำลังโหลดข้อมูลสุขภาวะ...</div>
+              {loading || liveProgressLoading ? (
+                <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  <LoaderCircle size={18} className="animate-spin text-slate-400" />
+                  <span>กำลังอัปเดตคะแนนจริงจากบันทึกล่าสุด...</span>
+                </div>
               ) : (
                 <CategoryRadarChart items={chartItems} />
               )}
@@ -544,9 +728,12 @@ export default function GoalCategoryPage() {
             {config.activities.map((activity) => {
               const matchedGoal = goalByActivity.get(activity.slug);
               const liveProgress = liveActivityProgress[activity.slug];
-              const score = liveProgress
-                ? getActivityScoreFromProgress(liveProgress)
-                : getActivityScore(matchedGoal);
+              const isCardLoading = usesLiveProgress && liveProgressLoading && !liveProgress;
+              const score = isCardLoading
+                ? 0
+                : liveProgress
+                  ? getActivityScoreFromProgress(liveProgress)
+                  : getActivityScore(matchedGoal);
               const statusText = getScoreStatus(score);
               const currentValue = liveProgress?.currentValue ?? (Number(matchedGoal?.current_value) || 0);
               const targetValue = liveProgress?.targetValue ?? (Number(matchedGoal?.target_value) || 0);
@@ -562,20 +749,29 @@ export default function GoalCategoryPage() {
 
                         <div className="mt-3 h-2 rounded-full bg-slate-200">
                           <div
-                            className={`h-2 rounded-full ${config.progressColor} transition-all`}
+                            className={`h-2 rounded-full ${config.progressColor} transition-all ${isCardLoading ? "animate-pulse opacity-60" : ""}`}
                             style={{ width: `${score}%` }}
                           />
                         </div>
 
                         <div className="mt-2 flex items-center justify-between gap-2">
                           <p className="text-sm text-slate-500">
-                            {matchedGoal
+                            {isCardLoading
+                              ? "กำลังคำนวณจากบันทึกล่าสุด"
+                              : matchedGoal
                               ? `ความคืบหน้า ${currentValue}/${targetValue || "-"}`
                               : "ยังไม่ตั้งเป้าหมาย"}
                           </p>
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getScoreChip(score)}`}>
-                            {score}% • {statusText}
-                          </span>
+                          {isCardLoading ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                              <LoaderCircle size={12} className="animate-spin" />
+                              กำลังโหลด
+                            </span>
+                          ) : (
+                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getScoreChip(score)}`}>
+                              {score}% • {statusText}
+                            </span>
+                          )}
                         </div>
                       </div>
 

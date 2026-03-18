@@ -30,6 +30,8 @@ import {
   getLogTimestamp as getBalanceLogTimestamp,
   parseBalanceTaskNote,
 } from "../task-detail/balanceTaskShared";
+import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
+import ScaffoldedActivityPage from "./ScaffoldedActivityPage";
 
 const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
   string,
@@ -122,7 +124,15 @@ export default function GoalActivityPage() {
     category: string;
     activity: string;
   }>();
+  const scaffoldedConfig =
+    category === "physical" || category === "mental"
+      ? getScaffoldedActivityConfig(category, activity)
+      : undefined;
   const userId = getCurrentUserId();
+
+  if (scaffoldedConfig) {
+    return <ScaffoldedActivityPage />;
+  }
 
   const [positiveThinkingCompletion, setPositiveThinkingCompletion] = useState<Record<string, boolean>>({});
   const [positiveThinkingLoading, setPositiveThinkingLoading] = useState(false);

@@ -18,6 +18,8 @@ import { profileService } from "../../../services/profile.service";
 import type { DailyLog, Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS, type TaskConfig } from "../tasks/restTasks";
+import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
+import ScaffoldedTaskPage from "./ScaffoldedTaskPage";
 
 type TaskValue = number | boolean | null;
 
@@ -283,6 +285,14 @@ export default function ActivityTaskPage() {
     activity?: string;
     task?: string;
   }>();
+  const scaffoldedConfig =
+    category === "physical" || category === "mental"
+      ? getScaffoldedActivityConfig(category, activity)
+      : undefined;
+
+  if (scaffoldedConfig && task) {
+    return <ScaffoldedTaskPage />;
+  }
 
   const userId = getCurrentUserId();
   const isRestFlow = category === "physical" && activity === "rest";
