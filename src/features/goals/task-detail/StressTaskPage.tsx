@@ -48,7 +48,7 @@ export default function StressTaskPage() {
 
   const [done, setDone] = useState<boolean | null>(null);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -182,6 +182,16 @@ export default function StressTaskPage() {
             </div>
           ) : null}
 
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                กำลังโหลดข้อมูลเดิม...
+              </div>
+            </div>
+          ) : null}
+
+          <div className={loading ? "pointer-events-none opacity-70" : ""}>
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -261,8 +271,10 @@ export default function StressTaskPage() {
             <HeartPulse size={14} />
             เลือกบันทึกจากสิ่งที่คุณทำได้ในรอบล่าสุดของวันนั้น
           </div>
+          </div>
         </main>
       </div>
     </MobileShell>
   );
 }
+

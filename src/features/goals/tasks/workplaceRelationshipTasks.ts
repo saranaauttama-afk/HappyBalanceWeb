@@ -1,4 +1,4 @@
-export type WorkplaceRelationshipTaskType = "boolean" | "counter";
+﻿export type WorkplaceRelationshipTaskType = "boolean" | "counter";
 
 export interface WorkplaceRelationshipTaskConfig {
   slug: string;

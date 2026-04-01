@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+﻿import { ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -185,10 +185,19 @@ export default function ScaffoldedActivityPage() {
                               ? "bg-slate-100 text-slate-500"
                               : task.completed
                                 ? "bg-emerald-50 text-emerald-700"
-                                : "bg-slate-100 text-slate-600"
+                              : "bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {loading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                          {loading ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+                              กำลังโหลด
+                            </span>
+                          ) : task.completed ? (
+                            "บันทึกแล้ว"
+                          ) : (
+                            "รอบันทึก"
+                          )}
                         </span>
                         <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
                           {config.taskTypeLabel}

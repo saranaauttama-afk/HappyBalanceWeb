@@ -1,4 +1,4 @@
-import { CircleCheckBig, CircleX, HandHelping, HeartHandshake, HousePlus, Smile, Sparkles, UserRoundCheck } from "lucide-react";
+﻿import { CircleCheckBig, CircleX, HandHelping, HeartHandshake, HousePlus, Smile, Sparkles, UserRoundCheck } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -41,7 +41,7 @@ export default function FamilyRelationshipTaskPage() {
 
   const [done, setDone] = useState<boolean | null>(null);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -176,80 +176,91 @@ export default function FamilyRelationshipTaskPage() {
             </div>
           ) : null}
 
-          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
-                    <Icon size={18} />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
-                  </div>
-                </div>
-                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                กำลังโหลดข้อมูลเดิม...
               </div>
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                  done === null
-                    ? "bg-slate-100 text-slate-600"
-                    : done
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
-              </span>
             </div>
+          ) : null}
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setDone(true)}
-                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                  done === true
-                    ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <CircleCheckBig size={18} />
-                Yes
-              </button>
+          <div className={loading ? "pointer-events-none opacity-70" : ""}>
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                      <Icon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                      <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+                    </div>
+                  </div>
+                  {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    done === null
+                      ? "bg-slate-100 text-slate-600"
+                      : done
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
+                </span>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setDone(false)}
-                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                  done === false
-                    ? "border-rose-300 bg-rose-50 text-rose-700"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                }`}
-              >
-                <CircleX size={18} />
-                No
-              </button>
-            </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDone(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    done === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
 
-            <p className="mt-4 text-xs text-slate-500">
-              {loading
-                ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
-                : lastSavedDate
-                  ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
-                  : "ยังไม่เคยบันทึกหัวข้อนี้"}
-            </p>
-          </section>
+                <button
+                  type="button"
+                  onClick={() => setDone(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    done === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
 
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving || loading || done === null}
-            className={`w-full rounded-2xl py-4 font-semibold text-white ${
-              saving || loading || done === null ? "bg-slate-400" : "bg-[#c6968c]"
-            }`}
-          >
-            {saving ? "กำลังบันทึก..." : "บันทึกผล"}
-          </button>
+              <p className="mt-4 text-xs text-slate-500">
+                {loading
+                  ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
+                  : lastSavedDate
+                    ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
+                    : "ยังไม่เคยบันทึกหัวข้อนี้"}
+              </p>
+            </section>
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || loading || done === null}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || loading || done === null ? "bg-slate-400" : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผล"}
+            </button>
+          </div>
         </main>
       </div>
     </MobileShell>

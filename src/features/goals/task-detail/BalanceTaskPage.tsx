@@ -1,4 +1,4 @@
-import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
+﻿import { CircleCheckBig, CircleX, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -22,7 +22,7 @@ export default function BalanceTaskPage() {
 
   const [done, setDone] = useState<boolean | null>(null);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -91,7 +91,7 @@ export default function BalanceTaskPage() {
     setSuccessMessage("");
 
     if (done === null) {
-      setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+      setError("à¸à¸£à¸¸à¸“à¸²à¹€à¸¥à¸·à¸­à¸à¸„à¸³à¸•à¸­à¸š Yes à¸«à¸£à¸·à¸­ No à¸à¹ˆà¸­à¸™à¸šà¸±à¸™à¸—à¸¶à¸");
       return;
     }
 
@@ -124,7 +124,7 @@ export default function BalanceTaskPage() {
 
       await syncBalanceActivityGoal(activityKey, userId ?? undefined);
       setLastSavedDate(getTodayDate());
-      setSuccessMessage(done ? "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 100%" : "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 0%");
+      setSuccessMessage(done ? "à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ à¸„à¸°à¹à¸™à¸™à¸«à¸±à¸§à¸‚à¹‰à¸­à¸™à¸µà¹‰à¹€à¸›à¹‡à¸™ 100%" : "à¸šà¸±à¸™à¸—à¸¶à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ à¸„à¸°à¹à¸™à¸™à¸«à¸±à¸§à¸‚à¹‰à¸­à¸™à¸µà¹‰à¹€à¸›à¹‡à¸™ 0%");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -135,8 +135,8 @@ export default function BalanceTaskPage() {
   if (!config) {
     return (
       <MobileShell>
-        <AppHeader title="ไม่พบกิจกรรม" showBack />
-        <main className="p-6 text-center text-slate-500">ไม่พบกิจกรรมที่ต้องการ</main>
+        <AppHeader title="à¹„à¸¡à¹ˆà¸žà¸šà¸à¸´à¸ˆà¸à¸£à¸£à¸¡" showBack />
+        <main className="p-6 text-center text-slate-500">à¹„à¸¡à¹ˆà¸žà¸šà¸à¸´à¸ˆà¸à¸£à¸£à¸¡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£</main>
       </MobileShell>
     );
   }
@@ -157,11 +157,21 @@ export default function BalanceTaskPage() {
             </div>
           ) : null}
 
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                กำลังโหลดข้อมูลเดิม...
+              </div>
+            </div>
+          ) : null}
+
+          <div className={loading ? "pointer-events-none opacity-70" : ""}>
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">เช็กการทำกิจกรรมนี้</h2>
-                <p className="text-sm text-slate-500">หัวข้อนี้เป็นการประเมินภาพรวม ไม่เน้นบันทึกรายวัน</p>
+                <h2 className="text-lg font-semibold text-slate-900">à¹€à¸Šà¹‡à¸à¸à¸²à¸£à¸—à¸³à¸à¸´à¸ˆà¸à¸£à¸£à¸¡à¸™à¸µà¹‰</h2>
+                <p className="text-sm text-slate-500">à¸«à¸±à¸§à¸‚à¹‰à¸­à¸™à¸µà¹‰à¹€à¸›à¹‡à¸™à¸à¸²à¸£à¸›à¸£à¸°à¹€à¸¡à¸´à¸™à¸ à¸²à¸žà¸£à¸§à¸¡ à¹„à¸¡à¹ˆà¹€à¸™à¹‰à¸™à¸šà¸±à¸™à¸—à¸¶à¸à¸£à¸²à¸¢à¸§à¸±à¸™</p>
               </div>
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -172,13 +182,13 @@ export default function BalanceTaskPage() {
                       : "bg-rose-50 text-rose-700"
                 }`}
               >
-                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
+                {scorePreview === null ? "à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¹€à¸¥à¸·à¸­à¸" : `${scorePreview}%`}
               </span>
             </div>
 
             <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#f5fbff] px-3 py-1.5 text-xs font-medium text-[#2e6a8b]">
               <Sparkles size={14} />
-              ตอบแบบ Yes / No
+              à¸•à¸­à¸šà¹à¸šà¸š Yes / No
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
@@ -211,10 +221,10 @@ export default function BalanceTaskPage() {
 
             <p className="mt-4 text-xs text-slate-500">
               {loading
-                ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
+                ? "à¸à¸³à¸¥à¸±à¸‡à¹‚à¸«à¸¥à¸”à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸šà¸±à¸™à¸—à¸¶à¸à¸¥à¹ˆà¸²à¸ªà¸¸à¸”..."
                 : lastSavedDate
-                  ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
-                  : "ยังไม่เคยบันทึกหัวข้อนี้"}
+                  ? `à¸šà¸±à¸™à¸—à¸¶à¸à¸¥à¹ˆà¸²à¸ªà¸¸à¸”: ${formatThaiDate(lastSavedDate)}`
+                  : "à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸šà¸±à¸™à¸—à¸¶à¸à¸«à¸±à¸§à¸‚à¹‰à¸­à¸™à¸µà¹‰"}
             </p>
           </section>
 
@@ -226,10 +236,12 @@ export default function BalanceTaskPage() {
               saving || loading || done === null ? "bg-slate-400" : "bg-[#c6968c]"
             }`}
           >
-            {saving ? "กำลังบันทึก..." : "บันทึกผล"}
+            {saving ? "à¸à¸³à¸¥à¸±à¸‡à¸šà¸±à¸™à¸—à¸¶à¸..." : "à¸šà¸±à¸™à¸—à¸¶à¸à¸œà¸¥"}
           </button>
+          </div>
         </main>
       </div>
     </MobileShell>
   );
 }
+

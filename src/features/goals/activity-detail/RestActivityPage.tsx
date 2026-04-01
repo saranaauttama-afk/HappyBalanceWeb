@@ -4,9 +4,8 @@ import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
-import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
-import type { DailyLog, Goal } from "../../../types/models";
+import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS } from "../tasks/restTasks";
 
@@ -102,7 +101,6 @@ function formatThaiDate(value: Date) {
 
 export default function RestActivityPage() {
   const userId = getCurrentUserId();
-  const [goals, setGoals] = useState<Goal[]>([]);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,22 +110,14 @@ export default function RestActivityPage() {
       setLoading(true);
       setError(null);
 
-      const [goalsResponse, logsResponse] = await Promise.all([
-        goalsService.listGoals(userId ?? undefined),
-        logsService.listRestTaskLogs(userId ?? undefined, {
-          limit: 240,
-        }),
-      ]);
-
-      if (!goalsResponse.success) {
-        throw new Error(goalsResponse.error || "ไม่สามารถโหลดข้อมูลเป้าหมายได้");
-      }
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        limit: 240,
+      });
 
       if (!logsResponse.success) {
         throw new Error(logsResponse.error || "ไม่สามารถโหลดข้อมูลบันทึกกิจกรรมได้");
       }
 
-      setGoals(goalsResponse.data || []);
       setLogs(logsResponse.data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
@@ -139,10 +129,6 @@ export default function RestActivityPage() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
-
-  const restGoal = useMemo(() => {
-    return goals.find((goal) => goal.category === "physical" && goal.activity === "rest") ?? null;
-  }, [goals]);
 
   const taskScoreMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -159,28 +145,17 @@ export default function RestActivityPage() {
     return map;
   }, [logs]);
 
-  const latestAverageScore = useMemo(() => {
-    const values = Array.from(taskScoreMap.values());
-    if (values.length === 0) return 0;
-    return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-  }, [taskScoreMap]);
-
-  const overallScore = useMemo(() => {
-    const currentValue = Number(restGoal?.current_value) || 0;
-    const targetValue = Number(restGoal?.target_value) || 0;
-    if (targetValue > 0) {
-      return Math.max(0, Math.min(100, Math.round((currentValue / targetValue) * 100)));
-    }
-
-    return latestAverageScore;
-  }, [latestAverageScore, restGoal?.current_value, restGoal?.target_value]);
-
   const completedTaskCount = useMemo(() => {
     return REST_TASKS.filter((task) => {
       const score = taskScoreMap.get(task.slug);
       return score !== undefined && score >= 80;
     }).length;
   }, [taskScoreMap]);
+
+  const completionProgress = useMemo(() => {
+    if (REST_TASKS.length === 0) return 0;
+    return Math.round((completedTaskCount / REST_TASKS.length) * 100);
+  }, [completedTaskCount]);
 
   const latestLogDate = useMemo(() => {
     const latestLog = [...logs].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))[0];
@@ -250,13 +225,13 @@ export default function RestActivityPage() {
                 </div>
                 <div className="min-w-0 flex-1 rounded-[24px] border border-white/60 bg-white/55 px-4 py-3 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur-sm">
                   <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
-                    <span>คะแนนรวมกิจกรรมการพักผ่อน</span>
-                    <span className="font-semibold text-slate-900">{overallScore}%</span>
+                    <span>ความคืบหน้ากิจกรรมการพักผ่อน</span>
+                    <span className="font-semibold text-slate-900">{completionProgress}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-white/80">
                     <div
                       className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                      style={{ width: `${overallScore}%` }}
+                      style={{ width: `${completionProgress}%` }}
                     />
                   </div>
                   <p className="mt-2 text-sm font-semibold text-slate-800">
@@ -265,16 +240,12 @@ export default function RestActivityPage() {
                 </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
-                  <p className="text-xs text-slate-500">คะแนนล่าสุด</p>
-                  <p className="mt-1 text-lg font-bold text-[#9a3412]">{latestAverageScore}%</p>
-                </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
                   <p className="text-xs text-slate-500">บันทึกล่าสุด</p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">{latestLogDate ?? "ยังไม่มีข้อมูล"}</p>
                 </div>
-                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3 sm:block hidden">
+                <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
                   <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
                   <p className="mt-1 text-lg font-bold text-slate-900">{REST_TASKS.length}</p>
                 </div>
@@ -361,8 +332,19 @@ export default function RestActivityPage() {
 
                         <div className="mt-2 flex items-center justify-between gap-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.chipClass}`}>
-                              {status.label}
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                loading ? "bg-slate-100 text-slate-500" : status.chipClass
+                              }`}
+                            >
+                              {loading ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+                                  กำลังโหลด
+                                </span>
+                              ) : (
+                                status.label
+                              )}
                             </span>
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -377,7 +359,11 @@ export default function RestActivityPage() {
                             </span>
                           </div>
                           <p className="text-sm text-slate-500">
-                            {score === undefined ? "ยังไม่มีการบันทึกล่าสุด" : `คะแนนล่าสุด ${score}%`}
+                            {loading
+                              ? "กำลังโหลดข้อมูลล่าสุด..."
+                              : score === undefined
+                                ? "ยังไม่มีการบันทึกล่าสุด"
+                                : `คะแนนล่าสุด ${score}%`}
                           </p>
                         </div>
                       </div>
@@ -396,4 +382,3 @@ export default function RestActivityPage() {
     </MobileShell>
   );
 }
-

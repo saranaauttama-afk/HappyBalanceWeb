@@ -1,4 +1,4 @@
-export interface WorkBalanceTaskConfig {
+﻿export interface WorkBalanceTaskConfig {
   slug: string;
   label: string;
   subtitle: string;

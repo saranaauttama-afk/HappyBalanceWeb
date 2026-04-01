@@ -1,4 +1,4 @@
-import { BellOff, BookOpenText, CircleCheckBig, CircleX, Film, Music4, Plus, Sparkles } from "lucide-react";
+﻿import { BellOff, BookOpenText, CircleCheckBig, CircleX, Film, Music4, Plus, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -51,7 +51,7 @@ export default function PersonalLifeBalanceTaskPage() {
   const [countValue, setCountValue] = useState(0);
   const [history, setHistory] = useState<CounterHistoryItem[]>([]);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -89,7 +89,7 @@ export default function PersonalLifeBalanceTaskPage() {
         limit: config.type === "counter" ? 90 : 20,
       });
       if (!response.success) {
-        throw new Error(response.error || "Could not load task logs");
+        throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
       const sortedLogs = [...(response.data || [])].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a));
@@ -149,7 +149,7 @@ export default function PersonalLifeBalanceTaskPage() {
 
       setLastSavedDate(latestLog.log_date);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
     }
@@ -210,7 +210,7 @@ export default function PersonalLifeBalanceTaskPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "Could not save task");
+        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลได้");
       }
 
       await syncBalanceActivityGoal(activityKey, userId ?? undefined);
@@ -226,7 +226,7 @@ export default function PersonalLifeBalanceTaskPage() {
             : "บันทึกสำเร็จ หัวข้อนี้ได้ 0%"
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setSaving(false);
     }
@@ -257,164 +257,175 @@ export default function PersonalLifeBalanceTaskPage() {
             </div>
           ) : null}
 
-          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
-                    <Icon size={18} />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
-                  </div>
-                </div>
-                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                กำลังโหลดข้อมูลเดิม...
               </div>
-
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                  scorePreview === null
-                    ? "bg-slate-100 text-slate-600"
-                    : scorePreview > 0
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-rose-50 text-rose-700"
-                }`}
-              >
-                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
-              </span>
             </div>
+          ) : null}
 
-            {config.type === "counter" ? (
-              <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
-                <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้วันนี้</p>
-                <div className="mt-4 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                    aria-label="ลดจำนวน"
-                  >
-                    -
-                  </button>
-
-                  <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
-                    <p className="text-3xl font-bold text-slate-900">{countValue}</p>
-                    <p className="text-xs text-slate-500">ครั้ง</p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                    aria-label="เพิ่มจำนวน"
-                  >
-                    <Plus size={18} />
-                  </button>
-                </div>
-
-                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                  {[1, 2, 3].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setCountValue(preset)}
-                      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
-                    >
-                      {preset} ครั้ง
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setDone(true)}
-                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    done === true
-                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <CircleCheckBig size={18} />
-                  Yes
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDone(false)}
-                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    done === false
-                      ? "border-rose-300 bg-rose-50 text-rose-700"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  <CircleX size={18} />
-                  No
-                </button>
-              </div>
-            )}
-
-            <p className="mt-4 text-xs text-slate-500">
-              {loading
-                ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
-                : lastSavedDate
-                  ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
-                  : "ยังไม่เคยบันทึกหัวข้อนี้"}
-            </p>
-          </section>
-
-          <button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving || loading || (config.type === "boolean" && done === null)}
-            className={`w-full rounded-2xl py-4 font-semibold text-white ${
-              saving || loading || (config.type === "boolean" && done === null) ? "bg-slate-400" : "bg-[#c6968c]"
-            }`}
-          >
-            {saving ? "กำลังบันทึก..." : "บันทึกผล"}
-          </button>
-
-          {config.type === "counter" ? (
+          <div className={loading ? "pointer-events-none opacity-70" : ""}>
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
-                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  เดือนนี้ได้ {monthlyPoints} คะแนน
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                      <Icon size={18} />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                      <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+                    </div>
+                  </div>
+                  {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
+                </div>
+
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    scorePreview === null
+                      ? "bg-slate-100 text-slate-600"
+                      : scorePreview > 0
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
                 </span>
               </div>
 
-              {loading ? (
-                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
-              ) : history.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกไว้</p>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  {history.map((item) => (
-                    <div
-                      key={`${item.date}-${item.id}`}
-                      className={`rounded-2xl border px-3 py-3 ${
-                        item.achieved ? "border-emerald-200 bg-emerald-50/70" : "border-rose-200 bg-rose-50/70"
-                      }`}
+              {config.type === "counter" ? (
+                <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
+                  <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้วันนี้</p>
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                      aria-label="ลดจำนวน"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                          }`}
-                        >
-                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-600">ทำกิจกรรมนี้ {item.count} ครั้ง</p>
+                      -
+                    </button>
+
+                    <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                      <p className="text-3xl font-bold text-slate-900">{countValue}</p>
+                      <p className="text-xs text-slate-500">ครั้ง</p>
                     </div>
-                  ))}
+
+                    <button
+                      type="button"
+                      onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                      aria-label="เพิ่มจำนวน"
+                    >
+                      <Plus size={18} />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    {[1, 2, 3].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setCountValue(preset)}
+                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+                      >
+                        {preset} ครั้ง
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDone(true)}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                      done === true
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <CircleCheckBig size={18} />
+                    Yes
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDone(false)}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                      done === false
+                        ? "border-rose-300 bg-rose-50 text-rose-700"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <CircleX size={18} />
+                    No
+                  </button>
                 </div>
               )}
+
+              <p className="mt-4 text-xs text-slate-500">
+                {loading
+                  ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
+                  : lastSavedDate
+                    ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
+                    : "ยังไม่เคยบันทึกหัวข้อนี้"}
+              </p>
             </section>
-          ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || loading || (config.type === "boolean" && done === null)}
+              className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                saving || loading || (config.type === "boolean" && done === null) ? "bg-slate-400" : "bg-[#c6968c]"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึกผล"}
+            </button>
+
+            {config.type === "counter" ? (
+              <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                  <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                    เดือนนี้ได้ {monthlyPoints} คะแนน
+                  </span>
+                </div>
+
+                {loading ? (
+                  <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+                ) : history.length === 0 ? (
+                  <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกไว้</p>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {history.map((item) => (
+                      <div
+                        key={`${item.date}-${item.id}`}
+                        className={`rounded-2xl border px-3 py-3 ${
+                          item.achieved ? "border-emerald-200 bg-emerald-50/70" : "border-rose-200 bg-rose-50/70"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                            }`}
+                          >
+                            {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-600">ทำกิจกรรมนี้ {item.count} ครั้ง</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ) : null}
+          </div>
         </main>
       </div>
     </MobileShell>

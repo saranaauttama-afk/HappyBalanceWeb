@@ -304,38 +304,39 @@ export default function ActivityTaskPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [postSaveSyncing, setPostSaveSyncing] = useState(false);
 
   const [sleepHour, setSleepHour] = useState(8);
   const [sleepMinute, setSleepMinute] = useState(0);
   const [sleepTargetMinutes, setSleepTargetMinutes] = useState(8 * 60);
   const [sleepHistory, setSleepHistory] = useState<SleepHistoryItem[]>([]);
-  const [sleepLoading, setSleepLoading] = useState(false);
+  const [sleepLoading, setSleepLoading] = useState(true);
 
   const [waterTargetGlasses, setWaterTargetGlasses] = useState(8);
   const [waterTargetMl, setWaterTargetMl] = useState(8 * 350);
   const [waterHistory, setWaterHistory] = useState<WaterHistoryItem[]>([]);
-  const [waterLoading, setWaterLoading] = useState(false);
+  const [waterLoading, setWaterLoading] = useState(true);
   const [hasLoadedWaterContext, setHasLoadedWaterContext] = useState(false);
 
   const [sleepOnTimeValue, setSleepOnTimeValue] = useState<boolean | null>(null);
   const [sleepOnTimeHistory, setSleepOnTimeHistory] = useState<SleepOnTimeHistoryItem[]>([]);
-  const [sleepOnTimeLoading, setSleepOnTimeLoading] = useState(false);
+  const [sleepOnTimeLoading, setSleepOnTimeLoading] = useState(true);
 
   const [avoidWaterBeforeBedValue, setAvoidWaterBeforeBedValue] = useState<boolean | null>(null);
   const [avoidWaterBeforeBedHistory, setAvoidWaterBeforeBedHistory] = useState<
     AvoidWaterBeforeBedHistoryItem[]
   >([]);
-  const [avoidWaterBeforeBedLoading, setAvoidWaterBeforeBedLoading] = useState(false);
+  const [avoidWaterBeforeBedLoading, setAvoidWaterBeforeBedLoading] = useState(true);
 
   const [noLongLateNapValue, setNoLongLateNapValue] = useState<boolean | null>(null);
   const [noLongLateNapHistory, setNoLongLateNapHistory] = useState<NoLongLateNapHistoryItem[]>([]);
-  const [noLongLateNapLoading, setNoLongLateNapLoading] = useState(false);
+  const [noLongLateNapLoading, setNoLongLateNapLoading] = useState(true);
 
   const [noFood4HoursBeforeBedValue, setNoFood4HoursBeforeBedValue] = useState<boolean | null>(null);
   const [noFood4HoursBeforeBedHistory, setNoFood4HoursBeforeBedHistory] = useState<
     NoFood4HoursBeforeBedHistoryItem[]
   >([]);
-  const [noFood4HoursBeforeBedLoading, setNoFood4HoursBeforeBedLoading] = useState(false);
+  const [noFood4HoursBeforeBedLoading, setNoFood4HoursBeforeBedLoading] = useState(true);
 
   const todaySleepScore = useMemo(() => {
     const sleptMinutes = sleepHour * 60 + sleepMinute;
@@ -401,6 +402,35 @@ export default function ActivityTaskPage() {
   }, [noFood4HoursBeforeBedHistory]);
 
   const isInitialWaterLoading = task === "drink-water" && !hasLoadedWaterContext;
+  const activeTaskLoading = useMemo(() => {
+    if (postSaveSyncing) return true;
+
+    switch (task) {
+      case "sleep":
+        return sleepLoading;
+      case "drink-water":
+        return isInitialWaterLoading;
+      case "sleep-on-time":
+        return sleepOnTimeLoading;
+      case "avoid-water-before-bed":
+        return avoidWaterBeforeBedLoading;
+      case "no-long-late-nap":
+        return noLongLateNapLoading;
+      case "no-food-4-hours-before-bed":
+        return noFood4HoursBeforeBedLoading;
+      default:
+        return false;
+    }
+  }, [
+    postSaveSyncing,
+    task,
+    sleepLoading,
+    isInitialWaterLoading,
+    sleepOnTimeLoading,
+    avoidWaterBeforeBedLoading,
+    noLongLateNapLoading,
+    noFood4HoursBeforeBedLoading,
+  ]);
 
   const loadSleepContext = useCallback(async () => {
     if (!(isRestFlow && task === "sleep")) return;
@@ -814,6 +844,15 @@ export default function ActivityTaskPage() {
             {successMessage}
           </div>
         ) : null}
+
+        {activeTaskLoading ? (
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-600 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+              {postSaveSyncing ? "กำลังอัปเดตข้อมูลล่าสุด..." : "กำลังโหลดข้อมูลเดิม..."}
+            </div>
+          </div>
+        ) : null}
       </>
     );
   }
@@ -933,20 +972,21 @@ export default function ActivityTaskPage() {
     }
   }
 
-  function runPostSaveSync(refreshContext?: () => Promise<void>) {
+  async function runPostSaveSync(refreshContext?: () => Promise<void>) {
     if (!isRestFlow) return;
 
-    void (async () => {
-      try {
-        await syncRestGoalProgress();
-        if (refreshContext) {
-          await refreshContext();
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        setError((prev) => prev ?? `บันทึกสำเร็จแล้ว แต่ซิงก์คะแนนมีปัญหา: ${message}`);
+    try {
+      setPostSaveSyncing(true);
+      await syncRestGoalProgress();
+      if (refreshContext) {
+        await refreshContext();
       }
-    })();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError((prev) => prev ?? `บันทึกสำเร็จแล้ว แต่ซิงก์คะแนนมีปัญหา: ${message}`);
+    } finally {
+      setPostSaveSyncing(false);
+    }
   }
 
   function renderGenericInput(currentConfig: TaskConfig) {
@@ -1050,12 +1090,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved
-            ? "บันทึกการนอนวันนี้สำเร็จ ได้ +1 คะแนน"
-            : "บันทึกการนอนวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
-        );
-        runPostSaveSync(loadSleepContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกการนอนวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกการนอนวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย";
+        await runPostSaveSync(loadSleepContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1096,12 +1135,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved
-            ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
-            : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย"
-        );
-        runPostSaveSync(loadWaterContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย";
+        await runPostSaveSync(loadWaterContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1140,12 +1178,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved
-            ? "บันทึกวันนี้สำเร็จ เข้านอนและตื่นนอนตรงเวลา ได้ +1 คะแนน"
-            : "บันทึกวันนี้สำเร็จ วันนี้ยังไม่ตรงเวลาที่ตั้งไว้"
-        );
-        runPostSaveSync(loadSleepOnTimeContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกวันนี้สำเร็จ เข้านอนและตื่นนอนตรงเวลา ได้ +1 คะแนน"
+          : "บันทึกวันนี้สำเร็จ วันนี้ยังไม่ตรงเวลาที่ตั้งไว้";
+        await runPostSaveSync(loadSleepOnTimeContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1184,12 +1221,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved
-            ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
-            : "บันทึกวันนี้สำเร็จ วันนี้ยังดื่มน้ำมากเกินไปก่อนนอน"
-        );
-        runPostSaveSync(loadAvoidWaterBeforeBedContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกวันนี้สำเร็จ วันนี้ยังดื่มน้ำมากเกินไปก่อนนอน";
+        await runPostSaveSync(loadAvoidWaterBeforeBedContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1228,10 +1264,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้งีบยาวเกินเงื่อนไข"
-        );
-        runPostSaveSync(loadNoLongLateNapContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกวันนี้สำเร็จ วันนี้งีบยาวเกินเงื่อนไข";
+        await runPostSaveSync(loadNoLongLateNapContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1270,10 +1307,11 @@ export default function ActivityTaskPage() {
               },
         });
 
-        setSuccessMessage(
-          achieved ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน" : "บันทึกวันนี้สำเร็จ วันนี้ทานอาหารใกล้เวลานอนเกินไป"
-        );
-        runPostSaveSync(loadNoFood4HoursBeforeBedContext);
+        const nextSuccessMessage = achieved
+          ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกวันนี้สำเร็จ วันนี้ทานอาหารใกล้เวลานอนเกินไป";
+        await runPostSaveSync(loadNoFood4HoursBeforeBedContext);
+        setSuccessMessage(nextSuccessMessage);
         return;
       }
 
@@ -1308,8 +1346,8 @@ export default function ActivityTaskPage() {
           : { task, value },
       });
 
+      await runPostSaveSync();
       setSuccessMessage("บันทึกผลสำเร็จ");
-      runPostSaveSync();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
@@ -1323,7 +1361,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การนอนหลับ" showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1437,7 +1475,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การดื่มน้ำ" showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1639,7 +1677,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="เข้านอนและตื่นนอนตรงเวลา" showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1770,7 +1808,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่ดื่มน้ำปริมาณมากก่อนนอน" showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1903,7 +1941,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่งีบหลับหลังบ่าย 3 โมงเกิน 1 ชม." showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -2034,7 +2072,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="งดอาหารอย่างน้อย 4 ชม. ก่อนนอน" showBack showBell variant="soft" />
 
-          <main className="space-y-4 px-4 py-4">
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -2175,7 +2213,7 @@ export default function ActivityTaskPage() {
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={activeConfig.label} showBack showBell variant="soft" />
 
-        <main className="space-y-4 px-4 py-4">
+        <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
           {renderStatusBanner()}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -2231,3 +2269,4 @@ export default function ActivityTaskPage() {
     </MobileShell>
   );
 }
+

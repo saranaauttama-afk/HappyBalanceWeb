@@ -1,4 +1,4 @@
-export type ScaffoldedTaskConfig = {
+﻿export type ScaffoldedTaskConfig = {
   slug: string;
   label: string;
   subtitle: string;

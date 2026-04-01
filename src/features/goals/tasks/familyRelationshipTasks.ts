@@ -1,4 +1,4 @@
-export type FamilyRelationshipTaskType = "boolean" | "counter";
+﻿export type FamilyRelationshipTaskType = "boolean" | "counter";
 
 export interface FamilyRelationshipTaskConfig {
   slug: string;

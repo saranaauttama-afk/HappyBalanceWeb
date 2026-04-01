@@ -1,4 +1,4 @@
-export type PersonalLifeBalanceTaskType = "boolean" | "counter";
+﻿export type PersonalLifeBalanceTaskType = "boolean" | "counter";
 
 export interface PersonalLifeBalanceTaskConfig {
   slug: string;
