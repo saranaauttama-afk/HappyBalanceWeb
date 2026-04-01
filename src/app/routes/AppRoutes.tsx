@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import WelcomePage from "../../features/auth/welcome/WelcomePage";
 import LoginPage from "../../features/auth/login/LoginPage";
 import ForgotPasswordPage from "../../features/auth/forgot-password/ForgotPasswordPage";
+import ResetPasswordPage from "../../features/auth/reset-password/ResetPasswordPage";
 import TermsPage from "../../features/auth/terms/TermsPage";
 import RegisterPage from "../../features/auth/register/RegisterPage";
 import HomePage from "../../features/home/HomePage";
@@ -62,6 +63,7 @@ export default function AppRoutes() {
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/register" element={<RegisterPage />} />
 

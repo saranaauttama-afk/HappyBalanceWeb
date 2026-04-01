@@ -6,6 +6,7 @@ const SHEET_NAMES = {
   mentalTaskLogs: "mental_task_logs",
   socialTaskLogs: "social_task_logs",
   balanceTaskLogs: "balance_task_logs",
+  passwordResetTokens: "password_reset_tokens",
   appointments: "appointments",
   monthlyGoals: "monthly_goals",
   articles: "articles",
@@ -29,6 +30,17 @@ const STRUCTURED_TASK_LOG_HEADERS = [
   "energy",
   "stress",
   "note",
+  "created_at",
+  "updated_at",
+];
+
+const PASSWORD_RESET_TOKEN_HEADERS = [
+  "id",
+  "user_id",
+  "email",
+  "token",
+  "expires_at",
+  "used_at",
   "created_at",
   "updated_at",
 ];
@@ -73,6 +85,10 @@ function doGet(e) {
         return jsonOutput_(testVersion_());
       case "getUser":
         return jsonOutput_(getUser_(getParam_(e, "id")));
+      case "validatePasswordResetToken":
+        return jsonOutput_(
+          validatePasswordResetToken_(getParam_(e, "token"))
+        );
       case "listGoals":
         return jsonOutput_(listGoals_(getParam_(e, "userId")));
       case "listDailyLogs":
@@ -160,6 +176,10 @@ function doPost(e) {
         return jsonOutput_(registerUser_(body));
       case "loginUser":
         return jsonOutput_(loginUser_(body));
+      case "requestPasswordReset":
+        return jsonOutput_(requestPasswordReset_(body));
+      case "resetPassword":
+        return jsonOutput_(resetPassword_(body));
       case "createGoal":
         return jsonOutput_(createGoal_(body));
       case "updateGoal":
@@ -201,6 +221,162 @@ function getUser_(id) {
   return {
     success: true,
     data: user,
+  };
+}
+
+function requestPasswordReset_(payload) {
+  const email = String(payload.email || "").trim().toLowerCase();
+  if (!email) {
+    throw new Error("Missing email");
+  }
+
+  ensureSheetWithHeaders_(
+    SHEET_NAMES.passwordResetTokens,
+    PASSWORD_RESET_TOKEN_HEADERS
+  );
+
+  const users = getAllObjects_(SHEET_NAMES.users);
+  const user = users.find(function (row) {
+    return (
+      String(row.email || "").trim().toLowerCase() === email &&
+      String(row.status || "active") === "active"
+    );
+  });
+
+  if (!user) {
+    return {
+      success: true,
+      data: {
+        message:
+          "If the email exists, a reset link has been sent successfully.",
+      },
+    };
+  }
+
+  const tokenSheet = getSheet_(SHEET_NAMES.passwordResetTokens);
+  const resetRows = getAllObjects_(SHEET_NAMES.passwordResetTokens);
+  const now = nowIso_();
+
+  resetRows.forEach(function (row, index) {
+    if (
+      String(row.user_id || "") === String(user.id || "") &&
+      !String(row.used_at || "")
+    ) {
+      updateRowByIndex_(tokenSheet, index + 2, {
+        ...row,
+        used_at: now,
+        updated_at: now,
+      });
+    }
+  });
+
+  const token = generatePasswordResetToken_();
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+  const resetLink =
+    resolveAppBaseUrl_(payload) +
+    "/reset-password?token=" +
+    encodeURIComponent(token);
+
+  appendObject_(SHEET_NAMES.passwordResetTokens, {
+    id: generateId_("pwreset"),
+    user_id: user.id,
+    email: email,
+    token: token,
+    expires_at: expiresAt,
+    used_at: "",
+    created_at: now,
+    updated_at: now,
+  });
+
+  MailApp.sendEmail({
+    to: email,
+    subject: "Reset your Happy Balance password",
+    htmlBody: buildPasswordResetEmailHtml_(user.full_name, resetLink),
+    name: "Happy Balance",
+  });
+
+  return {
+    success: true,
+    data: {
+      message: "Password reset email has been sent.",
+    },
+  };
+}
+
+function validatePasswordResetToken_(token) {
+  const resetRow = getValidPasswordResetRow_(token);
+  if (!resetRow) {
+    return {
+      success: true,
+      data: {
+        valid: false,
+        error: "ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว",
+      },
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      valid: true,
+      email: maskEmail_(String(resetRow.email || "")),
+    },
+  };
+}
+
+function resetPassword_(payload) {
+  const token = String(payload.token || "").trim();
+  const newPassword = String(payload.new_password || "");
+
+  if (!token) {
+    throw new Error("Missing token");
+  }
+
+  if (!newPassword || newPassword.length < 8) {
+    throw new Error("New password must be at least 8 characters");
+  }
+
+  const resetRow = getValidPasswordResetRow_(token);
+  if (!resetRow) {
+    throw new Error("ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว");
+  }
+
+  const usersSheet = getSheet_(SHEET_NAMES.users);
+  const users = getAllObjects_(SHEET_NAMES.users);
+  const userIndex = users.findIndex(function (row) {
+    return String(row.id || "") === String(resetRow.user_id || "");
+  });
+
+  if (userIndex === -1) {
+    throw new Error("User not found");
+  }
+
+  const now = nowIso_();
+  updateRowByIndex_(usersSheet, userIndex + 2, {
+    ...users[userIndex],
+    password_hash: hashPassword(newPassword),
+    updated_at: now,
+  });
+
+  const resetSheet = getSheet_(SHEET_NAMES.passwordResetTokens);
+  const resetRows = getAllObjects_(SHEET_NAMES.passwordResetTokens);
+  const resetIndex = resetRows.findIndex(function (row) {
+    return String(row.id || "") === String(resetRow.id || "");
+  });
+
+  if (resetIndex !== -1) {
+    updateRowByIndex_(resetSheet, resetIndex + 2, {
+      ...resetRows[resetIndex],
+      used_at: now,
+      updated_at: now,
+    });
+  }
+
+  return {
+    success: true,
+    data: {
+      message: "Password has been reset successfully.",
+    },
   };
 }
 
@@ -1355,6 +1531,98 @@ function getAvatarFolder_() {
   }
 
   return DriveApp.getFolderById(folderId);
+}
+
+function generatePasswordResetToken_() {
+  return (
+    Utilities.getUuid().replace(/-/g, "") +
+    Utilities.getUuid().replace(/-/g, "")
+  );
+}
+
+function resolveAppBaseUrl_(payload) {
+  const bodyBaseUrl = String(payload.app_base_url || "").trim();
+  if (/^https?:\/\//i.test(bodyBaseUrl)) {
+    return bodyBaseUrl.replace(/\/+$/, "");
+  }
+
+  const propertyBaseUrl = String(
+    PropertiesService.getScriptProperties().getProperty("APP_BASE_URL") || ""
+  ).trim();
+  if (/^https?:\/\//i.test(propertyBaseUrl)) {
+    return propertyBaseUrl.replace(/\/+$/, "");
+  }
+
+  return "http://localhost:5173";
+}
+
+function buildPasswordResetEmailHtml_(fullName, resetLink) {
+  const safeName = escapeHtml_(String(fullName || "คุณ"));
+  const safeLink = escapeHtml_(resetLink);
+
+  return (
+    '<div style="font-family:Arial,sans-serif;line-height:1.7;color:#243447;">' +
+    `<p>สวัสดี ${safeName},</p>` +
+    "<p>เราได้รับคำขอให้ตั้งรหัสผ่านใหม่สำหรับบัญชี Happy Balance ของคุณ</p>" +
+    `<p><a href="${safeLink}" style="display:inline-block;padding:12px 18px;background:#d88d80;color:#ffffff;text-decoration:none;border-radius:12px;font-weight:600;">ตั้งรหัสผ่านใหม่</a></p>` +
+    "<p>ลิงก์นี้จะหมดอายุภายใน 30 นาที หากคุณไม่ได้เป็นผู้ขอรีเซ็ต คุณสามารถละเว้นอีเมลฉบับนี้ได้</p>" +
+    `<p>หากปุ่มใช้งานไม่ได้ ให้คัดลอกลิงก์นี้ไปวางในเบราว์เซอร์:<br>${safeLink}</p>` +
+    "<p>ด้วยความปรารถนาดี<br>Happy Balance</p>" +
+    "</div>"
+  );
+}
+
+function escapeHtml_(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function getValidPasswordResetRow_(token) {
+  const normalizedToken = String(token || "").trim();
+  if (!normalizedToken) return null;
+
+  ensureSheetWithHeaders_(
+    SHEET_NAMES.passwordResetTokens,
+    PASSWORD_RESET_TOKEN_HEADERS
+  );
+
+  const rows = getAllObjects_(SHEET_NAMES.passwordResetTokens);
+  const nowMs = Date.now();
+
+  for (var index = 0; index < rows.length; index += 1) {
+    var row = rows[index];
+    if (String(row.token || "") !== normalizedToken) continue;
+    if (String(row.used_at || "")) return null;
+
+    var expiresAtMs = new Date(String(row.expires_at || "")).getTime();
+    if (!Number.isFinite(expiresAtMs) || expiresAtMs < nowMs) {
+      return null;
+    }
+
+    return row;
+  }
+
+  return null;
+}
+
+function maskEmail_(email) {
+  const normalized = String(email || "").trim();
+  if (!normalized || normalized.indexOf("@") === -1) {
+    return "";
+  }
+
+  const parts = normalized.split("@");
+  const name = parts[0];
+  const domain = parts.slice(1).join("@");
+  if (name.length <= 2) {
+    return name[0] + "***@" + domain;
+  }
+
+  return name[0] + "***" + name[name.length - 1] + "@" + domain;
 }
 
 function loginUser_(params) {

@@ -18,4 +18,22 @@ export const authService = {
   async loginUser(payload: { email: string; password: string }) {
     return api.post<User>("loginUser", payload);
   },
+
+  async requestPasswordReset(payload: {
+    email: string;
+    app_base_url?: string;
+  }) {
+    return api.post<{ message: string }>("requestPasswordReset", payload);
+  },
+
+  async validatePasswordResetToken(token: string) {
+    return api.get<{ valid: boolean; email?: string; error?: string }>(
+      "validatePasswordResetToken",
+      { token }
+    );
+  },
+
+  async resetPassword(payload: { token: string; new_password: string }) {
+    return api.post<{ message: string }>("resetPassword", payload);
+  },
 };
