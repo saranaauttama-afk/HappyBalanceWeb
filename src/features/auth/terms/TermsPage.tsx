@@ -7,9 +7,23 @@ export default function TermsPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"terms" | "privacy">("terms");
   const [accepted, setAccepted] = useState(false);
+  const [visitedTabs, setVisitedTabs] = useState({
+    terms: true,
+    privacy: false,
+  });
+
+  const hasReadBothTabs = visitedTabs.terms && visitedTabs.privacy;
+
+  function handleChangeTab(nextTab: "terms" | "privacy") {
+    setTab(nextTab);
+    setVisitedTabs((prev) => ({
+      ...prev,
+      [nextTab]: true,
+    }));
+  }
 
   function handleContinue() {
-    if (!accepted) return;
+    if (!accepted || !hasReadBothTabs) return;
     navigate("/register");
   }
 
@@ -34,7 +48,7 @@ export default function TermsPage() {
             <div className="grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
               <button
                 type="button"
-                onClick={() => setTab("terms")}
+                onClick={() => handleChangeTab("terms")}
                 className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
                   tab === "terms"
                     ? "bg-white text-slate-900 shadow-sm"
@@ -46,7 +60,7 @@ export default function TermsPage() {
 
               <button
                 type="button"
-                onClick={() => setTab("privacy")}
+                onClick={() => handleChangeTab("privacy")}
                 className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
                   tab === "privacy"
                     ? "bg-white text-slate-900 shadow-sm"
@@ -55,6 +69,27 @@ export default function TermsPage() {
               >
                 นโยบายความเป็นส่วนตัว
               </button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium">
+              <span
+                className={`rounded-full px-3 py-1 ${
+                  visitedTabs.terms
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                ข้อกำหนดและเงื่อนไข {visitedTabs.terms ? "อ่านแล้ว" : "ยังไม่อ่าน"}
+              </span>
+              <span
+                className={`rounded-full px-3 py-1 ${
+                  visitedTabs.privacy
+                    ? "bg-emerald-50 text-emerald-700"
+                    : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                นโยบายความเป็นส่วนตัว {visitedTabs.privacy ? "อ่านแล้ว" : "ยังไม่อ่าน"}
+              </span>
             </div>
 
             <div className="mt-3 max-h-[48vh] space-y-3 overflow-y-auto rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-700">
@@ -75,7 +110,7 @@ export default function TermsPage() {
                   </p>
 
                   <p>
-                    งานวิจัยดำเนินการโดย <br/>นางสาวชนินาฏ วัฒนา นิสิตระดับปริญญาเอก สาขาวิชาจิตวิทยาการปรึกษา
+                    งานวิจัยดำเนินการโดย <br />นางสาวชนินาฏ วัฒนา นิสิตระดับปริญญาเอก สาขาวิชาจิตวิทยาการปรึกษา
                     มหาวิทยาลัยบูรพา
                   </p>
 
@@ -111,11 +146,18 @@ export default function TermsPage() {
           </section>
 
           <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            {!hasReadBothTabs ? (
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700">
+                กรุณาเปิดอ่านให้ครบทั้ง 2 แท็บก่อน จึงจะสามารถยอมรับและไปต่อได้
+              </div>
+            ) : null}
+
             <label className="flex items-start gap-3 text-sm text-slate-700">
               <input
                 type="checkbox"
                 className="mt-1 h-4 w-4 rounded border-slate-300 accent-[#d88d80]"
                 checked={accepted}
+                disabled={!hasReadBothTabs}
                 onChange={() => setAccepted((prev) => !prev)}
               />
 
@@ -126,14 +168,14 @@ export default function TermsPage() {
 
             <button
               onClick={handleContinue}
-              disabled={!accepted}
+              disabled={!accepted || !hasReadBothTabs}
               className={`mt-4 w-full rounded-2xl px-4 py-3 text-base font-semibold text-white transition ${
-                accepted
+                accepted && hasReadBothTabs
                   ? "bg-[#d88d80] hover:brightness-105"
                   : "cursor-not-allowed bg-slate-300"
               }`}
             >
-              ต่อไป
+              {hasReadBothTabs ? "ต่อไป" : "อ่านทั้ง 2 แท็บก่อน"}
             </button>
           </section>
         </main>
