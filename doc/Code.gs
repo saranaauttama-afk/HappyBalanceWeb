@@ -6,6 +6,7 @@ const SHEET_NAMES = {
   mentalTaskLogs: "mental_task_logs",
   socialTaskLogs: "social_task_logs",
   balanceTaskLogs: "balance_task_logs",
+  wellbeingEvaluations: "wellbeing_evaluations",
   passwordResetTokens: "password_reset_tokens",
   appointments: "appointments",
   monthlyGoals: "monthly_goals",
@@ -41,6 +42,17 @@ const PASSWORD_RESET_TOKEN_HEADERS = [
   "token",
   "expires_at",
   "used_at",
+  "created_at",
+  "updated_at",
+];
+
+const WELLBEING_EVALUATION_HEADERS = [
+  "id",
+  "user_id",
+  "physical_score",
+  "mental_score",
+  "social_score",
+  "balance_score",
   "created_at",
   "updated_at",
 ];
@@ -85,6 +97,10 @@ function doGet(e) {
         return jsonOutput_(testVersion_());
       case "getUser":
         return jsonOutput_(getUser_(getParam_(e, "id")));
+      case "getWellbeingEvaluation":
+        return jsonOutput_(
+          getWellbeingEvaluation_(getParam_(e, "userId"))
+        );
       case "validatePasswordResetToken":
         return jsonOutput_(
           validatePasswordResetToken_(getParam_(e, "token"))
@@ -176,6 +192,8 @@ function doPost(e) {
         return jsonOutput_(registerUser_(body));
       case "loginUser":
         return jsonOutput_(loginUser_(body));
+      case "createWellbeingEvaluation":
+        return jsonOutput_(createWellbeingEvaluation_(body));
       case "requestPasswordReset":
         return jsonOutput_(requestPasswordReset_(body));
       case "resetPassword":
@@ -221,6 +239,134 @@ function getUser_(id) {
   return {
     success: true,
     data: user,
+  };
+}
+
+function getWellbeingEvaluation_(userId) {
+  if (!userId) {
+    throw new Error("Missing userId");
+  }
+
+  ensureSheetWithHeaders_(
+    SHEET_NAMES.wellbeingEvaluations,
+    WELLBEING_EVALUATION_HEADERS
+  );
+
+  const rows = getAllObjects_(SHEET_NAMES.wellbeingEvaluations);
+  const evaluation =
+    rows.find(function (row) {
+      return String(row.user_id || "") === String(userId);
+    }) || null;
+
+  return {
+    success: true,
+    data: evaluation,
+  };
+}
+
+function createWellbeingEvaluation_(payload) {
+  const userId = String(payload.user_id || "").trim();
+  if (!userId) {
+    throw new Error("Missing user_id");
+  }
+
+  ensureSheetWithHeaders_(
+    SHEET_NAMES.wellbeingEvaluations,
+    WELLBEING_EVALUATION_HEADERS
+  );
+
+  const rows = getAllObjects_(SHEET_NAMES.wellbeingEvaluations);
+  const existing = rows.find(function (row) {
+    return String(row.user_id || "") === userId;
+  });
+
+  if (existing) {
+    throw new Error("คุณได้บันทึกผลประเมินตั้งต้นไปแล้ว");
+  }
+
+  const newEvaluation = {
+    id: generateId_("weval"),
+    user_id: userId,
+    physical_score: normalizeEvaluationScore_(payload.physical_score),
+    mental_score: normalizeEvaluationScore_(payload.mental_score),
+    social_score: normalizeEvaluationScore_(payload.social_score),
+    balance_score: normalizeEvaluationScore_(payload.balance_score),
+    created_at: nowIso_(),
+    updated_at: nowIso_(),
+  };
+
+  appendObject_(SHEET_NAMES.wellbeingEvaluations, newEvaluation);
+
+  return {
+    success: true,
+    data: newEvaluation,
+  };
+}
+
+function deleteWellbeingEvaluationByEmailForTest_() {
+  return deleteWellbeingEvaluationByEmail_("kwansrn@hotmail.com");
+}
+
+function runDeleteWellbeingEvaluationForTest() {
+  return deleteWellbeingEvaluationByEmailForTest_();
+}
+
+function deleteWellbeingEvaluationByEmail_(email) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error("Missing email");
+  }
+
+  ensureSheetWithHeaders_(
+    SHEET_NAMES.wellbeingEvaluations,
+    WELLBEING_EVALUATION_HEADERS
+  );
+
+  const users = getAllObjects_(SHEET_NAMES.users);
+  const user = users.find(function (row) {
+    return String(row.email || "").trim().toLowerCase() === normalizedEmail;
+  });
+
+  if (!user) {
+    return {
+      success: true,
+      data: {
+        deleted: false,
+        reason: "User not found",
+        email: normalizedEmail,
+      },
+    };
+  }
+
+  const sheet = getSheet_(SHEET_NAMES.wellbeingEvaluations);
+  const rows = getAllObjects_(SHEET_NAMES.wellbeingEvaluations);
+  const rowIndex = rows.findIndex(function (row) {
+    return String(row.user_id || "") === String(user.id || "");
+  });
+
+  if (rowIndex === -1) {
+    return {
+      success: true,
+      data: {
+        deleted: false,
+        reason: "Wellbeing evaluation not found",
+        email: normalizedEmail,
+        user_id: user.id,
+      },
+    };
+  }
+
+  const deletedRow = rows[rowIndex];
+  sheet.deleteRow(rowIndex + 2);
+
+  return {
+    success: true,
+    data: {
+      deleted: true,
+      email: normalizedEmail,
+      user_id: user.id,
+      evaluation_id: deletedRow.id,
+    },
   };
 }
 
@@ -1124,6 +1270,15 @@ function validateRequired_(payload, fields) {
       throw new Error(`Missing required field: ${field}`);
     }
   });
+}
+
+function normalizeEvaluationScore_(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    throw new Error("คะแนนประเมินต้องเป็นตัวเลข");
+  }
+
+  return Math.max(0, Math.min(100, Math.round(numeric)));
 }
 
 function nowIso_() {

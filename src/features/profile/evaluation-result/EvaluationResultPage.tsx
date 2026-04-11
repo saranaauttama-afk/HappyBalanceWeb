@@ -1,289 +1,120 @@
-﻿import {
+import {
   Activity,
+  AlertTriangle,
   Brain,
-  ChevronDown,
-  ChevronUp,
+  CheckCircle2,
   LoaderCircle,
+  Lock,
+  Save,
   Scale,
   Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import WellbeingRadarChart from "../../../components/charts/WellbeingRadarChart";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import Dialog from "../../../components/ui/Dialog";
 import InfoCard from "../../../components/ui/InfoCard";
-import WellbeingRadarChart from "../../../components/charts/WellbeingRadarChart";
-import { logsService } from "../../../services/logs.service";
+import { evaluationService } from "../../../services/evaluation.service";
+import type { WellbeingEvaluation } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import {
-  getLogTimestamp as getMentalLogTimestamp,
-  parsePositiveThinkingTaskNote,
-} from "../../goals/task-detail/positiveThinkingTaskShared";
-import { parseStressTaskNote } from "../../goals/task-detail/stressTaskShared";
-import {
-  getLogTimestamp as getSocialLogTimestamp,
-  parseSocialTaskNote,
-} from "../../goals/task-detail/socialTaskShared";
-import {
-  getLogTimestamp as getBalanceLogTimestamp,
-  parseBalanceTaskNote,
-} from "../../goals/task-detail/balanceTaskShared";
-import {
-  getLogTimestamp as getScaffoldedLogTimestamp,
-  parseScaffoldedTaskNote,
-} from "../../goals/task-detail/scaffoldedTaskShared";
-import { FAMILY_SOCIAL_BALANCE_TASKS } from "../../goals/tasks/familySocialBalanceTasks";
-import { FAMILY_RELATIONSHIP_TASKS } from "../../goals/tasks/familyRelationshipTasks";
-import { PERSONAL_LIFE_BALANCE_TASKS } from "../../goals/tasks/personalLifeBalanceTasks";
-import { POSITIVE_THINKING_TASKS } from "../../goals/tasks/positiveThinkingTasks";
-import { REST_TASKS } from "../../goals/tasks/restTasks";
-import { getScaffoldedActivityConfig } from "../../goals/tasks/scaffoldedActivityTasks";
-import { STRESS_TASKS } from "../../goals/tasks/stressTasks";
-import { WORK_BALANCE_TASKS } from "../../goals/tasks/workBalanceTasks";
-import { WORKPLACE_RELATIONSHIP_TASKS } from "../../goals/tasks/workplaceRelationshipTasks";
 
 type CategoryKey = "physical" | "mental" | "social" | "balance";
 
-type ActivityDetail = {
-  slug: string;
-  label: string;
-  subtitle: string;
-  score: number;
-};
+type DraftScores = Record<CategoryKey, string>;
 
-type CategoryDetail = {
+type CategoryMeta = {
   key: CategoryKey;
-  label: string;
   subtitle: string;
+  description: string;
   Icon: typeof Activity;
-  accentClass: string;
   chipClass: string;
   softClass: string;
-  score: number;
-  activities: ActivityDetail[];
 };
 
-const CATEGORY_META: Record<
-  CategoryKey,
+const CATEGORY_META: CategoryMeta[] = [
   {
-    label: string;
-    subtitle: string;
-    Icon: typeof Activity;
-    accentClass: string;
-    chipClass: string;
-    softClass: string;
-  }
-> = {
-  physical: {
-    label: "สุขภาวะทางกาย",
-    subtitle: "การนอน อาหาร การขยับร่างกาย และการดูแลตัวเอง",
+    key: "physical",
+    subtitle: "ด้านสุขภาพร่างกาย",
+    description:
+      "ประเมินพลังงาน การนอน การกิน การเคลื่อนไหว และความพร้อมของร่างกายโดยรวม",
     Icon: Activity,
-    accentClass: "bg-[#8cc2db]",
     chipClass: "bg-[#eef7fd] text-[#2e6a8b]",
     softClass: "bg-[#f4fbff]",
   },
-  mental: {
-    label: "สุขภาวะทางใจ",
-    subtitle: "มุมมอง ความเครียด ความพึงพอใจ และคุณค่าในตัวเอง",
+  {
+    key: "mental",
+    subtitle: "ด้านสุขภาวะทางใจ",
+    description:
+      "ประเมินอารมณ์ ความเครียด ความมั่นคงทางใจ และความรู้สึกพึงพอใจกับชีวิต",
     Icon: Brain,
-    accentClass: "bg-[#7fc3a0]",
     chipClass: "bg-[#eef8f2] text-[#2f7b56]",
     softClass: "bg-[#f4fcf7]",
   },
-  social: {
-    label: "สุขภาวะทางสังคม",
-    subtitle: "ครอบครัว ชุมชน และความสัมพันธ์ในที่ทำงาน",
+  {
+    key: "social",
+    subtitle: "ด้านสุขภาวะทางสังคม",
+    description:
+      "ประเมินความสัมพันธ์กับครอบครัว คนรอบตัว ชุมชน และการทำงานร่วมกับผู้อื่น",
     Icon: Users,
-    accentClass: "bg-[#d7b08f]",
     chipClass: "bg-[#fff6ef] text-[#8a5a3a]",
     softClass: "bg-[#fffaf6]",
   },
-  balance: {
-    label: "สุขสมดุลชีวิต",
-    subtitle: "สมดุลงาน ครอบครัว สังคม และเวลาส่วนตัว",
+  {
+    key: "balance",
+    subtitle: "ด้านความสมดุลของชีวิต",
+    description:
+      "ประเมินความสมดุลระหว่างงาน ครอบครัว สังคม และเวลาส่วนตัวในภาพรวม",
     Icon: Scale,
-    accentClass: "bg-[#d79bb4]",
     chipClass: "bg-[#fff1f6] text-[#7a2a48]",
     softClass: "bg-[#fff7fa]",
   },
+];
+
+const EMPTY_DRAFT: DraftScores = {
+  physical: "",
+  mental: "",
+  social: "",
+  balance: "",
 };
 
-const PHYSICAL_ACTIVITY_META = [
-  {
-    slug: "rest",
-    label: "การพักผ่อน",
-    subtitle: "ดูจังหวะการนอนและพฤติกรรมก่อนนอน",
-  },
-  {
-    slug: "food-intake",
-    label: "การรับประทานอาหาร",
-    subtitle: "ติดตามพฤติกรรมการกินพื้นฐานในแต่ละวัน",
-  },
-  {
-    slug: "exercise",
-    label: "การออกกำลังกาย",
-    subtitle: "เช็กการขยับตัวและการเคลื่อนไหวของร่างกาย",
-  },
-  {
-    slug: "body-hygiene",
-    label: "การดูแลรักษาความสะอาดของร่างกาย",
-    subtitle: "ดูความสม่ำเสมอของกิจวัตรดูแลตัวเอง",
-  },
-] as const;
-
-const MENTAL_ACTIVITY_META = [
-  {
-    slug: "positive-thinking",
-    label: "การมองโลกในแง่บวก",
-    subtitle: "ฝึกมองสิ่งรอบตัวในด้านที่ช่วยให้ใจเบาขึ้น",
-  },
-  {
-    slug: "stress-level",
-    label: "ระดับความเครียด",
-    subtitle: "ติดตามกิจกรรมที่ช่วยลดความเครียดระหว่างวัน",
-  },
-  {
-    slug: "life-satisfaction",
-    label: "ระดับความพึงพอใจในชีวิต",
-    subtitle: "สำรวจความรู้สึกพอใจกับชีวิตในภาพรวม",
-  },
-  {
-    slug: "self-worth",
-    label: "การรู้สึกมีคุณค่าในตนเอง",
-    subtitle: "สังเกตการมองเห็นคุณค่าและการยอมรับตัวเอง",
-  },
-] as const;
-
-const SOCIAL_ACTIVITY_META = [
-  {
-    slug: "family-relationship",
-    label: "ความสัมพันธ์ระหว่างสมาชิกในครอบครัว",
-    subtitle: "บรรยากาศในบ้านและการสื่อสารที่ดีต่อกัน",
-  },
-  {
-    slug: "community-participation",
-    label: "การมีส่วนร่วมในชุมชนและสังคมรอบข้าง",
-    subtitle: "การเปิดใจมีส่วนร่วมกับผู้คนและกิจกรรมรอบตัว",
-  },
-  {
-    slug: "workplace-relationship",
-    label: "ความสัมพันธ์ในที่ทำงาน",
-    subtitle: "ความร่วมมือและความสบายใจในการทำงานร่วมกับผู้อื่น",
-  },
-] as const;
-
-const BALANCE_ACTIVITY_META = [
-  {
-    slug: "work-balance",
-    label: "สมดุลระหว่างการทำงาน",
-    subtitle: "จังหวะงานที่พอดี ไม่หนักจนเกินไป",
-  },
-  {
-    slug: "family-social-balance",
-    label: "สมดุลระหว่างครอบครัวและสังคม",
-    subtitle: "แบ่งเวลาให้ความสัมพันธ์สำคัญอย่างเหมาะสม",
-  },
-  {
-    slug: "personal-life-balance",
-    label: "สมดุลระหว่างชีวิตส่วนตัว",
-    subtitle: "เว้นพื้นที่ให้ตัวเองและกิจกรรมที่เติมพลัง",
-  },
-] as const;
-
-function formatThaiDate(value: Date) {
-  return value.toLocaleDateString("th-TH", {
+function formatThaiDate(value: Date | string) {
+  const parsed = value instanceof Date ? value : new Date(value);
+  return parsed.toLocaleDateString("th-TH", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 }
 
-function getStatusText(score: number) {
-  if (score >= 80) return "ดีมาก";
-  if (score >= 60) return "ดี";
-  if (score >= 40) return "กำลังพัฒนา";
-  if (score > 0) return "เริ่มต้น";
-  return "ยังไม่มีข้อมูล";
+function toSafeScore(value: string | number | undefined) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.max(0, Math.min(100, Math.round(numeric)));
 }
 
-function getStatusChip(score: number) {
-  if (score >= 80) return "bg-emerald-50 text-emerald-700";
-  if (score >= 60) return "bg-sky-50 text-sky-700";
-  if (score >= 40) return "bg-amber-50 text-amber-700";
-  if (score > 0) return "bg-orange-50 text-orange-700";
-  return "bg-slate-100 text-slate-600";
+function hasCompletedDraft(draft: DraftScores) {
+  return Object.values(draft).every((value) => value !== "");
 }
 
-function averageFromScores(scores: number[], divisor?: number) {
-  const total = scores.reduce((sum, score) => sum + score, 0);
-  const count = divisor ?? scores.length;
-  if (count <= 0) return 0;
-  return Math.round(total / count);
-}
-
-function parseRestTaskScore(note: string) {
-  if (!note) return null;
-
-  try {
-    const parsed = JSON.parse(note) as {
-      entry_type?: string;
-      category?: string;
-      activity?: string;
-      task?: string;
-      score?: number;
-    };
-
-    if (parsed.entry_type !== "rest_task") return null;
-    if (parsed.category !== "physical") return null;
-    if (parsed.activity !== "rest") return null;
-    if (!parsed.task) return null;
-
-    const score = Number(parsed.score);
-    if (!Number.isFinite(score)) return null;
-
-    return {
-      task: parsed.task,
-      score: Math.max(0, Math.min(100, Math.round(score))),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function parsePhysicalTaskActivity(note: string) {
-  if (!note) return null;
-
-  try {
-    const parsed = JSON.parse(note) as {
-      entry_type?: string;
-      category?: string;
-      activity?: string;
-      task?: string;
-      score?: number;
-    };
-
-    if (parsed.entry_type !== "physical_task") return null;
-    if (parsed.category !== "physical") return null;
-    if (!parsed.activity || !parsed.task) return null;
-
-    const score = Number(parsed.score);
-    if (!Number.isFinite(score)) return null;
-
-    return {
-      activity: parsed.activity,
-      task: parsed.task,
-      score: Math.max(0, Math.min(100, Math.round(score))),
-    };
-  } catch {
-    return null;
-  }
+function buildDraftFromEvaluation(evaluation: WellbeingEvaluation): DraftScores {
+  return {
+    physical: String(toSafeScore(evaluation.physical_score)),
+    mental: String(toSafeScore(evaluation.mental_score)),
+    social: String(toSafeScore(evaluation.social_score)),
+    balance: String(toSafeScore(evaluation.balance_score)),
+  };
 }
 
 export default function EvaluationResultPage() {
   const userId = getCurrentUserId();
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<CategoryKey | null>(null);
-  const [categories, setCategories] = useState<CategoryDetail[]>([]);
+  const [evaluation, setEvaluation] = useState<WellbeingEvaluation | null>(null);
+  const [draft, setDraft] = useState<DraftScores>(EMPTY_DRAFT);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -293,227 +124,19 @@ export default function EvaluationResultPage() {
         setLoading(true);
         setError(null);
 
-        const [restResponse, physicalResponse, mentalResponse, socialResponse, balanceResponse] =
-          await Promise.all([
-            logsService.listRestTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-            }),
-            logsService.listDailyLogs(userId ?? undefined, {
-              entry_type: "physical_task",
-              category: "physical",
-              limit: 480,
-              forceRefresh: true,
-            }),
-            logsService.listMentalTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-            }),
-            logsService.listSocialTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-            }),
-            logsService.listBalanceTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-            }),
-          ]);
-
-        if (
-          !restResponse.success ||
-          !physicalResponse.success ||
-          !mentalResponse.success ||
-          !socialResponse.success ||
-          !balanceResponse.success
-        ) {
-          throw new Error("ไม่สามารถโหลดผลประเมินภาวะสุขสมดุลได้");
+        const response = await evaluationService.getWellbeingEvaluation(userId ?? undefined);
+        if (!response.success) {
+          throw new Error(response.error || "ไม่สามารถโหลดผลประเมินตั้งต้นได้");
         }
 
-        const restLatestByTask = new Map<string, number>();
-        [...(restResponse.data || [])]
-          .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseRestTaskScore(String(log.note));
-            if (!parsed || restLatestByTask.has(parsed.task)) return;
-            restLatestByTask.set(parsed.task, parsed.score);
-          });
-
-        const physicalLatestByActivity = new Map<string, Map<string, number>>();
-        [...(physicalResponse.data || [])]
-          .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parsePhysicalTaskActivity(String(log.note));
-            if (!parsed) return;
-            const latestByTask = physicalLatestByActivity.get(parsed.activity) ?? new Map<string, number>();
-            if (!latestByTask.has(parsed.task)) {
-              latestByTask.set(parsed.task, parsed.score);
-            }
-            physicalLatestByActivity.set(parsed.activity, latestByTask);
-          });
-
-        const physicalActivities: ActivityDetail[] = PHYSICAL_ACTIVITY_META.map((activity) => {
-          if (activity.slug === "rest") {
-            return {
-              ...activity,
-              score: averageFromScores(Array.from(restLatestByTask.values()), REST_TASKS.length),
-            };
-          }
-
-          const taskCount = getScaffoldedActivityConfig("physical", activity.slug)?.tasks.length ?? 0;
-          const scores = Array.from(physicalLatestByActivity.get(activity.slug)?.values() || []);
-          return {
-            ...activity,
-            score: averageFromScores(scores, taskCount),
-          };
-        });
-
-        const positiveLatestByTask = new Map<string, number>();
-        const stressLatestByTask = new Map<string, number>();
-        const scaffoldedMentalLatestByActivity = new Map<string, Map<string, number>>();
-
-        [...(mentalResponse.data || [])]
-          .sort((a, b) => getMentalLogTimestamp(b) - getMentalLogTimestamp(a))
-          .forEach((log) => {
-            const positiveEntry = parsePositiveThinkingTaskNote(String(log.note));
-            if (positiveEntry && !positiveLatestByTask.has(positiveEntry.task)) {
-              positiveLatestByTask.set(positiveEntry.task, positiveEntry.score);
-              return;
-            }
-
-            const stressEntry = parseStressTaskNote(String(log.note));
-            if (stressEntry && !stressLatestByTask.has(stressEntry.task)) {
-              stressLatestByTask.set(stressEntry.task, stressEntry.score);
-              return;
-            }
-
-            for (const activity of ["life-satisfaction", "self-worth"] as const) {
-              const parsed = parseScaffoldedTaskNote(String(log.note), "mental", activity);
-              if (!parsed) continue;
-              const latestByTask =
-                scaffoldedMentalLatestByActivity.get(activity) ?? new Map<string, number>();
-              if (!latestByTask.has(parsed.task)) {
-                latestByTask.set(parsed.task, parsed.score);
-              }
-              scaffoldedMentalLatestByActivity.set(activity, latestByTask);
-              break;
-            }
-          });
-
-        const mentalActivities: ActivityDetail[] = MENTAL_ACTIVITY_META.map((activity) => {
-          if (activity.slug === "positive-thinking") {
-            return {
-              ...activity,
-              score: averageFromScores(
-                Array.from(positiveLatestByTask.values()),
-                POSITIVE_THINKING_TASKS.length
-              ),
-            };
-          }
-
-          if (activity.slug === "stress-level") {
-            return {
-              ...activity,
-              score: averageFromScores(
-                Array.from(stressLatestByTask.values()),
-                STRESS_TASKS.length
-              ),
-            };
-          }
-
-          const taskCount = getScaffoldedActivityConfig("mental", activity.slug)?.tasks.length ?? 0;
-          const scores = Array.from(scaffoldedMentalLatestByActivity.get(activity.slug)?.values() || []);
-          return {
-            ...activity,
-            score: averageFromScores(scores, taskCount),
-          };
-        });
-
-        const socialActivityTaskCount: Record<string, number> = {
-          "family-relationship": FAMILY_RELATIONSHIP_TASKS.length,
-          "community-participation": 1,
-          "workplace-relationship": WORKPLACE_RELATIONSHIP_TASKS.length,
-        };
-        const socialLatestByActivity = new Map<string, Map<string, number>>();
-        [...(socialResponse.data || [])]
-          .sort((a, b) => getSocialLogTimestamp(b) - getSocialLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseSocialTaskNote(String(log.note));
-            if (!parsed) return;
-            const latestByTask = socialLatestByActivity.get(parsed.activity) ?? new Map<string, number>();
-            if (!latestByTask.has(parsed.task)) {
-              latestByTask.set(parsed.task, parsed.score);
-            }
-            socialLatestByActivity.set(parsed.activity, latestByTask);
-          });
-
-        const socialActivities: ActivityDetail[] = SOCIAL_ACTIVITY_META.map((activity) => ({
-          ...activity,
-          score: averageFromScores(
-            Array.from(socialLatestByActivity.get(activity.slug)?.values() || []),
-            socialActivityTaskCount[activity.slug] ?? 0
-          ),
-        }));
-
-        const balanceActivityTaskCount: Record<string, number> = {
-          "family-social-balance": FAMILY_SOCIAL_BALANCE_TASKS.length,
-          "work-balance": WORK_BALANCE_TASKS.length,
-          "personal-life-balance": PERSONAL_LIFE_BALANCE_TASKS.length,
-        };
-        const balanceLatestByActivity = new Map<string, Map<string, number>>();
-        [...(balanceResponse.data || [])]
-          .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseBalanceTaskNote(String(log.note));
-            if (!parsed) return;
-            const latestByTask = balanceLatestByActivity.get(parsed.activity) ?? new Map<string, number>();
-            if (!latestByTask.has(parsed.task)) {
-              latestByTask.set(parsed.task, parsed.score);
-            }
-            balanceLatestByActivity.set(parsed.activity, latestByTask);
-          });
-
-        const balanceActivities: ActivityDetail[] = BALANCE_ACTIVITY_META.map((activity) => ({
-          ...activity,
-          score: averageFromScores(
-            Array.from(balanceLatestByActivity.get(activity.slug)?.values() || []),
-            balanceActivityTaskCount[activity.slug] ?? 0
-          ),
-        }));
-
-        const nextCategories: CategoryDetail[] = [
-          {
-            key: "physical",
-            ...CATEGORY_META.physical,
-            score: averageFromScores(physicalActivities.map((item) => item.score)),
-            activities: physicalActivities,
-          },
-          {
-            key: "mental",
-            ...CATEGORY_META.mental,
-            score: averageFromScores(mentalActivities.map((item) => item.score)),
-            activities: mentalActivities,
-          },
-          {
-            key: "social",
-            ...CATEGORY_META.social,
-            score: averageFromScores(socialActivities.map((item) => item.score)),
-            activities: socialActivities,
-          },
-          {
-            key: "balance",
-            ...CATEGORY_META.balance,
-            score: averageFromScores(balanceActivities.map((item) => item.score)),
-            activities: balanceActivities,
-          },
-        ];
-
+        const nextEvaluation = response.data ?? null;
         if (!cancelled) {
-          setCategories(nextCategories);
+          setEvaluation(nextEvaluation);
+          setDraft(nextEvaluation ? buildDraftFromEvaluation(nextEvaluation) : EMPTY_DRAFT);
         }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
-          setCategories([]);
         }
       } finally {
         if (!cancelled) {
@@ -529,10 +152,61 @@ export default function EvaluationResultPage() {
     };
   }, [userId]);
 
-  const overallProgress = useMemo(() => {
-    if (categories.length === 0) return 0;
-    return averageFromScores(categories.map((category) => category.score));
-  }, [categories]);
+  const previewScores = useMemo(
+    () => ({
+      physical: toSafeScore(draft.physical),
+      mental: toSafeScore(draft.mental),
+      social: toSafeScore(draft.social),
+      balance: toSafeScore(draft.balance),
+    }),
+    [draft]
+  );
+
+  const overallScore = useMemo(() => {
+    const values = Object.values(previewScores);
+    const total = values.reduce((sum, value) => sum + value, 0);
+    return Math.round(total / values.length);
+  }, [previewScores]);
+
+  const isReadOnly = Boolean(evaluation);
+  const canSave = !loading && !saving && !isReadOnly && hasCompletedDraft(draft);
+
+  function updateDraft(key: CategoryKey, rawValue: string) {
+    const cleaned = rawValue === "" ? "" : String(toSafeScore(rawValue));
+    setDraft((current) => ({
+      ...current,
+      [key]: cleaned,
+    }));
+  }
+
+  async function confirmSaveEvaluation() {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const response = await evaluationService.createWellbeingEvaluation({
+        user_id: userId ?? undefined,
+        physical_score: previewScores.physical,
+        mental_score: previewScores.mental,
+        social_score: previewScores.social,
+        balance_score: previewScores.balance,
+      });
+
+      if (!response.success) {
+        throw new Error(response.error || "ไม่สามารถบันทึกผลประเมินตั้งต้นได้");
+      }
+
+      setEvaluation(response.data);
+      setDraft(buildDraftFromEvaluation(response.data));
+      setConfirmOpen(false);
+      setSuccessOpen(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
+      setConfirmOpen(false);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <MobileShell>
@@ -543,7 +217,13 @@ export default function EvaluationResultPage() {
 
         <AppHeader
           title="ผลประเมินภาวะสุขสมดุล"
-          subtitle={loading ? "กำลังสรุปข้อมูลจากทั้ง 4 ด้าน..." : "สรุปภาพรวมและกดดูรายละเอียดของแต่ละด้านได้ในหน้าเดียว"}
+          subtitle={
+            loading
+              ? "กำลังโหลดค่าประเมินตั้งต้น..."
+              : isReadOnly
+                ? "แสดงผลประเมินตั้งต้นครั้งแรกของทั้ง 4 ด้าน"
+                : "กรอกคะแนนตั้งต้นของทั้ง 4 ด้านเพื่อใช้เป็นจุดเริ่มต้นของโครงการ"
+          }
           showBack
           showBell
           variant="soft"
@@ -552,9 +232,7 @@ export default function EvaluationResultPage() {
         <main className="relative z-10 space-y-4 px-4 py-6">
           {error ? (
             <InfoCard className="rounded-3xl border-rose-200 bg-rose-50/90">
-              <div className="space-y-3">
-                <p className="text-sm text-rose-700">{error}</p>
-              </div>
+              <p className="text-sm text-rose-700">{error}</p>
             </InfoCard>
           ) : null}
 
@@ -562,120 +240,235 @@ export default function EvaluationResultPage() {
             <div className="pointer-events-none absolute -left-12 top-16 h-36 w-36 rounded-full bg-[#ffd8bf]/22 blur-3xl" />
             <div className="pointer-events-none absolute -right-10 -top-12 h-44 w-44 rounded-full bg-[#9ad4be]/18 blur-3xl" />
 
-            <div className="relative z-10">
-              <p className="text-xs font-semibold tracking-[0.16em] text-[#255f54]">WELLBEING EVALUATION</p>
-              <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">ภาพรวมภาวะสุขสมดุลของคุณ</h2>
-              <p className="mt-1 text-sm text-slate-500">อัปเดตล่าสุด {formatThaiDate(new Date())}</p>
-
-              <div className="mt-4 rounded-2xl border border-white/85 bg-white/76 p-3 shadow-[0_12px_28px_rgba(31,47,61,0.08)] backdrop-blur-sm">
-                <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
-                  <span>คะแนนเฉลี่ยทั้ง 4 ด้าน</span>
-                  <span className="font-semibold text-slate-900">{overallProgress}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-200/90">
-                  <div
-                    className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d79bb4]"
-                    style={{ width: `${overallProgress}%` }}
-                  />
-                </div>
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.16em] text-[#255f54]">
+                  WELLBEING BASELINE
+                </p>
+                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">
+                  คะแนนตั้งต้นภาวะสุขสมดุล 4 ด้าน
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  ใช้บันทึกคะแนนตั้งต้นก่อนติดตามกิจกรรมจริงในโครงการ เพื่อให้เราเห็นจุดเริ่มต้นของคุณอย่างชัดเจน
+                </p>
               </div>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {CATEGORY_META.map((item) => (
+                  <div
+                    key={item.key}
+                    className={`rounded-2xl border border-white/90 ${item.softClass} p-3`}
+                  >
+                    <p className="text-xs font-medium text-slate-500">{item.subtitle}</p>
+                    <p className="mt-2 text-2xl font-extrabold text-slate-900">
+                      {previewScores[item.key]}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {isReadOnly ? (
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#eef8f2] px-3 py-1.5 text-xs font-semibold text-[#2f7b56]">
+                  <Lock size={14} />
+                  <span>
+                    บันทึกครั้งแรกแล้วเมื่อ {formatThaiDate(evaluation?.created_at || new Date())}
+                  </span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                  <Lock size={14} />
+                  <span>แบบประเมินนี้บันทึกได้ครั้งเดียว กรุณาตรวจสอบคะแนนให้ดีก่อนกดยืนยัน</span>
+                </div>
+              )}
             </div>
           </section>
 
           <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-900">กราฟสุขสมดุลหลัก</h3>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">กราฟสุขสมดุลตั้งต้น</h3>
+                  <p className="text-xs text-slate-500">คะแนนเฉลี่ยรวม {overallScore}%</p>
+                </div>
                 <span className="rounded-full bg-[#f5fbff] px-3 py-1 text-xs font-semibold text-[#315d75]">
-                  เฉลี่ย {overallProgress}%
+                  เฉลี่ย {overallScore}%
                 </span>
               </div>
 
               {loading ? (
                 <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
                   <LoaderCircle size={18} className="animate-spin text-slate-400" />
-                  <span>กำลังประมวลผลคะแนนจริงจากบันทึกล่าสุด...</span>
+                  <span>กำลังโหลดผลประเมินตั้งต้น...</span>
                 </div>
               ) : (
                 <WellbeingRadarChart
-                  physical={categories.find((item) => item.key === "physical")?.score ?? 0}
-                  mental={categories.find((item) => item.key === "mental")?.score ?? 0}
-                  social={categories.find((item) => item.key === "social")?.score ?? 0}
-                  balance={categories.find((item) => item.key === "balance")?.score ?? 0}
+                  physical={previewScores.physical}
+                  mental={previewScores.mental}
+                  social={previewScores.social}
+                  balance={previewScores.balance}
                 />
               )}
             </div>
           </InfoCard>
 
           <section className="space-y-3">
-            {categories.map((category) => {
-              const isOpen = expanded === category.key;
+            {CATEGORY_META.map((item, index) => {
+              const value = draft[item.key];
+              const numericValue = previewScores[item.key];
               return (
                 <InfoCard
-                  key={category.key}
-                  className="overflow-hidden rounded-3xl border-white/70 bg-white/82 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur"
+                  key={item.key}
+                  className="rounded-3xl border-white/70 bg-white/82 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur"
                 >
-                  <button
-                    type="button"
-                    onClick={() => setExpanded((prev) => (prev === category.key ? null : category.key))}
-                    className="flex w-full items-start justify-between gap-3 text-left"
-                  >
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <span
-                        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${category.softClass}`}
-                      >
-                        <category.Icon size={20} className="text-slate-700" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-base font-semibold text-slate-900">{category.label}</h3>
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${category.chipClass}`}>
-                            {category.score}% • {getStatusText(category.score)}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">{category.subtitle}</p>
-                        <div className="mt-3 h-2 rounded-full bg-slate-200">
-                          <div
-                            className={`h-2 rounded-full ${category.accentClass}`}
-                            style={{ width: `${category.score}%` }}
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${item.softClass}`}
+                    >
+                      <item.Icon size={20} className="text-slate-700" />
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-semibold text-slate-900">
+                          {index + 1}. {item.subtitle}
+                        </h3>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-medium ${item.chipClass}`}
+                        >
+                          {value === "" ? "ยังไม่ได้กรอก" : `${numericValue} / 100`}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-6 text-slate-500">{item.description}</p>
+
+                      <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/90 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <label
+                            className="text-sm font-medium text-slate-700"
+                            htmlFor={`score-${item.key}`}
+                          >
+                            คะแนนตั้งต้น
+                          </label>
+                          <input
+                            id={`score-${item.key}`}
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={100}
+                            value={value}
+                            onChange={(event) => updateDraft(item.key, event.target.value)}
+                            disabled={loading || saving || isReadOnly}
+                            className="h-11 w-24 rounded-2xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-900 outline-none transition focus:border-[#7dcdb8] disabled:cursor-not-allowed disabled:bg-slate-100"
+                            placeholder="0-100"
                           />
+                        </div>
+
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={numericValue}
+                          onChange={(event) => updateDraft(item.key, event.target.value)}
+                          disabled={loading || saving || isReadOnly}
+                          className="h-2 w-full cursor-pointer accent-[#7dcdb8] disabled:cursor-not-allowed"
+                        />
+
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          <span>น้อย</span>
+                          <span>0 - 100 คะแนน</span>
+                          <span>มาก</span>
                         </div>
                       </div>
                     </div>
-
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 shadow-[0_8px_18px_rgba(31,47,61,0.08)]">
-                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </span>
-                  </button>
-
-                  {isOpen ? (
-                    <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
-                      {category.activities.map((activity) => (
-                        <div key={activity.slug} className="rounded-2xl border border-slate-100 bg-slate-50/90 p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-slate-900">{activity.label}</p>
-                              <p className="mt-1 text-xs leading-6 text-slate-500">{activity.subtitle}</p>
-                            </div>
-                            <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusChip(activity.score)}`}>
-                              {activity.score}%
-                            </span>
-                          </div>
-                          <div className="mt-3 h-2 rounded-full bg-slate-200">
-                            <div
-                              className={`h-2 rounded-full ${category.accentClass}`}
-                              style={{ width: `${activity.score}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
+                  </div>
                 </InfoCard>
               );
             })}
           </section>
+
+          {!isReadOnly ? (
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(true)}
+              disabled={!canSave}
+              className="flex w-full items-center justify-center gap-2 rounded-[26px] bg-[#d88d80] px-4 py-4 text-base font-semibold text-white shadow-[0_18px_34px_rgba(216,141,128,0.32)] transition hover:brightness-[1.02] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+            >
+              {saving ? <LoaderCircle size={18} className="animate-spin" /> : <Save size={18} />}
+              <span>{saving ? "กำลังบันทึกผลประเมิน..." : "บันทึกคะแนนตั้งต้น"}</span>
+            </button>
+          ) : null}
         </main>
+
+        <Dialog
+          open={confirmOpen}
+          onClose={() => {
+            if (!saving) setConfirmOpen(false);
+          }}
+          icon={<AlertTriangle size={18} />}
+          title="ยืนยันการบันทึกคะแนนตั้งต้น"
+          description="ข้อมูลชุดนี้จะถูกใช้เป็นคะแนนเริ่มต้นของโครงการ และบันทึกได้เพียงครั้งเดียว"
+          closeOnOverlayClick={!saving}
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={saving}
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmSaveEvaluation()}
+                disabled={saving}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#d88d80] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(216,141,128,0.24)] transition hover:brightness-[1.02] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? <LoaderCircle size={16} className="animate-spin" /> : <Save size={16} />}
+                <span>{saving ? "กำลังบันทึก..." : "ยืนยันบันทึก"}</span>
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm leading-6 text-slate-500">
+              กรุณาตรวจสอบคะแนนทั้ง 4 ด้านให้แน่ใจก่อนดำเนินการต่อ
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {CATEGORY_META.map((item) => (
+                <div
+                  key={item.key}
+                  className={`rounded-2xl border border-white/80 ${item.softClass} p-3`}
+                >
+                  <p className="text-xs font-medium text-slate-500">{item.subtitle}</p>
+                  <p className="mt-2 text-xl font-extrabold text-slate-900">
+                    {previewScores[item.key]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Dialog>
+
+        <Dialog
+          open={successOpen}
+          onClose={() => setSuccessOpen(false)}
+          icon={<CheckCircle2 size={18} />}
+          title="บันทึกผลประเมินตั้งต้นเรียบร้อยแล้ว"
+          description="จากนี้กราฟจะแสดงคะแนนตั้งต้นของคุณ และไม่สามารถแก้ไขชุดข้อมูลนี้ซ้ำได้"
+          footer={
+            <button
+              type="button"
+              onClick={() => setSuccessOpen(false)}
+              className="inline-flex items-center justify-center rounded-2xl bg-[#d88d80] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(216,141,128,0.24)] transition hover:brightness-[1.02]"
+            >
+              รับทราบ
+            </button>
+          }
+        >
+          <div className="rounded-2xl bg-[#f8fcfb] p-4 text-sm leading-6 text-slate-600">
+            คะแนนตั้งต้นของทั้ง 4 ด้านถูกจัดเก็บเรียบร้อยแล้ว และพร้อมใช้เป็นจุดเริ่มต้นของการติดตามผลในระยะต่อไป
+          </div>
+        </Dialog>
       </div>
     </MobileShell>
   );

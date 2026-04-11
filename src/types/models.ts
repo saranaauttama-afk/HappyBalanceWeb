@@ -74,6 +74,17 @@ export interface SystemVersionInfo {
   server_time?: string;
 }
 
+export interface WellbeingEvaluation {
+  id: string;
+  user_id: string;
+  physical_score: number;
+  mental_score: number;
+  social_score: number;
+  balance_score: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;

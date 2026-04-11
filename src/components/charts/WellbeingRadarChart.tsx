@@ -1,4 +1,4 @@
-import {
+﻿import {
   Radar,
   RadarChart,
   PolarGrid,
@@ -45,11 +45,7 @@ export default function WellbeingRadarChart({
             tick={{ fill: "#475569", fontSize: 12 }}
           />
 
-          <PolarRadiusAxis
-            angle={90}
-            domain={[0, 100]}
-            tick={false}
-          />
+          <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
 
           <Radar
             name="Wellbeing"
