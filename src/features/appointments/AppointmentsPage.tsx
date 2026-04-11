@@ -287,7 +287,7 @@ export default function AppointmentsPage() {
       );
 
       if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายรายเดือนได้");
+        throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายรายสัปดาห์ได้");
       }
 
       setMonthlyGoal(String(response.data?.[0]?.goal_text ?? ""));
@@ -468,7 +468,7 @@ export default function AppointmentsPage() {
       });
 
       if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายรายเดือนได้");
+        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายรายสัปดาห์ได้");
       }
 
       setMonthlyGoal(String(response.data?.goal_text ?? trimmedGoal));
@@ -541,7 +541,7 @@ export default function AppointmentsPage() {
                   <Target size={18} />
                 </span>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">เป้าหมายรายเดือน</h3>
+                  <h3 className="text-base font-semibold text-slate-900">เป้าหมายรายสัปดาห์</h3>
                   <p className="text-sm text-slate-500">โฟกัสของเดือน {monthLabel}</p>
                 </div>
               </div>

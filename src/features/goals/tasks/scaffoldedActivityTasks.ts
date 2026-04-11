@@ -92,7 +92,7 @@ export const SCAFFOLDED_ACTIVITY_CONFIGS: ScaffoldedActivityConfig[] = [
     category: "physical",
     activity: "body-hygiene",
     title: "การดูแลรักษาความสะอาดของร่างกาย",
-    subtitle: "เช็กกิจวัตรพื้นฐานที่ช่วยดูแลความสะอาดและความสบายตัว",
+    subtitle: "เช็คกิจวัตรพื้นฐานที่ช่วยดูแลความสะอาดและความสบายตัว",
     heroEyebrow: "BODY HYGIENE",
     heroHeadline: "ดูแลตัวเองให้สบายตัว",
     heroImage:

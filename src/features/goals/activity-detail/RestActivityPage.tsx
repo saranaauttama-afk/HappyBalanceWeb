@@ -211,7 +211,7 @@ export default function RestActivityPage() {
                 <div className="min-w-0">
                   <h2 className="text-2xl font-extrabold leading-tight text-slate-900">จัดจังหวะการพักผ่อนให้ร่างกายได้ค่อย ๆ ฟื้นพลัง</h2>
                   <p className="mt-1 max-w-xs text-sm text-slate-700">
-                    ติดตามการนอน น้ำ และพฤติกรรมก่อนนอน เพื่อให้คะแนนสะท้อนคุณภาพการพักผ่อนจริง
+                    ติดตามการนอน ดื่มน้ำ และพฤติกรรมก่อนนอน เพื่อให้คะแนนสะท้อนคุณภาพการพักผ่อนจริง
                   </p>
                 </div>
                 <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.7)_0%,rgba(255,255,255,0.36)_100%)] text-[#2e6a8b] shadow-[0_12px_24px_rgba(78,104,96,0.16)] backdrop-blur-md">
