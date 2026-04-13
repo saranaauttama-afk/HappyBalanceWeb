@@ -1,6 +1,7 @@
 import { api } from "./api";
 import type { ApiResponse } from "../types/models";
 import type { DailyLog } from "../types/models";
+import { getCurrentWeekRange } from "../utils/weekPeriod";
 
 const DEMO_USER_ID = "demo-user-001";
 const READ_CACHE_TTL_MS = 90 * 1000;
@@ -83,6 +84,19 @@ function invalidateUserLogCache(userId: string) {
   }
 }
 
+function applyCurrentWeekDefaults<T extends { from?: string; to?: string }>(filters: T): T {
+  if (filters.from || filters.to) {
+    return filters;
+  }
+
+  const currentWeek = getCurrentWeekRange();
+  return {
+    ...filters,
+    from: currentWeek.from,
+    to: currentWeek.to,
+  };
+}
+
 export const logsService = {
   async listDailyLogs(userId?: string, filters: ListLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
@@ -106,11 +120,12 @@ export const logsService = {
   async listRestTaskLogs(userId?: string, filters: RestTaskLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
     const { forceRefresh, ...rawFilters } = filters;
+    const effectiveFilters = applyCurrentWeekDefaults(rawFilters);
     const params = {
       userId: resolvedUserId,
-      ...rawFilters,
+      ...effectiveFilters,
     };
-    const cacheKey = buildReadCacheKey("listRestTaskLogs", resolvedUserId, rawFilters);
+    const cacheKey = buildReadCacheKey("listRestTaskLogs", resolvedUserId, effectiveFilters);
 
     if (!forceRefresh) {
       const cached = getCachedRead(cacheKey);
@@ -125,11 +140,12 @@ export const logsService = {
   async listMentalTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
     const { forceRefresh, ...rawFilters } = filters;
+    const effectiveFilters = applyCurrentWeekDefaults(rawFilters);
     const params = {
       userId: resolvedUserId,
-      ...rawFilters,
+      ...effectiveFilters,
     };
-    const cacheKey = buildReadCacheKey("listMentalTaskLogs", resolvedUserId, rawFilters);
+    const cacheKey = buildReadCacheKey("listMentalTaskLogs", resolvedUserId, effectiveFilters);
 
     if (!forceRefresh) {
       const cached = getCachedRead(cacheKey);
@@ -144,11 +160,12 @@ export const logsService = {
   async listSocialTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
     const { forceRefresh, ...rawFilters } = filters;
+    const effectiveFilters = applyCurrentWeekDefaults(rawFilters);
     const params = {
       userId: resolvedUserId,
-      ...rawFilters,
+      ...effectiveFilters,
     };
-    const cacheKey = buildReadCacheKey("listSocialTaskLogs", resolvedUserId, rawFilters);
+    const cacheKey = buildReadCacheKey("listSocialTaskLogs", resolvedUserId, effectiveFilters);
 
     if (!forceRefresh) {
       const cached = getCachedRead(cacheKey);
@@ -163,11 +180,12 @@ export const logsService = {
   async listBalanceTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
     const { forceRefresh, ...rawFilters } = filters;
+    const effectiveFilters = applyCurrentWeekDefaults(rawFilters);
     const params = {
       userId: resolvedUserId,
-      ...rawFilters,
+      ...effectiveFilters,
     };
-    const cacheKey = buildReadCacheKey("listBalanceTaskLogs", resolvedUserId, rawFilters);
+    const cacheKey = buildReadCacheKey("listBalanceTaskLogs", resolvedUserId, effectiveFilters);
 
     if (!forceRefresh) {
       const cached = getCachedRead(cacheKey);

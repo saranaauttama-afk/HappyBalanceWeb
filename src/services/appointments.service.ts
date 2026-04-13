@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { Appointment, MonthlyGoal } from "../types/models";
+import type { Appointment, WeeklyGoal } from "../types/models";
 
 const DEMO_USER_ID = "demo-user-001";
 
@@ -21,19 +21,27 @@ export const appointmentsService = {
     });
   },
 
-  async listMonthlyGoals(userId?: string, month_key?: string) {
-    return api.get<MonthlyGoal[]>("listMonthlyGoals", {
-      userId: userId ?? DEMO_USER_ID,
-      month_key,
+  async deleteAppointment(id: string, userId?: string) {
+    return api.post<{ id: string }>("deleteAppointment", {
+      id,
+      user_id: userId ?? DEMO_USER_ID,
     });
   },
 
-  async upsertMonthlyGoal(payload: {
+  async listWeeklyGoals(userId?: string, week_start_date?: string) {
+    return api.get<WeeklyGoal[]>("listWeeklyGoals", {
+      userId: userId ?? DEMO_USER_ID,
+      week_start_date,
+      _ts: Date.now(),
+    });
+  },
+
+  async upsertWeeklyGoal(payload: {
     user_id?: string;
-    month_key: string;
+    week_start_date: string;
     goal_text: string;
   }) {
-    return api.post<MonthlyGoal>("upsertMonthlyGoal", {
+    return api.post<WeeklyGoal>("upsertWeeklyGoal", {
       user_id: payload.user_id ?? DEMO_USER_ID,
       ...payload,
     });

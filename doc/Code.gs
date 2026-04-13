@@ -10,6 +10,9 @@ const SHEET_NAMES = {
   passwordResetTokens: "password_reset_tokens",
   appointments: "appointments",
   monthlyGoals: "monthly_goals",
+  weeklyGoals: "weekly_goals",
+  weeklyTaskScores: "weekly_task_scores",
+  weeklyActivityScores: "weekly_activity_scores",
   articles: "articles",
 };
 const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-14B";
@@ -53,6 +56,47 @@ const WELLBEING_EVALUATION_HEADERS = [
   "mental_score",
   "social_score",
   "balance_score",
+  "created_at",
+  "updated_at",
+];
+
+const WEEKLY_GOAL_HEADERS = [
+  "id",
+  "user_id",
+  "week_start_date",
+  "goal_text",
+  "created_at",
+  "updated_at",
+];
+
+const WEEKLY_TASK_SCORE_HEADERS = [
+  "id",
+  "user_id",
+  "week_start_date",
+  "category",
+  "activity",
+  "task",
+  "score",
+  "point",
+  "achieved",
+  "last_log_id",
+  "last_log_at",
+  "created_at",
+  "updated_at",
+];
+
+const WEEKLY_ACTIVITY_SCORE_HEADERS = [
+  "id",
+  "user_id",
+  "week_start_date",
+  "category",
+  "activity",
+  "score",
+  "completed_count",
+  "total_count",
+  "status_text",
+  "last_log_id",
+  "last_log_at",
   "created_at",
   "updated_at",
 ];
@@ -164,6 +208,32 @@ function doGet(e) {
         );
       case "listAppointments":
         return jsonOutput_(listAppointments_(getParam_(e, "userId")));
+      case "listWeeklyGoals":
+        return jsonOutput_(
+          listWeeklyGoals_(
+            getParam_(e, "userId"),
+            getParam_(e, "week_start_date")
+          )
+        );
+      case "listWeeklyTaskScores":
+        return jsonOutput_(
+          listWeeklyTaskScores_(
+            getParam_(e, "userId"),
+            getParam_(e, "week_start_date"),
+            getParam_(e, "category"),
+            getParam_(e, "activity"),
+            getParam_(e, "task")
+          )
+        );
+      case "listWeeklyActivityScores":
+        return jsonOutput_(
+          listWeeklyActivityScores_(
+            getParam_(e, "userId"),
+            getParam_(e, "week_start_date"),
+            getParam_(e, "category"),
+            getParam_(e, "activity")
+          )
+        );
       case "listMonthlyGoals":
         return jsonOutput_(
           listMonthlyGoals_(getParam_(e, "userId"), getParam_(e, "month_key"))
@@ -210,6 +280,10 @@ function doPost(e) {
         return jsonOutput_(uploadProfileAvatar_(body));
       case "createAppointment":
         return jsonOutput_(createAppointment_(body));
+      case "deleteAppointment":
+        return jsonOutput_(deleteAppointment_(body));
+      case "upsertWeeklyGoal":
+        return jsonOutput_(upsertWeeklyGoal_(body));
       case "upsertMonthlyGoal":
         return jsonOutput_(upsertMonthlyGoal_(body));
       default:
@@ -926,8 +1000,18 @@ function createDailyLog_(payload) {
       updated_at: nowIso_(),
     };
 
+    const parsedTaskNote = parseTaskNotePayload_(newLog.note);
+    if (
+      parsedTaskNote &&
+      isTaskEntryType_(parsedTaskNote.entry_type) &&
+      !isEditableWeek_(getWeekStartDateKey_(newLog.log_date))
+    ) {
+      throw new Error("Historical weekly scores are read-only");
+    }
+
     appendObject_(SHEET_NAMES.dailyLogs, newLog);
     appendStructuredTaskLogIfNeeded_(newLog);
+    syncWeeklyScoreSummariesForDailyLog_(newLog);
     bumpUserDataVersion_(newLog.user_id);
 
     return {
@@ -978,6 +1062,189 @@ function createAppointment_(payload) {
   return {
     success: true,
     data: newAppointment,
+  };
+}
+
+function deleteAppointment_(payload) {
+  const userId = String(payload.user_id || "").trim();
+  const appointmentId = String(payload.id || "").trim();
+
+  if (!userId) throw new Error("Missing user_id");
+  if (!appointmentId) throw new Error("Missing id");
+
+  const sheet = getSheet_(SHEET_NAMES.appointments);
+  const rows = getAllObjects_(SHEET_NAMES.appointments);
+  const index = rows.findIndex(
+    (row) => String(row.id || "") === appointmentId && String(row.user_id || "") === userId
+  );
+
+  if (index === -1) {
+    throw new Error("ไม่พบรายการนัดหมายนี้");
+  }
+
+  sheet.deleteRow(index + 2);
+
+  return { success: true, data: { id: appointmentId } };
+}
+
+function listWeeklyGoals_(userId, weekStartDate) {
+  if (!userId) {
+    throw new Error("Missing userId");
+  }
+
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyGoals, WEEKLY_GOAL_HEADERS);
+
+  const normalizedWeekStartDate = weekStartDate
+    ? normalizeWeekStartDate_(weekStartDate)
+    : "";
+
+  const rows = getAllObjects_(SHEET_NAMES.weeklyGoals)
+    .filter((row) => {
+      if (String(row.user_id || "") !== String(userId)) return false;
+      if (!normalizedWeekStartDate) return true;
+      return normalizeWeekStartDate_(row.week_start_date) === normalizedWeekStartDate;
+    })
+    .sort((a, b) => {
+      const weekCompare = String(b.week_start_date).localeCompare(
+        String(a.week_start_date)
+      );
+      if (weekCompare !== 0) return weekCompare;
+
+      return String(b.updated_at || b.created_at || "").localeCompare(
+        String(a.updated_at || a.created_at || "")
+      );
+    });
+
+  return {
+    success: true,
+    data: rows,
+  };
+}
+
+function upsertWeeklyGoal_(payload) {
+  const userId = String(payload.user_id || "").trim();
+  const weekStartDate = String(payload.week_start_date || "").trim();
+  const goalText = String(payload.goal_text || "").trim();
+
+  if (!userId) {
+    throw new Error("Missing user_id");
+  }
+
+  if (!weekStartDate) {
+    throw new Error("Missing week_start_date");
+  }
+
+  if (!isEditableWeek_(weekStartDate)) {
+    throw new Error("You can only edit goals for the current week");
+  }
+
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyGoals, WEEKLY_GOAL_HEADERS);
+
+  const normalizedWeekStartDate = normalizeWeekStartDate_(weekStartDate);
+  const sheet = getSheet_(SHEET_NAMES.weeklyGoals);
+  const rows = getAllObjects_(SHEET_NAMES.weeklyGoals);
+  const index = rows.findIndex(
+    (row) =>
+      String(row.user_id || "") === userId &&
+      normalizeWeekStartDate_(row.week_start_date) === normalizedWeekStartDate
+  );
+
+  if (index === -1) {
+    const newGoal = {
+      id: generateId_("wgoal"),
+      user_id: userId,
+      week_start_date: normalizedWeekStartDate,
+      goal_text: goalText,
+      created_at: nowIso_(),
+      updated_at: nowIso_(),
+    };
+
+    appendObject_(SHEET_NAMES.weeklyGoals, newGoal);
+
+    return {
+      success: true,
+      data: newGoal,
+    };
+  }
+
+  const updated = {
+    ...rows[index],
+    goal_text: goalText,
+    updated_at: nowIso_(),
+  };
+
+  updateRowByIndex_(sheet, index + 2, updated);
+
+  return {
+    success: true,
+    data: updated,
+  };
+}
+
+function listWeeklyTaskScores_(userId, weekStartDate, category, activity, task) {
+  if (!userId) {
+    throw new Error("Missing userId");
+  }
+
+  const normalizedWeekStartDate = normalizeWeekStartDate_(weekStartDate);
+  ensureWeeklyScoreSummaries_(userId, normalizedWeekStartDate, {
+    category: category,
+    activity: activity,
+  });
+
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyTaskScores, WEEKLY_TASK_SCORE_HEADERS);
+
+  const rows = getAllObjects_(SHEET_NAMES.weeklyTaskScores)
+    .filter(function (row) {
+      if (String(row.user_id || "") !== String(userId)) return false;
+      if (String(row.week_start_date || "") !== normalizedWeekStartDate) return false;
+      if (category && String(row.category || "") !== String(category)) return false;
+      if (activity && String(row.activity || "") !== String(activity)) return false;
+      if (task && String(row.task || "") !== String(task)) return false;
+      return true;
+    })
+    .sort(function (a, b) {
+      const activityCompare = String(a.activity || "").localeCompare(String(b.activity || ""));
+      if (activityCompare !== 0) return activityCompare;
+      return String(a.task || "").localeCompare(String(b.task || ""));
+    });
+
+  return {
+    success: true,
+    data: rows,
+  };
+}
+
+function listWeeklyActivityScores_(userId, weekStartDate, category, activity) {
+  if (!userId) {
+    throw new Error("Missing userId");
+  }
+
+  const normalizedWeekStartDate = normalizeWeekStartDate_(weekStartDate);
+  ensureWeeklyScoreSummaries_(userId, normalizedWeekStartDate, {
+    category: category,
+    activity: activity,
+  });
+
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyActivityScores, WEEKLY_ACTIVITY_SCORE_HEADERS);
+
+  const rows = getAllObjects_(SHEET_NAMES.weeklyActivityScores)
+    .filter(function (row) {
+      if (String(row.user_id || "") !== String(userId)) return false;
+      if (String(row.week_start_date || "") !== normalizedWeekStartDate) return false;
+      if (category && String(row.category || "") !== String(category)) return false;
+      if (activity && String(row.activity || "") !== String(activity)) return false;
+      return true;
+    })
+    .sort(function (a, b) {
+      const categoryCompare = String(a.category || "").localeCompare(String(b.category || ""));
+      if (categoryCompare !== 0) return categoryCompare;
+      return String(a.activity || "").localeCompare(String(b.activity || ""));
+    });
+
+  return {
+    success: true,
+    data: rows,
   };
 }
 
@@ -1086,6 +1353,387 @@ function withTiming_(label, fn) {
     const elapsedMs = new Date().getTime() - startedAt;
     console.log(`[perf] ${label} ${elapsedMs}ms`);
   }
+}
+
+const WEEKLY_ACTIVITY_TOTAL_COUNT = {
+  "physical:rest": 7,
+  "physical:food-intake": 4,
+  "physical:exercise": 4,
+  "physical:body-hygiene": 4,
+  "mental:positive-thinking": 6,
+  "mental:stress-level": 6,
+  "mental:life-satisfaction": 4,
+  "mental:self-worth": 4,
+  "social:family-relationship": 6,
+  "social:community-participation": 1,
+  "social:workplace-relationship": 6,
+  "balance:family-social-balance": 6,
+  "balance:work-balance": 6,
+  "balance:personal-life-balance": 11,
+};
+
+const TASK_ENTRY_TYPES = {
+  rest_task: true,
+  physical_task: true,
+  mental_task: true,
+  social_task: true,
+  balance_task: true,
+};
+
+function padNumber_(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatDateKey_(date) {
+  return (
+    date.getFullYear() +
+    "-" +
+    padNumber_(date.getMonth() + 1) +
+    "-" +
+    padNumber_(date.getDate())
+  );
+}
+
+function parseDateKey_(value) {
+  if (!value) return null;
+
+  const normalized = String(value).trim();
+  const matched = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (matched) {
+    return new Date(
+      Number(matched[1]),
+      Number(matched[2]) - 1,
+      Number(matched[3])
+    );
+  }
+
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+}
+
+function addDays_(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return new Date(next.getFullYear(), next.getMonth(), next.getDate());
+}
+
+function getWeekStartDateKey_(value) {
+  const parsed = parseDateKey_(value) || new Date();
+  const normalized = new Date(
+    parsed.getFullYear(),
+    parsed.getMonth(),
+    parsed.getDate()
+  );
+  const weekday = normalized.getDay();
+  const offset = weekday === 0 ? -6 : 1 - weekday;
+  return formatDateKey_(addDays_(normalized, offset));
+}
+
+function getWeekEndDateKey_(weekStartDate) {
+  const start = parseDateKey_(weekStartDate);
+  if (!start) return "";
+  return formatDateKey_(addDays_(start, 6));
+}
+
+function normalizeWeekStartDate_(weekStartDate) {
+  return weekStartDate
+    ? getWeekStartDateKey_(weekStartDate)
+    : getWeekStartDateKey_(formatDateKey_(new Date()));
+}
+
+function isEditableWeek_(weekStartDate) {
+  return normalizeWeekStartDate_(weekStartDate) === getWeekStartDateKey_(formatDateKey_(new Date()));
+}
+
+function getWeeklyActivityTotalCount_(category, activity) {
+  const key = String(category || "") + ":" + String(activity || "");
+  return Number(WEEKLY_ACTIVITY_TOTAL_COUNT[key] || 0);
+}
+
+function isTaskEntryType_(entryType) {
+  return !!TASK_ENTRY_TYPES[String(entryType || "")];
+}
+
+function getWeeklyScoreStatusText_(score) {
+  if (score >= 80) return "ดีมาก";
+  if (score >= 60) return "ดี";
+  if (score >= 40) return "กำลังพัฒนา";
+  if (score > 0) return "เริ่มต้น";
+  return "ยังไม่มีข้อมูล";
+}
+
+function getWeeklyTaskAchieved_(category, activity, score, payload) {
+  if (String(category || "") === "physical" && String(activity || "") === "rest") {
+    return Number(score) >= 80;
+  }
+
+  return getBooleanValue_(
+    payload && payload.achieved,
+    Number(score) > 0
+  );
+}
+
+function getWeeklyPointValue_(payload, achieved) {
+  const parsedPoint = Number(payload && payload.point);
+  if (Number.isFinite(parsedPoint)) return parsedPoint;
+  return achieved ? 1 : 0;
+}
+
+function collectWeeklyTaskEntries_(userId, weekStartDate, filters) {
+  const normalizedWeekStartDate = normalizeWeekStartDate_(weekStartDate);
+  const weekEndDate = getWeekEndDateKey_(normalizedWeekStartDate);
+  const source = filters || {};
+
+  return getAllObjects_(SHEET_NAMES.dailyLogs)
+    .filter(function (row) {
+      if (String(row.user_id || "") !== String(userId || "")) return false;
+
+      const logDate = String(row.log_date || "");
+      if (!logDate || logDate < normalizedWeekStartDate || logDate > weekEndDate) {
+        return false;
+      }
+
+      const parsed = parseTaskNotePayload_(row.note);
+      if (!parsed || !isTaskEntryType_(parsed.entry_type)) return false;
+      if (!parsed.category || !parsed.activity || !parsed.task) return false;
+      if (source.category && String(parsed.category) !== String(source.category)) return false;
+      if (source.activity && String(parsed.activity) !== String(source.activity)) return false;
+      if (source.task && String(parsed.task) !== String(source.task)) return false;
+
+      return true;
+    })
+    .map(function (row) {
+      const parsed = parseTaskNotePayload_(row.note);
+      return {
+        row: row,
+        parsed: parsed,
+      };
+    })
+    .filter(function (entry) {
+      return !!entry.parsed;
+    });
+}
+
+function ensureWeeklyScoreSummaries_(userId, weekStartDate, filters) {
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyTaskScores, WEEKLY_TASK_SCORE_HEADERS);
+  ensureSheetWithHeaders_(SHEET_NAMES.weeklyActivityScores, WEEKLY_ACTIVITY_SCORE_HEADERS);
+
+  const normalizedWeekStartDate = normalizeWeekStartDate_(weekStartDate);
+  const entries = collectWeeklyTaskEntries_(userId, normalizedWeekStartDate, filters);
+  if (entries.length === 0) {
+    return;
+  }
+
+  const sortedEntries = entries.sort(function (a, b) {
+    return getLogTimestampMs_(b.row) - getLogTimestampMs_(a.row);
+  });
+
+  const latestTaskEntries = new Map();
+  sortedEntries.forEach(function (entry) {
+    const key =
+      String(entry.parsed.category) +
+      "|" +
+      String(entry.parsed.activity) +
+      "|" +
+      String(entry.parsed.task);
+    if (!latestTaskEntries.has(key)) {
+      latestTaskEntries.set(key, entry);
+    }
+  });
+
+  upsertWeeklyTaskScoreRows_(
+    userId,
+    normalizedWeekStartDate,
+    Array.from(latestTaskEntries.values())
+  );
+
+  const activityKeys = new Map();
+  Array.from(latestTaskEntries.values()).forEach(function (entry) {
+    const key =
+      String(entry.parsed.category) + "|" + String(entry.parsed.activity);
+    if (!activityKeys.has(key)) {
+      activityKeys.set(key, {
+        category: String(entry.parsed.category),
+        activity: String(entry.parsed.activity),
+      });
+    }
+  });
+
+  upsertWeeklyActivityScoreRows_(
+    userId,
+    normalizedWeekStartDate,
+    Array.from(activityKeys.values()),
+    latestTaskEntries
+  );
+}
+
+function syncWeeklyScoreSummariesForDailyLog_(dailyLog) {
+  const parsed = parseTaskNotePayload_(dailyLog && dailyLog.note);
+  if (!parsed || !isTaskEntryType_(parsed.entry_type)) return;
+  if (!parsed.category || !parsed.activity || !parsed.task) return;
+
+  ensureWeeklyScoreSummaries_(dailyLog.user_id, getWeekStartDateKey_(dailyLog.log_date), {
+    category: parsed.category,
+    activity: parsed.activity,
+  });
+}
+
+function upsertWeeklyTaskScoreRows_(userId, weekStartDate, latestEntries) {
+  const sheet = getSheet_(SHEET_NAMES.weeklyTaskScores);
+  const rows = getAllObjects_(SHEET_NAMES.weeklyTaskScores);
+  const rowIndexByKey = {};
+
+  rows.forEach(function (row, index) {
+    const key =
+      String(row.user_id || "") +
+      "|" +
+      String(row.week_start_date || "") +
+      "|" +
+      String(row.category || "") +
+      "|" +
+      String(row.activity || "") +
+      "|" +
+      String(row.task || "");
+    rowIndexByKey[key] = index;
+  });
+
+  latestEntries.forEach(function (entry) {
+    const payload = entry.parsed.payload || {};
+    const score = Number(entry.parsed.score);
+    const achieved = getWeeklyTaskAchieved_(
+      entry.parsed.category,
+      entry.parsed.activity,
+      score,
+      payload
+    );
+    const point = getWeeklyPointValue_(payload, achieved);
+    const key =
+      String(userId) +
+      "|" +
+      String(weekStartDate) +
+      "|" +
+      String(entry.parsed.category) +
+      "|" +
+      String(entry.parsed.activity) +
+      "|" +
+      String(entry.parsed.task);
+    const nextRow = {
+      id:
+        rowIndexByKey[key] !== undefined
+          ? rows[rowIndexByKey[key]].id
+          : generateId_("wtask"),
+      user_id: userId,
+      week_start_date: weekStartDate,
+      category: entry.parsed.category,
+      activity: entry.parsed.activity,
+      task: entry.parsed.task,
+      score: Number.isFinite(score) ? Math.max(0, Math.min(100, Math.round(score))) : 0,
+      point: point,
+      achieved: achieved,
+      last_log_id: entry.row.id,
+      last_log_at: entry.row.updated_at || entry.row.created_at || entry.row.log_date || "",
+      created_at:
+        rowIndexByKey[key] !== undefined
+          ? rows[rowIndexByKey[key]].created_at || nowIso_()
+          : nowIso_(),
+      updated_at: nowIso_(),
+    };
+
+    if (rowIndexByKey[key] !== undefined) {
+      updateRowByIndex_(sheet, rowIndexByKey[key] + 2, nextRow);
+    } else {
+      appendObject_(SHEET_NAMES.weeklyTaskScores, nextRow);
+    }
+  });
+}
+
+function upsertWeeklyActivityScoreRows_(userId, weekStartDate, activityKeys, latestTaskEntries) {
+  const sheet = getSheet_(SHEET_NAMES.weeklyActivityScores);
+  const rows = getAllObjects_(SHEET_NAMES.weeklyActivityScores);
+  const rowIndexByKey = {};
+
+  rows.forEach(function (row, index) {
+    const key =
+      String(row.user_id || "") +
+      "|" +
+      String(row.week_start_date || "") +
+      "|" +
+      String(row.category || "") +
+      "|" +
+      String(row.activity || "");
+    rowIndexByKey[key] = index;
+  });
+
+  activityKeys.forEach(function (activityEntry) {
+    const matchedEntries = Array.from(latestTaskEntries.values()).filter(function (entry) {
+      return (
+        String(entry.parsed.category) === String(activityEntry.category) &&
+        String(entry.parsed.activity) === String(activityEntry.activity)
+      );
+    });
+
+    const totalCount = getWeeklyActivityTotalCount_(
+      activityEntry.category,
+      activityEntry.activity
+    ) || matchedEntries.length;
+    const totalScore = matchedEntries.reduce(function (sum, entry) {
+      return sum + Number(entry.parsed.score || 0);
+    }, 0);
+    const completedCount = matchedEntries.filter(function (entry) {
+      return getWeeklyTaskAchieved_(
+        entry.parsed.category,
+        entry.parsed.activity,
+        entry.parsed.score,
+        entry.parsed.payload || {}
+      );
+    }).length;
+    const averageScore =
+      totalCount > 0 ? Math.round(totalScore / totalCount) : 0;
+    const latestEntry = matchedEntries.sort(function (a, b) {
+      return getLogTimestampMs_(b.row) - getLogTimestampMs_(a.row);
+    })[0];
+    const key =
+      String(userId) +
+      "|" +
+      String(weekStartDate) +
+      "|" +
+      String(activityEntry.category) +
+      "|" +
+      String(activityEntry.activity);
+    const nextRow = {
+      id:
+        rowIndexByKey[key] !== undefined
+          ? rows[rowIndexByKey[key]].id
+          : generateId_("wactivity"),
+      user_id: userId,
+      week_start_date: weekStartDate,
+      category: activityEntry.category,
+      activity: activityEntry.activity,
+      score: averageScore,
+      completed_count: completedCount,
+      total_count: totalCount,
+      status_text: getWeeklyScoreStatusText_(averageScore),
+      last_log_id: latestEntry ? latestEntry.row.id : "",
+      last_log_at:
+        latestEntry &&
+        (latestEntry.row.updated_at ||
+          latestEntry.row.created_at ||
+          latestEntry.row.log_date ||
+          ""),
+      created_at:
+        rowIndexByKey[key] !== undefined
+          ? rows[rowIndexByKey[key]].created_at || nowIso_()
+          : nowIso_(),
+      updated_at: nowIso_(),
+    };
+
+    if (rowIndexByKey[key] !== undefined) {
+      updateRowByIndex_(sheet, rowIndexByKey[key] + 2, nextRow);
+    } else {
+      appendObject_(SHEET_NAMES.weeklyActivityScores, nextRow);
+    }
+  });
 }
 
 function normalizeLogFilters_(filters) {

@@ -49,11 +49,43 @@ export interface Appointment {
   note: string;
 }
 
-export interface MonthlyGoal {
+export interface WeeklyGoal {
   id: string;
   user_id: string;
-  month_key: string;
+  week_start_date: string;
   goal_text: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WeeklyTaskScore {
+  id: string;
+  user_id: string;
+  week_start_date: string;
+  category: string;
+  activity: string;
+  task: string;
+  score: number;
+  point: number;
+  achieved: boolean | string | number;
+  last_log_id?: string;
+  last_log_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WeeklyActivityScore {
+  id: string;
+  user_id: string;
+  week_start_date: string;
+  category: string;
+  activity: string;
+  score: number;
+  completed_count: number;
+  total_count: number;
+  status_text: string;
+  last_log_id?: string;
+  last_log_at?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -17,6 +17,7 @@ import { goalsService } from "../../services/goals.service";
 import { logsService } from "../../services/logs.service";
 import type { Goal } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
+import { getCurrentWeekRange } from "../../utils/weekPeriod";
 import {
   getLogTimestamp as getMentalLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -186,6 +187,7 @@ function parsePhysicalTaskActivity(note: string) {
 
 export default function GoalsPage() {
   const userId = getCurrentUserId();
+  const currentWeek = useMemo(() => getCurrentWeekRange(), []);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [liveScores, setLiveScores] = useState<CategoryLiveScore | null>(null);
   const [liveScoresLoading, setLiveScoresLoading] = useState(true);
@@ -235,6 +237,8 @@ export default function GoalsPage() {
             logsService.listDailyLogs(userId ?? undefined, {
               entry_type: "physical_task",
               category: "physical",
+              from: currentWeek.from,
+              to: currentWeek.to,
               limit: 480,
               forceRefresh: true,
             }),
@@ -461,7 +465,7 @@ export default function GoalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [currentWeek.from, currentWeek.to, userId]);
 
   const summaries = useMemo<CategorySummary[]>(() => {
     return categoryConfig.map((category) => {
