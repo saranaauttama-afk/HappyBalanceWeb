@@ -151,6 +151,7 @@ export default function GoalActivityPage() {
   const [stressLatestDate, setStressLatestDate] = useState<string | null>(null);
   const [stressLoading, setStressLoading] = useState(false);
   const [socialCompletion, setSocialCompletion] = useState<Record<string, boolean>>({});
+  const [socialLatestDate, setSocialLatestDate] = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState(false);
   const [balanceCompletion, setBalanceCompletion] = useState<Record<string, boolean>>({});
   const [balanceLoading, setBalanceLoading] = useState(false);
@@ -297,16 +298,21 @@ export default function GoalActivityPage() {
         }
 
         const completionByTask = new Map<string, boolean>();
+        let socialLatest: string | null = null;
         [...(response.data || [])]
           .sort((a, b) => getSocialLogTimestamp(b) - getSocialLogTimestamp(a))
           .forEach((log) => {
             const parsed = parseSocialTaskNote(String(log.note));
             if (!parsed || parsed.activity !== activity || completionByTask.has(parsed.task)) return;
             completionByTask.set(parsed.task, parsed.score > 0);
+            if (log.log_date && (!socialLatest || String(log.log_date) > socialLatest)) {
+              socialLatest = String(log.log_date).slice(0, 10);
+            }
           });
 
         if (!cancelled) {
           setSocialCompletion(Object.fromEntries(completionByTask));
+          setSocialLatestDate(socialLatest);
         }
       } finally {
         if (!cancelled) {
@@ -836,6 +842,21 @@ export default function GoalActivityPage() {
                       />
                     </div>
                     <p className="mt-2 text-sm font-semibold text-white/90">Completed {completedCount} / {totalCount} tasks</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {socialLatestDate
+                        ? new Date(socialLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
               </div>
