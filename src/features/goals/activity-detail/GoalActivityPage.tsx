@@ -941,6 +941,11 @@ export default function GoalActivityPage() {
             variant="soft"
             subtitle="ประเมินภาพรวมด้วยคำตอบแบบ Yes / No"
           />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
+          />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#18211d] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.22)]">
@@ -983,6 +988,21 @@ export default function GoalActivityPage() {
                     <p className="mt-2 text-sm font-semibold text-white/90">Completed {completedCount} / {totalCount} tasks</p>
                   </div>
                 </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {socialLatestDate
+                        ? new Date(socialLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -998,18 +1018,33 @@ export default function GoalActivityPage() {
                   <p className="mt-1 text-sm text-slate-500">
                     {currentTask?.subtitle ?? "เปิดใจมีส่วนร่วมกับผู้คนและกิจกรรมรอบตัวอย่างเหมาะสม"}
                   </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 flex items-center justify-between gap-2">
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                         socialLoading
                           ? "bg-slate-100 text-slate-500"
                           : currentTask?.completed
                             ? "bg-emerald-50 text-emerald-700"
+                            : "community-participation-overall" in socialCompletion
+                            ? "bg-rose-50 text-rose-600"
                             : "bg-slate-100 text-slate-600"
                       }`}
                     >
-                      {socialLoading ? "กำลังโหลด" : currentTask?.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                      {socialLoading
+                        ? "กำลังโหลด"
+                        : currentTask?.completed
+                        ? "บันทึกแล้ว"
+                        : "community-participation-overall" in socialCompletion
+                        ? "รอบันทึก"
+                        : "ยังไม่บันทึก"}
                     </span>
+                    {!socialLoading && (
+                      <span className="text-xs text-slate-500">
+                        {"community-participation-overall" in socialCompletion
+                          ? `คะแนนล่าสุด ${currentTask?.completed ? 100 : 0}%`
+                          : "ยังไม่มีการบันทึกล่าสุด"}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
@@ -1040,6 +1075,11 @@ export default function GoalActivityPage() {
             showBell
             variant="soft"
             subtitle="สร้างบรรยากาศการทำงานที่ร่วมมือกันได้ดี"
+          />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1083,6 +1123,21 @@ export default function GoalActivityPage() {
                     <p className="mt-2 text-sm font-semibold text-white/90">Completed {completedCount} / {totalCount} tasks</p>
                   </div>
                 </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {socialLatestDate
+                        ? new Date(socialLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1102,18 +1157,33 @@ export default function GoalActivityPage() {
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 flex items-center justify-between gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                                 socialLoading
                                   ? "bg-slate-100 text-slate-500"
                                   : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
+                                  : task.slug in socialCompletion
+                                  ? "bg-rose-50 text-rose-600"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                              {socialLoading
+                                ? "กำลังโหลด"
+                                : task.completed
+                                ? "บันทึกแล้ว"
+                                : task.slug in socialCompletion
+                                ? "รอบันทึก"
+                                : "ยังไม่บันทึก"}
                             </span>
+                            {!socialLoading && (
+                              <span className="text-xs text-slate-500">
+                                {!(task.slug in socialCompletion)
+                                  ? "ยังไม่มีการบันทึกล่าสุด"
+                                  : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
+                              </span>
+                            )}
                           </div>
                         </div>
 
