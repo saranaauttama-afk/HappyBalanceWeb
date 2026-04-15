@@ -2,8 +2,10 @@
 import { Link, useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import { STRESS_TASKS } from "../tasks/stressTasks";
 import { SOCIAL_TASKS } from "../tasks/socialTasks";
@@ -134,7 +136,16 @@ export default function GoalActivityPage() {
     return <ScaffoldedActivityPage />;
   }
 
+  const weekStartKey = (() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  })();
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
   const [positiveThinkingCompletion, setPositiveThinkingCompletion] = useState<Record<string, boolean>>({});
+  const [positiveThinkingLatestDate, setPositiveThinkingLatestDate] = useState<string | null>(null);
   const [positiveThinkingLoading, setPositiveThinkingLoading] = useState(false);
   const [stressCompletion, setStressCompletion] = useState<Record<string, boolean>>({});
   const [stressLoading, setStressLoading] = useState(false);
@@ -169,16 +180,21 @@ export default function GoalActivityPage() {
         }
 
         const completionByTask = new Map<string, boolean>();
+        let latestDate: string | null = null;
         [...(response.data || [])]
           .sort((a, b) => getPositiveThinkingLogTimestamp(b) - getPositiveThinkingLogTimestamp(a))
           .forEach((log) => {
             const parsed = parsePositiveThinkingTaskNote(String(log.note));
             if (!parsed || completionByTask.has(parsed.task)) return;
             completionByTask.set(parsed.task, parsed.score > 0);
+            if (log.log_date && (!latestDate || String(log.log_date) > latestDate)) {
+              latestDate = String(log.log_date).slice(0, 10);
+            }
           });
 
         if (!cancelled) {
           setPositiveThinkingCompletion(Object.fromEntries(completionByTask));
+          setPositiveThinkingLatestDate(latestDate);
         }
       } finally {
         if (!cancelled) {
@@ -496,6 +512,11 @@ export default function GoalActivityPage() {
             variant="soft"
             subtitle="บันทึกกิจกรรมเล็ก ๆ ที่ช่วยให้ใจมองโลกในมุมที่ดีขึ้น"
           />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
+          />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="relative overflow-hidden rounded-[28px] border border-white/80 p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)]">
@@ -544,6 +565,21 @@ export default function GoalActivityPage() {
                     <p className="mt-2 text-sm font-semibold text-slate-800">
                       ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                    <p className="text-xs text-slate-500">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      {positiveThinkingLatestDate
+                        ? new Date(positiveThinkingLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                    <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900">{totalCount}</p>
                   </div>
                 </div>
               </div>
