@@ -2,8 +2,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { STRESS_TASKS } from "../tasks/stressTasks";
 import {
   formatThaiDate,
@@ -28,6 +30,14 @@ const config = STRESS_TASKS.find((item) => item.slug === "get-sunlight");
 
 export default function SunlightTaskPage() {
   const userId = getCurrentUserId();
+
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
 
   const [sunCount, setSunCount] = useState(0);
   const [history, setHistory] = useState<SunHistoryItem[]>([]);
@@ -162,8 +172,9 @@ export default function SunlightTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title="ออกไปเจอแสงแดด" showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-        <main className="space-y-4 px-4 py-4">
+        <main className={`space-y-4 px-4 py-4 ${loading ? "pointer-events-none opacity-70" : ""}`}>
           {error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
           ) : null}
@@ -182,8 +193,6 @@ export default function SunlightTaskPage() {
               </div>
             </div>
           ) : null}
-
-          <div className={loading ? "pointer-events-none opacity-70" : ""}>
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-start justify-between gap-3">
@@ -302,7 +311,6 @@ export default function SunlightTaskPage() {
               </div>
             )}
           </section>
-          </div>
         </main>
       </div>
     </MobileShell>
