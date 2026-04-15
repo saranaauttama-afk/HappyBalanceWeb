@@ -877,18 +877,33 @@ export default function GoalActivityPage() {
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 flex items-center justify-between gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                                 socialLoading
                                   ? "bg-slate-100 text-slate-500"
                                   : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
+                                  : task.slug in socialCompletion
+                                  ? "bg-rose-50 text-rose-600"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                              {socialLoading
+                                ? "กำลังโหลด"
+                                : task.completed
+                                ? "บันทึกแล้ว"
+                                : task.slug in socialCompletion
+                                ? "รอบันทึก"
+                                : "ยังไม่บันทึก"}
                             </span>
+                            {!socialLoading && (
+                              <span className="text-xs text-slate-500">
+                                {!(task.slug in socialCompletion)
+                                  ? "ยังไม่มีการบันทึกล่าสุด"
+                                  : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
+                              </span>
+                            )}
                           </div>
                         </div>
 
