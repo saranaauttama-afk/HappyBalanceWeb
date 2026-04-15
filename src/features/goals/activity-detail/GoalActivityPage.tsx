@@ -148,6 +148,7 @@ export default function GoalActivityPage() {
   const [positiveThinkingLatestDate, setPositiveThinkingLatestDate] = useState<string | null>(null);
   const [positiveThinkingLoading, setPositiveThinkingLoading] = useState(false);
   const [stressCompletion, setStressCompletion] = useState<Record<string, boolean>>({});
+  const [stressLatestDate, setStressLatestDate] = useState<string | null>(null);
   const [stressLoading, setStressLoading] = useState(false);
   const [socialCompletion, setSocialCompletion] = useState<Record<string, boolean>>({});
   const [socialLoading, setSocialLoading] = useState(false);
@@ -236,16 +237,21 @@ export default function GoalActivityPage() {
         }
 
         const completionByTask = new Map<string, boolean>();
+        let stressLatest: string | null = null;
         [...(response.data || [])]
           .sort((a, b) => getStressLogTimestamp(b) - getStressLogTimestamp(a))
           .forEach((log) => {
             const parsed = parseStressTaskNote(String(log.note));
             if (!parsed || completionByTask.has(parsed.task)) return;
             completionByTask.set(parsed.task, parsed.score > 0);
+            if (log.log_date && (!stressLatest || String(log.log_date) > stressLatest)) {
+              stressLatest = String(log.log_date).slice(0, 10);
+            }
           });
 
         if (!cancelled) {
           setStressCompletion(Object.fromEntries(completionByTask));
+          setStressLatestDate(stressLatest);
         }
       } finally {
         if (!cancelled) {
@@ -697,6 +703,21 @@ export default function GoalActivityPage() {
                     <p className="mt-2 text-sm font-semibold text-slate-800">
                       ทำได้แล้ว {completedCount} / {totalCount} หัวข้อ
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                    <p className="text-xs text-slate-500">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-800">
+                      {stressLatestDate
+                        ? new Date(stressLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/70 bg-white/60 px-3 py-3">
+                    <p className="text-xs text-slate-500">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900">{totalCount}</p>
                   </div>
                 </div>
               </div>
