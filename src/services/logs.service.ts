@@ -137,6 +137,26 @@ export const logsService = {
     return response;
   },
 
+  async listPhysicalTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
+    const resolvedUserId = userId ?? DEMO_USER_ID;
+    const { forceRefresh, ...rawFilters } = filters;
+    const effectiveFilters = applyCurrentWeekDefaults(rawFilters);
+    const params = {
+      userId: resolvedUserId,
+      ...effectiveFilters,
+    };
+    const cacheKey = buildReadCacheKey("listPhysicalTaskLogs", resolvedUserId, effectiveFilters);
+
+    if (!forceRefresh) {
+      const cached = getCachedRead(cacheKey);
+      if (cached) return cached;
+    }
+
+    const response = await api.get<DailyLog[]>("listPhysicalTaskLogs", params);
+    setCachedRead(cacheKey, response);
+    return response;
+  },
+
   async listMentalTaskLogs(userId?: string, filters: StructuredTaskLogsFilters = {}) {
     const resolvedUserId = userId ?? DEMO_USER_ID;
     const { forceRefresh, ...rawFilters } = filters;

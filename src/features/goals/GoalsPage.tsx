@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AppHeader from "../../components/layout/AppHeader";
+import WeekNavBar from "../../components/ui/WeekNavBar";
 import BottomNav from "../../components/layout/BottomNav";
 import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
 import MobileShell from "../../components/layout/MobileShell";
@@ -17,7 +18,7 @@ import { goalsService } from "../../services/goals.service";
 import { logsService } from "../../services/logs.service";
 import type { Goal } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
-import { getCurrentWeekRange } from "../../utils/weekPeriod";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../utils/weekPeriod";
 import {
   getLogTimestamp as getMentalLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -127,6 +128,12 @@ function formatThaiDate(value: Date) {
   });
 }
 
+function formatWeekLabel(from: Date, to: Date) {
+  const fromStr = from.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  const toStr = to.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  return `${fromStr} – ${toStr}`;
+}
+
 function parseRestTaskScore(note: string) {
   if (!note) return null;
 
@@ -187,7 +194,18 @@ function parsePhysicalTaskActivity(note: string) {
 
 export default function GoalsPage() {
   const userId = getCurrentUserId();
-  const currentWeek = useMemo(() => getCurrentWeekRange(), []);
+  const [weekStartDate, setWeekStartDate] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    if (saved) return new Date(saved + "T00:00:00");
+    return getStartOfWeek(new Date());
+  });
+  const weekStartKey = toDateKey(weekStartDate);
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
+  useEffect(() => {
+    sessionStorage.setItem("goals-week", weekStartKey);
+  }, [weekStartKey]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [liveScores, setLiveScores] = useState<CategoryLiveScore | null>(null);
   const [liveScoresLoading, setLiveScoresLoading] = useState(true);
@@ -233,26 +251,34 @@ export default function GoalsPage() {
             logsService.listRestTaskLogs(userId ?? undefined, {
               limit: 480,
               forceRefresh: true,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
             }),
             logsService.listDailyLogs(userId ?? undefined, {
               entry_type: "physical_task",
               category: "physical",
-              from: currentWeek.from,
-              to: currentWeek.to,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
               limit: 480,
               forceRefresh: true,
             }),
             logsService.listMentalTaskLogs(userId ?? undefined, {
               limit: 480,
               forceRefresh: true,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
             }),
             logsService.listSocialTaskLogs(userId ?? undefined, {
               limit: 480,
               forceRefresh: true,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
             }),
             logsService.listBalanceTaskLogs(userId ?? undefined, {
               limit: 480,
               forceRefresh: true,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
             }),
           ]);
 
@@ -465,7 +491,7 @@ export default function GoalsPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentWeek.from, currentWeek.to, userId]);
+  }, [weekStartKey, userId]);
 
   const summaries = useMemo<CategorySummary[]>(() => {
     return categoryConfig.map((category) => {
@@ -513,6 +539,13 @@ export default function GoalsPage() {
           variant="soft"
           subtitle={loading ? "กำลังโหลดข้อมูล..." : "เลือกหมวดเพื่อบันทึกและติดตามผล"}
         />
+        <WeekNavBar
+          weekStartDate={weekStartDate}
+          weekEndDate={weekEndDate}
+          isCurrentWeek={isViewingCurrentWeek}
+          onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
+          onNext={() => { if (!isViewingCurrentWeek) setWeekStartDate((prev) => addDays(prev, 7)); }}
+        />
 
         <main className="relative z-10 space-y-4 px-4 py-4">
           {loading ? (
@@ -552,7 +585,6 @@ export default function GoalsPage() {
                 <div className="relative z-10">
                   <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">GOALS SNAPSHOT</p>
                   <h2 className="mt-2 text-2xl font-extrabold leading-tight text-slate-900">สถานะเป้าหมายสุขสมดุล</h2>
-                  <p className="mt-1 text-sm text-slate-600">{formatThaiDate(new Date())}</p>
 
                   <div className="mt-4 rounded-2xl border border-white/85 bg-white/76 p-3 shadow-[0_12px_28px_rgba(31,47,61,0.08)] backdrop-blur-sm">
                     <div className="mb-2 flex items-center justify-between text-xs text-slate-600">

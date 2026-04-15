@@ -13,7 +13,7 @@ import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
-import { ChevronRight, Smile, Sparkles, Sun } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import {
   getLogTimestamp as getPositiveThinkingLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -577,16 +577,6 @@ export default function GoalActivityPage() {
                             >
                               {positiveThinkingLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "counter"
-                                  ? "bg-[#fff4ec] text-[#a95f3a]"
-                                  : "bg-[#eef8fd] text-[#2e6a8b]"
-                              }`}
-                            >
-                              {task.type === "counter" ? <Smile size={12} /> : null}
-                              {task.type === "counter" ? "Counter" : "Yes / No"}
-                            </span>
                           </div>
                         </div>
 
@@ -704,16 +694,6 @@ export default function GoalActivityPage() {
                             >
                               {stressLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "counter"
-                                  ? "bg-[#fff8dd] text-[#966300]"
-                                  : "bg-[#eef8fd] text-[#2e6a8b]"
-                              }`}
-                            >
-                              {task.type === "counter" ? <Sun size={12} /> : null}
-                              {task.type === "counter" ? "Counter" : "Yes / No"}
-                            </span>
                           </div>
                         </div>
 
@@ -821,15 +801,6 @@ export default function GoalActivityPage() {
                             >
                               {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "counter"
-                                  ? "bg-[#fff5ea] text-[#9a5b34]"
-                                  : "bg-[#eef8fd] text-[#2e6a8b]"
-                              }`}
-                            >
-                              {task.type === "counter" ? "Counter" : "Yes / No"}
-                            </span>
                           </div>
                         </div>
 
@@ -936,9 +907,6 @@ export default function GoalActivityPage() {
                     >
                       {socialLoading ? "กำลังโหลด" : currentTask?.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                     </span>
-                    <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                      Yes / No
-                    </span>
                   </div>
                 </div>
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
@@ -1042,15 +1010,6 @@ export default function GoalActivityPage() {
                               }`}
                             >
                               {socialLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
-                            </span>
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "counter"
-                                  ? "bg-[#fff5ea] text-[#9a5b34]"
-                                  : "bg-[#eef8fd] text-[#2e6a8b]"
-                              }`}
-                            >
-                              {task.type === "counter" ? "Counter" : "Yes / No"}
                             </span>
                           </div>
                         </div>
@@ -1162,15 +1121,6 @@ export default function GoalActivityPage() {
                             >
                               {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                             </span>
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "counter"
-                                  ? "bg-[#fff5ea] text-[#9a5b34]"
-                                  : "bg-[#eef8fd] text-[#2e6a8b]"
-                              }`}
-                            >
-                              {task.type === "counter" ? "Counter" : "Yes / No"}
-                            </span>
                           </div>
                         </div>
 
@@ -1276,9 +1226,6 @@ export default function GoalActivityPage() {
                           >
                             {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
                           </span>
-                          <span className="rounded-full bg-[#eef8fd] px-2.5 py-1 text-xs font-medium text-[#2e6a8b]">
-                            {task.type === "boolean" ? "Yes / No" : task.type}
-                          </span>
                         </div>
                       </div>
 
@@ -1383,15 +1330,6 @@ export default function GoalActivityPage() {
                             }`}
                           >
                             {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              task.type === "counter"
-                                ? "bg-[#fff5ea] text-[#9a5b34]"
-                                : "bg-[#eef8fd] text-[#2e6a8b]"
-                            }`}
-                          >
-                            {task.type === "counter" ? "Counter" : "Yes / No"}
                           </span>
                         </div>
                       </div>

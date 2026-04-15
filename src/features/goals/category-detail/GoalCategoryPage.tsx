@@ -5,11 +5,12 @@ import AppHeader from "../../../components/layout/AppHeader";
 import CategoryRadarChart from "../../../components/charts/CategoryRadarChart";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { getCurrentWeekRange } from "../../../utils/weekPeriod";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import {
   getLogTimestamp as getMentalLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -219,6 +220,12 @@ function formatThaiDate(value: Date) {
   });
 }
 
+function formatWeekLabel(from: Date, to: Date) {
+  const fromStr = from.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  const toStr = to.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
+  return `${fromStr} – ${toStr}`;
+}
+
 function parseRestTaskScore(note: string) {
   if (!note) return null;
 
@@ -281,7 +288,18 @@ export default function GoalCategoryPage() {
   const { category } = useParams<{ category: string }>();
   const config = CATEGORY_MAP[category ?? "physical"] ?? CATEGORY_MAP.physical;
   const userId = getCurrentUserId();
-  const currentWeek = useMemo(() => getCurrentWeekRange(), []);
+  const [weekStartDate, setWeekStartDate] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    if (saved) return new Date(saved + "T00:00:00");
+    return getStartOfWeek(new Date());
+  });
+  const weekStartKey = toDateKey(weekStartDate);
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
+  useEffect(() => {
+    sessionStorage.setItem("goals-week", weekStartKey);
+  }, [weekStartKey]);
   const usesLiveProgress = ["physical", "mental", "social", "balance"].includes(category ?? "");
 
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -332,12 +350,14 @@ export default function GoalCategoryPage() {
             logsService.listRestTaskLogs(userId ?? undefined, {
               limit: 480,
               forceRefresh: true,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
             }),
             logsService.listDailyLogs(userId ?? undefined, {
               entry_type: "physical_task",
               category: "physical",
-              from: currentWeek.from,
-              to: currentWeek.to,
+              from: weekStartKey,
+              to: toDateKey(weekEndDate),
               limit: 480,
               forceRefresh: true,
             }),
@@ -434,6 +454,8 @@ export default function GoalCategoryPage() {
           const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
             limit: 480,
             forceRefresh: true,
+            from: weekStartKey,
+            to: toDateKey(weekEndDate),
           });
 
           if (!response.success) {
@@ -443,6 +465,14 @@ export default function GoalCategoryPage() {
 
           const positiveLatestByTask = new Map<string, number>();
           const stressLatestByTask = new Map<string, number>();
+          const scaffoldedMentalActivityKeys = ["life-satisfaction", "self-worth"] as const;
+          const scaffoldedMentalTaskCounts = Object.fromEntries(
+            scaffoldedMentalActivityKeys.map((activityKey) => [
+              activityKey,
+              getScaffoldedActivityConfig("mental", activityKey)?.tasks.length ?? 0,
+            ])
+          ) as Record<(typeof scaffoldedMentalActivityKeys)[number], number>;
+          const scaffoldedMentalLatestByActivity = new Map<string, Map<string, number>>();
 
           [...(response.data || [])]
             .sort((a, b) => getMentalLogTimestamp(b) - getMentalLogTimestamp(a))
@@ -456,6 +486,19 @@ export default function GoalCategoryPage() {
               const stressEntry = parseStressTaskNote(String(log.note));
               if (stressEntry && !stressLatestByTask.has(stressEntry.task)) {
                 stressLatestByTask.set(stressEntry.task, stressEntry.score);
+                return;
+              }
+
+              for (const activityKey of scaffoldedMentalActivityKeys) {
+                const parsed = parseScaffoldedTaskNote(String(log.note), "mental", activityKey);
+                if (!parsed) continue;
+                const latestByTask =
+                  scaffoldedMentalLatestByActivity.get(activityKey) ?? new Map<string, number>();
+                if (!latestByTask.has(parsed.task)) {
+                  latestByTask.set(parsed.task, parsed.score);
+                }
+                scaffoldedMentalLatestByActivity.set(activityKey, latestByTask);
+                break;
               }
             });
 
@@ -468,10 +511,21 @@ export default function GoalCategoryPage() {
               Math.max(STRESS_TASKS.length, 1)
           );
 
+          const scaffoldedMentalScores = Object.fromEntries(
+            scaffoldedMentalActivityKeys.map((activityKey) => {
+              const taskCount = scaffoldedMentalTaskCounts[activityKey];
+              const total = Array.from(
+                scaffoldedMentalLatestByActivity.get(activityKey)?.values() || []
+              ).reduce((sum, score) => sum + score, 0);
+              return [activityKey, { currentValue: taskCount === 0 ? 0 : Math.round(total / taskCount), targetValue: 100 }];
+            })
+          ) as Record<string, ActivityProgress>;
+
           if (!cancelled) {
             setLiveActivityProgress({
               "positive-thinking": { currentValue: positiveScore, targetValue: 100 },
               "stress-level": { currentValue: stressScore, targetValue: 100 },
+              ...scaffoldedMentalScores,
             });
           }
           return;
@@ -481,6 +535,8 @@ export default function GoalCategoryPage() {
           const response = await logsService.listSocialTaskLogs(userId ?? undefined, {
             limit: 480,
             forceRefresh: true,
+            from: weekStartKey,
+            to: toDateKey(weekEndDate),
           });
 
           if (!response.success) {
@@ -533,6 +589,8 @@ export default function GoalCategoryPage() {
         const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
           limit: 480,
           forceRefresh: true,
+          from: weekStartKey,
+          to: toDateKey(weekEndDate),
         });
 
         if (!response.success) {
@@ -595,7 +653,7 @@ export default function GoalCategoryPage() {
     return () => {
       cancelled = true;
     };
-  }, [category, currentWeek.from, currentWeek.to, userId, usesLiveProgress]);
+  }, [category, weekStartKey, userId, usesLiveProgress]);
 
   const categoryGoals = useMemo(() => {
     return goals.filter((goal) => goal.category === (category ?? "physical"));
@@ -647,6 +705,13 @@ export default function GoalCategoryPage() {
           variant="soft"
           subtitle={loading ? "กำลังโหลดข้อมูล..." : "เลือกกิจกรรมเพื่ออัปเดตคะแนน"}
         />
+        <WeekNavBar
+          weekStartDate={weekStartDate}
+          weekEndDate={weekEndDate}
+          isCurrentWeek={isViewingCurrentWeek}
+          onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
+          onNext={() => { if (!isViewingCurrentWeek) setWeekStartDate((prev) => addDays(prev, 7)); }}
+        />
 
         <main className="relative z-10 space-y-4 px-4 py-4">
           {error ? (
@@ -681,13 +746,9 @@ export default function GoalCategoryPage() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold tracking-[0.16em] text-[#255f54]">CATEGORY OVERVIEW</p>
                   <h2 className="mt-1 text-[1.75rem] font-extrabold leading-tight text-slate-900">{config.shortTitle}</h2>
-                  <p className="mt-1 text-sm font-medium text-slate-500">{formatThaiDate(new Date())}</p>
                 </div>
               </div>
 
-              <div className="rounded-full border border-white/80 bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-slate-600 shadow-[0_8px_18px_rgba(31,47,61,0.08)] backdrop-blur">
-                อัปเดตวันนี้
-              </div>
             </div>
 
             <p className="relative z-10 mt-4 max-w-[30rem] text-sm leading-7 text-slate-600">{config.description}</p>

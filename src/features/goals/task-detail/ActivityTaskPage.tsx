@@ -7,6 +7,7 @@ import {
   CircleX,
   Droplets,
   Hourglass,
+  Monitor,
   MoonStar,
   Sunrise,
 } from "lucide-react";
@@ -20,6 +21,8 @@ import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS, type TaskConfig } from "../tasks/restTasks";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
 import ScaffoldedTaskPage from "./ScaffoldedTaskPage";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 
 type TaskValue = number | boolean | null;
 
@@ -89,6 +92,15 @@ type NoFood4HoursBeforeBedHistoryItem = {
   id: string;
   date: string;
   noFood4HoursBeforeBed: boolean;
+  score: number;
+  point: number;
+  achieved: boolean;
+};
+
+type LimitScreenTimeHistoryItem = {
+  id: string;
+  date: string;
+  limitedScreenTime: boolean;
   score: number;
   point: number;
   achieved: boolean;
@@ -296,6 +308,14 @@ export default function ActivityTaskPage() {
 
   const userId = getCurrentUserId();
   const isRestFlow = category === "physical" && activity === "rest";
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    if (saved) return saved;
+    return toDateKey(getStartOfWeek(new Date()));
+  });
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
   const config = REST_TASKS.find((t) => t.slug === task);
   const activeConfig = config ?? REST_TASKS[0];
 
@@ -337,6 +357,10 @@ export default function ActivityTaskPage() {
     NoFood4HoursBeforeBedHistoryItem[]
   >([]);
   const [noFood4HoursBeforeBedLoading, setNoFood4HoursBeforeBedLoading] = useState(true);
+
+  const [screenTimeValue, setScreenTimeValue] = useState<boolean | null>(null);
+  const [screenTimeHistory, setScreenTimeHistory] = useState<LimitScreenTimeHistoryItem[]>([]);
+  const [screenTimeLoading, setScreenTimeLoading] = useState(true);
 
   const todaySleepScore = useMemo(() => {
     const sleptMinutes = sleepHour * 60 + sleepMinute;
@@ -401,6 +425,15 @@ export default function ActivityTaskPage() {
       .reduce((sum, item) => sum + item.point, 0);
   }, [noFood4HoursBeforeBedHistory]);
 
+  const monthlyScreenTimePoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+
+    return screenTimeHistory
+      .filter((item) => item.date.startsWith(monthKey))
+      .reduce((sum, item) => sum + item.point, 0);
+  }, [screenTimeHistory]);
+
   const isInitialWaterLoading = task === "drink-water" && !hasLoadedWaterContext;
   const activeTaskLoading = useMemo(() => {
     if (postSaveSyncing) return true;
@@ -418,6 +451,8 @@ export default function ActivityTaskPage() {
         return noLongLateNapLoading;
       case "no-food-4-hours-before-bed":
         return noFood4HoursBeforeBedLoading;
+      case "limit-screen-time":
+        return screenTimeLoading;
       default:
         return false;
     }
@@ -430,6 +465,7 @@ export default function ActivityTaskPage() {
     avoidWaterBeforeBedLoading,
     noLongLateNapLoading,
     noFood4HoursBeforeBedLoading,
+    screenTimeLoading,
   ]);
 
   const loadSleepContext = useCallback(async () => {
@@ -505,7 +541,7 @@ export default function ActivityTaskPage() {
 
       setSleepHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
+      if (history.length > 0 && history[0].date === weekStartKey) {
         setSleepHour(Math.floor(history[0].sleptMinutes / 60));
         setSleepMinute(history[0].sleptMinutes % 60);
       }
@@ -574,7 +610,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setWaterHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
+      if (history.length > 0 && history[0].date === weekStartKey) {
         setWaterCount(Math.max(0, Math.round(history[0].glasses)));
       }
     } catch (err) {
@@ -627,8 +663,8 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setSleepOnTimeHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
-        setSleepOnTimeValue(history[0].onTime);
+      if (history.length > 0 && history[0].date === weekStartKey && history[0].onTime) {
+        setSleepOnTimeValue(true);
         return;
       }
 
@@ -685,8 +721,8 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setAvoidWaterBeforeBedHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
-        setAvoidWaterBeforeBedValue(history[0].avoidedLargeWater);
+      if (history.length > 0 && history[0].date === weekStartKey && history[0].avoidedLargeWater) {
+        setAvoidWaterBeforeBedValue(true);
         return;
       }
 
@@ -740,8 +776,8 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setNoLongLateNapHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
-        setNoLongLateNapValue(history[0].noLongLateNap);
+      if (history.length > 0 && history[0].date === weekStartKey && history[0].noLongLateNap) {
+        setNoLongLateNapValue(true);
         return;
       }
 
@@ -795,8 +831,8 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setNoFood4HoursBeforeBedHistory(history);
 
-      if (history.length > 0 && history[0].date === getTodayDate()) {
-        setNoFood4HoursBeforeBedValue(history[0].noFood4HoursBeforeBed);
+      if (history.length > 0 && history[0].date === weekStartKey && history[0].noFood4HoursBeforeBed) {
+        setNoFood4HoursBeforeBedValue(true);
         return;
       }
 
@@ -805,6 +841,61 @@ export default function ActivityTaskPage() {
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setNoFood4HoursBeforeBedLoading(false);
+    }
+  }, [isRestFlow, task, userId]);
+
+  const loadScreenTimeContext = useCallback(async () => {
+    if (!(isRestFlow && task === "limit-screen-time")) return;
+
+    try {
+      setScreenTimeLoading(true);
+      const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
+        task: "limit-screen-time",
+        limit: 30,
+      });
+
+      if (!logsResponse.success) {
+        throw new Error(logsResponse.error || "Could not load daily logs");
+      }
+
+      const byDate = new Map<string, LimitScreenTimeHistoryItem>();
+      [...(logsResponse.data || [])]
+        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+        .forEach((log) => {
+          const parsed = parseRestTaskNote(String(log.note));
+          if (!parsed || parsed.task !== "limit-screen-time") return;
+
+          const limitedFromLog = getBoolean(parsed.payload.limited_screen_time, parsed.score > 0);
+          const achievedFromLog = getBoolean(parsed.payload.achieved, limitedFromLog);
+          const pointFromLog = getNumber(parsed.payload.point, achievedFromLog ? 1 : 0);
+
+          if (byDate.has(log.log_date)) return;
+
+          byDate.set(log.log_date, {
+            id: log.id,
+            date: log.log_date,
+            limitedScreenTime: limitedFromLog,
+            score: parsed.score,
+            point: pointFromLog > 0 ? 1 : 0,
+            achieved: achievedFromLog,
+          });
+        });
+
+      const history = Array.from(byDate.values())
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 14);
+      setScreenTimeHistory(history);
+
+      if (history.length > 0 && history[0].date === weekStartKey && history[0].limitedScreenTime) {
+        setScreenTimeValue(true);
+        return;
+      }
+
+      setScreenTimeValue(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setScreenTimeLoading(false);
     }
   }, [isRestFlow, task, userId]);
 
@@ -831,6 +922,10 @@ export default function ActivityTaskPage() {
   useEffect(() => {
     void loadNoFood4HoursBeforeBedContext();
   }, [loadNoFood4HoursBeforeBedContext]);
+
+  useEffect(() => {
+    void loadScreenTimeContext();
+  }, [loadScreenTimeContext]);
 
   function renderStatusBanner() {
     return (
@@ -865,7 +960,7 @@ export default function ActivityTaskPage() {
   }) {
     const response = await logsService.createDailyLog({
       user_id: userId ?? undefined,
-      log_date: getTodayDate(),
+      log_date: weekStartKey,
       mood: input.mood,
       energy: input.energy,
       stress: input.stress,
@@ -1009,42 +1104,28 @@ export default function ActivityTaskPage() {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          className={`rounded-[22px] border px-4 py-4 text-left transition ${
-            value === true
-              ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_12px_24px_rgba(22,163,74,0.10)]"
-              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
-          }`}
           onClick={() => setValue(true)}
+          className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+            value === true
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+          }`}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold">ทำได้แล้ว</p>
-              <p className="mt-1 text-xs opacity-80">วันนี้หยุดใช้หน้าจอได้ตามที่ตั้งใจ</p>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80">
-              <CircleCheckBig size={18} />
-            </span>
-          </div>
+          <CircleCheckBig size={18} />
+          Yes
         </button>
 
         <button
           type="button"
-          className={`rounded-[22px] border px-4 py-4 text-left transition ${
-            value === false
-              ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_12px_24px_rgba(244,63,94,0.10)]"
-              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-white"
-          }`}
           onClick={() => setValue(false)}
+          className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+            value === false
+              ? "border-rose-300 bg-rose-50 text-rose-700"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+          }`}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold">ยังทำไม่ได้</p>
-              <p className="mt-1 text-xs opacity-80">วันนี้ยังใช้หน้าจอก่อนนอนเกินเป้าหมาย</p>
-            </div>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-white/80">
-              <CircleX size={18} />
-            </span>
-          </div>
+          <CircleX size={18} />
+          No
         </button>
       </div>
     );
@@ -1136,8 +1217,8 @@ export default function ActivityTaskPage() {
         });
 
         const nextSuccessMessage = achieved
-          ? "บันทึกการดื่มน้ำวันนี้สำเร็จ ได้ +1 คะแนน"
-          : "บันทึกการดื่มน้ำวันนี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย";
+          ? "บันทึกการดื่มน้ำสัปดาห์นี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกการดื่มน้ำสัปดาห์นี้สำเร็จ แต่ยังไม่ถึงเป้าหมาย";
         await runPostSaveSync(loadWaterContext);
         setSuccessMessage(nextSuccessMessage);
         return;
@@ -1315,6 +1396,49 @@ export default function ActivityTaskPage() {
         return;
       }
 
+      if (task === "limit-screen-time") {
+        if (screenTimeValue === null) {
+          setError("กรุณาเลือกคำตอบ Yes หรือ No ก่อนบันทึก");
+          return;
+        }
+
+        const score = screenTimeValue ? 100 : 0;
+        const point = screenTimeValue ? 1 : 0;
+        const achieved = screenTimeValue;
+
+        await saveTaskLog({
+          mood: "task-limit-screen-time",
+          energy: screenTimeValue ? 4 : 2,
+          stress: screenTimeValue ? 1 : 4,
+          note: isRestFlow
+            ? {
+                entry_type: "rest_task",
+                category: "physical",
+                activity: "rest",
+                task: "limit-screen-time",
+                score,
+                payload: {
+                  limited_screen_time: screenTimeValue,
+                  point,
+                  achieved,
+                },
+              }
+            : {
+                task,
+                limited_screen_time: screenTimeValue,
+                point,
+                achieved,
+              },
+        });
+
+        const nextSuccessMessage = achieved
+          ? "บันทึกวันนี้สำเร็จ ได้ +1 คะแนน"
+          : "บันทึกวันนี้สำเร็จ วันนี้ยังใช้หน้าจอนานเกินไปก่อนนอน";
+        await runPostSaveSync(loadScreenTimeContext);
+        setSuccessMessage(nextSuccessMessage);
+        return;
+      }
+
       if (value === null) {
         setError("กรุณาเลือกคำตอบก่อนบันทึก");
         return;
@@ -1360,8 +1484,9 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การนอนหลับ" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1425,7 +1550,7 @@ export default function ActivityTaskPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  เดือนนี้ได้ {monthlySleepPoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlySleepPoints} คะแนน
                 </span>
               </div>
 
@@ -1474,14 +1599,15 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การดื่มน้ำ" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">บันทึกการดื่มน้ำวันนี้</h2>
+                  <h2 className="text-lg font-semibold text-slate-900">บันทึกการดื่มน้ำสัปดาห์นี้</h2>
                   {isInitialWaterLoading ? (
                     <div className="mt-1 h-5 w-52 animate-pulse rounded-md bg-slate-200" />
                   ) : (
@@ -1612,22 +1738,28 @@ export default function ActivityTaskPage() {
               </div>
             </section>
 
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving || waterLoading || isInitialWaterLoading}
-              className={`w-full rounded-2xl py-4 font-semibold text-white ${
-                saving || waterLoading || isInitialWaterLoading ? "bg-slate-400" : "bg-[#c6968c]"
-              }`}
-            >
-              {saving ? "กำลังบันทึก..." : isInitialWaterLoading ? "กำลังโหลด..." : "บันทึกการดื่มน้ำวันนี้"}
-            </button>
+            {!isViewingCurrentWeek ? (
+              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-700">
+                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะสัปดาห์ปัจจุบัน
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving || waterLoading || isInitialWaterLoading}
+                className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                  saving || waterLoading || isInitialWaterLoading ? "bg-slate-400" : "bg-[#c6968c]"
+                }`}
+              >
+                {saving ? "กำลังบันทึก..." : isInitialWaterLoading ? "กำลังโหลด..." : "บันทึกการดื่มน้ำสัปดาห์นี้"}
+              </button>
+            )}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  เดือนนี้ได้ {monthlyWaterPoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlyWaterPoints} คะแนน
                 </span>
               </div>
 
@@ -1676,8 +1808,9 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="เข้านอนและตื่นนอนตรงเวลา" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1759,7 +1892,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  เดือนนี้ได้ {monthlySleepOnTimePoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlySleepOnTimePoints} คะแนน
                 </span>
               </div>
 
@@ -1807,8 +1940,9 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่ดื่มน้ำปริมาณมากก่อนนอน" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -1892,7 +2026,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  เดือนนี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
                 </span>
               </div>
 
@@ -1940,8 +2074,9 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่งีบหลับหลังบ่าย 3 โมงเกิน 1 ชม." showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -2023,7 +2158,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  เดือนนี้ได้ {monthlyNoLongLateNapPoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlyNoLongLateNapPoints} คะแนน
                 </span>
               </div>
 
@@ -2071,8 +2206,9 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="งดอาหารอย่างน้อย 4 ชม. ก่อนนอน" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
@@ -2156,7 +2292,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  เดือนนี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
+                  สัปดาห์นี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
                 </span>
               </div>
 
@@ -2199,6 +2335,144 @@ export default function ActivityTaskPage() {
     );
   }
 
+  if (task === "limit-screen-time") {
+    return (
+      <MobileShell>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
+          <AppHeader title="ลดเวลาอยู่กับหน้าจอก่อนนอน" showBack showBell variant="soft" />
+          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+
+          <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
+            {renderStatusBanner()}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">คืนนี้ลดเวลาอยู่กับหน้าจอก่อนนอนได้ไหม</h2>
+                  <p className="text-sm text-slate-500">ตั้งใจให้อยู่กับหน้าจอก่อนนอนไม่เกิน 60 นาที</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    screenTimeValue === null
+                      ? "bg-slate-100 text-slate-600"
+                      : screenTimeValue
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {screenTimeValue === null
+                    ? "ยังไม่เลือก"
+                    : screenTimeValue
+                      ? "ได้ +1 คะแนน"
+                      : "วันนี้ 0 คะแนน"}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 rounded-xl bg-[#f9fbff] px-3 py-2 text-xs text-slate-600">
+                  <Monitor size={14} className="text-[#5f6a86]" />
+                  ลดเวลาหน้าจอ
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-[#f2fbf5] px-3 py-2 text-xs text-slate-600">
+                  <MoonStar size={14} className="text-[#2f7b56]" />
+                  ไม่เกิน 60 นาที
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScreenTimeValue(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    screenTimeValue === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setScreenTimeValue(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    screenTimeValue === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            </section>
+
+            {!isViewingCurrentWeek ? (
+              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-700">
+                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะสัปดาห์ปัจจุบัน
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={saving || screenTimeLoading || screenTimeValue === null}
+                className={`w-full rounded-2xl py-4 font-semibold text-white ${
+                  saving || screenTimeLoading || screenTimeValue === null ? "bg-slate-400" : "bg-[#c6968c]"
+                }`}
+              >
+                {saving ? "กำลังบันทึก..." : "บันทึกผลวันนี้"}
+              </button>
+            )}
+
+            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                  <AlarmClockCheck size={13} />
+                  สัปดาห์นี้ได้ {monthlyScreenTimePoints} คะแนน
+                </span>
+              </div>
+
+              {screenTimeLoading ? (
+                <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+              ) : screenTimeHistory.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {screenTimeHistory.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved
+                          ? "border-emerald-200 bg-emerald-50/70"
+                          : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">
+                        ผลการทำวันนี้: {item.limitedScreenTime ? "ลดเวลาหน้าจอได้" : "ใช้หน้าจอนานเกินไป"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </main>
+        </div>
+      </MobileShell>
+    );
+  }
+
   if (!config) {
     return (
       <MobileShell>
@@ -2212,8 +2486,9 @@ export default function ActivityTaskPage() {
     <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={activeConfig.label} showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-        <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}> 
+        <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
           {renderStatusBanner()}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-5 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">

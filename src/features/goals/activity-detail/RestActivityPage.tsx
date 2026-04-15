@@ -4,10 +4,13 @@ import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { REST_TASKS } from "../tasks/restTasks";
+
 
 type RestTaskEntry = {
   task: string;
@@ -85,9 +88,16 @@ function getTaskStatus(score?: number) {
     };
   }
 
+  if (score > 0) {
+    return {
+      label: "เริ่มต้น",
+      chipClass: "bg-orange-50 text-orange-700",
+    };
+  }
+
   return {
-    label: "เริ่มต้น",
-    chipClass: "bg-orange-50 text-orange-700",
+    label: "รอบันทึก",
+    chipClass: "bg-rose-50 text-rose-600",
   };
 }
 
@@ -105,13 +115,25 @@ export default function RestActivityPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const weekStartDate = useMemo(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    if (saved) return new Date(saved + "T00:00:00");
+    return getStartOfWeek(new Date());
+  }, []);
+  const weekStartKey = toDateKey(weekStartDate);
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const weekEndKey = toDateKey(addDays(weekStartDate, 6));
       const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
         limit: 240,
+        from: weekStartKey,
+        to: weekEndKey,
       });
 
       if (!logsResponse.success) {
@@ -124,7 +146,7 @@ export default function RestActivityPage() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, weekStartDate, weekStartKey]);
 
   useEffect(() => {
     void loadData();
@@ -175,6 +197,11 @@ export default function RestActivityPage() {
           showBell
           variant="soft"
           subtitle={loading ? "กำลังโหลดข้อมูล..." : "ติดตามกิจกรรมพักผ่อนและคุณภาพการนอน"}
+        />
+        <WeekNavBar
+          weekStartDate={weekStartDate}
+          weekEndDate={weekEndDate}
+          isCurrentWeek={isViewingCurrentWeek}
         />
 
         <main className="relative z-10 space-y-4 px-4 py-4">
@@ -331,33 +358,20 @@ export default function RestActivityPage() {
                         </div>
 
                         <div className="mt-2 flex items-center justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                loading ? "bg-slate-100 text-slate-500" : status.chipClass
-                              }`}
-                            >
-                              {loading ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
-                                  กำลังโหลด
-                                </span>
-                              ) : (
-                                status.label
-                              )}
-                            </span>
-                            <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                                task.type === "boolean"
-                                  ? "bg-[#eef8fd] text-[#2e6a8b]"
-                                  : task.type === "water"
-                                    ? "bg-[#eef7ff] text-[#396f8c]"
-                                    : "bg-[#fff5ea] text-[#9a5b34]"
-                              }`}
-                            >
-                              {task.type === "boolean" ? "Yes / No" : task.type === "water" ? "Water" : "Counter"}
-                            </span>
-                          </div>
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                              loading ? "bg-slate-100 text-slate-500" : status.chipClass
+                            }`}
+                          >
+                            {loading ? (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+                                กำลังโหลด
+                              </span>
+                            ) : (
+                              status.label
+                            )}
+                          </span>
                           <p className="text-sm text-slate-500">
                             {loading
                               ? "กำลังโหลดข้อมูลล่าสุด..."

@@ -1,7 +1,6 @@
 import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog, Goal } from "../../../types/models";
-import { getCurrentWeekRange } from "../../../utils/weekPeriod";
 import type { ScaffoldedTaskConfig } from "../tasks/scaffoldedActivityTasks";
 
 type ScaffoldedTaskNotePayload = {
@@ -117,26 +116,26 @@ export async function listScaffoldedTaskLogs(
   activity: string,
   userId?: string,
   task?: string,
-  forceRefresh?: boolean
+  forceRefresh?: boolean,
+  from?: string,
+  to?: string
 ) {
   if (category === "mental") {
     return logsService.listMentalTaskLogs(userId ?? undefined, {
       activity,
       task,
+      from,
+      to,
       limit: 240,
       forceRefresh,
     });
   }
 
-  const currentWeek = getCurrentWeekRange();
-
-  return logsService.listDailyLogs(userId ?? undefined, {
-    entry_type: "physical_task",
-    category: "physical",
+  return logsService.listPhysicalTaskLogs(userId ?? undefined, {
     activity,
     task,
-    from: currentWeek.from,
-    to: currentWeek.to,
+    from,
+    to,
     limit: 240,
     forceRefresh,
   });

@@ -3,6 +3,7 @@ const SHEET_NAMES = {
   goals: "goals",
   dailyLogs: "daily_logs",
   restTaskLogs: "rest_task_logs",
+  physicalTaskLogs: "physical_task_logs",
   mentalTaskLogs: "mental_task_logs",
   socialTaskLogs: "social_task_logs",
   balanceTaskLogs: "balance_task_logs",
@@ -15,8 +16,8 @@ const SHEET_NAMES = {
   weeklyActivityScores: "weekly_activity_scores",
   articles: "articles",
 };
-const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-03-14B";
-const APP_SCRIPT_DEPLOYED_AT = "2026-03-14T13:30:00+07:00";
+const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-04-14";
+const APP_SCRIPT_DEPLOYED_AT = "2026-04-14T00:00:00+07:00";
 
 const STRUCTURED_TASK_LOG_HEADERS = [
   "id",
@@ -109,6 +110,13 @@ const TASK_LOG_SPECS = {
     category: "physical",
     activity: "rest",
   },
+  physical: {
+    sheetName: SHEET_NAMES.physicalTaskLogs,
+    idPrefix: "physlog",
+    entry_type: "physical_task",
+    category: "physical",
+    activity: "",
+  },
   mental: {
     sheetName: SHEET_NAMES.mentalTaskLogs,
     idPrefix: "mentallog",
@@ -167,6 +175,17 @@ function doGet(e) {
         return jsonOutput_(
           listRestTaskLogs_(
             getParam_(e, "userId"),
+            getParam_(e, "task"),
+            getParam_(e, "limit"),
+            getParam_(e, "from"),
+            getParam_(e, "to")
+          )
+        );
+      case "listPhysicalTaskLogs":
+        return jsonOutput_(
+          listPhysicalTaskLogs_(
+            getParam_(e, "userId"),
+            getParam_(e, "activity"),
             getParam_(e, "task"),
             getParam_(e, "limit"),
             getParam_(e, "from"),
@@ -896,6 +915,18 @@ function listRestTaskLogs_(userId, task, limitParam, fromParam, toParam) {
   });
 }
 
+function listPhysicalTaskLogs_(userId, activity, task, limitParam, fromParam, toParam) {
+  return listStructuredTaskLogs_("listPhysicalTaskLogs_", TASK_LOG_SPECS.physical, userId, {
+    entry_type: TASK_LOG_SPECS.physical.entry_type,
+    category: TASK_LOG_SPECS.physical.category,
+    activity: activity,
+    task: task,
+    limit: limitParam,
+    from: fromParam,
+    to: toParam,
+  });
+}
+
 function listMentalTaskLogs_(userId, activity, task, limitParam, fromParam, toParam) {
   return listStructuredTaskLogs_("listMentalTaskLogs_", TASK_LOG_SPECS.mental, userId, {
     entry_type: TASK_LOG_SPECS.mental.entry_type,
@@ -1397,6 +1428,12 @@ function formatDateKey_(date) {
 function parseDateKey_(value) {
   if (!value) return null;
 
+  // Handle Date objects returned by Sheets getValues() for date-formatted cells
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
   const normalized = String(value).trim();
   const matched = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (matched) {
@@ -1757,7 +1794,8 @@ function normalizeLogFilters_(filters) {
 function matchesLogFilters_(row, userId, filters) {
   if (row.user_id !== userId) return false;
 
-  const logDate = String(row.log_date || "");
+  const logDateParsed = parseDateKey_(row.log_date);
+  const logDate = logDateParsed ? formatDateKey_(logDateParsed) : String(row.log_date || "");
   if (filters.from && logDate < filters.from) return false;
   if (filters.to && logDate > filters.to) return false;
 
@@ -1957,6 +1995,21 @@ function getHeaders_(sheet) {
   return sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
 }
 
+function normalizeSheetCellValue_(header, value) {
+  if (!(value instanceof Date)) return value;
+  if (Number.isNaN(value.getTime())) return "";
+  // Date-only columns (log_date, week_start_date, etc.) → YYYY-MM-DD string
+  if (
+    header === "log_date" ||
+    header === "week_start_date" ||
+    (typeof header === "string" && header.endsWith("_date"))
+  ) {
+    return formatDateKey_(value);
+  }
+  // Datetime columns (created_at, updated_at, etc.) → ISO string
+  return value.toISOString();
+}
+
 function getAllObjects_(sheetName) {
   const sheet = getSheet_(sheetName);
   const headers = getHeaders_(sheet);
@@ -1972,7 +2025,7 @@ function getAllObjects_(sheetName) {
   return values.map((row) => {
     const obj = {};
     headers.forEach((header, index) => {
-      obj[header] = row[index];
+      obj[header] = normalizeSheetCellValue_(header, row[index]);
     });
     return obj;
   });
@@ -1997,7 +2050,7 @@ function getAllObjectsIfSheetExists_(sheetName) {
   return values.map((row) => {
     const obj = {};
     headers.forEach((header, index) => {
-      obj[header] = row[index];
+      obj[header] = normalizeSheetCellValue_(header, row[index]);
     });
     return obj;
   });
