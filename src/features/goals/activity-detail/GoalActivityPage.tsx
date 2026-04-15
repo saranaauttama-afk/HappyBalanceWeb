@@ -791,6 +791,11 @@ export default function GoalActivityPage() {
             variant="soft"
             subtitle="บันทึกความสัมพันธ์ที่ดีในบ้านอย่างต่อเนื่อง"
           />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
+          />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#18211d] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.22)]">
