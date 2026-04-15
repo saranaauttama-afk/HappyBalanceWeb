@@ -1,4 +1,5 @@
 ﻿import {
+  AlarmClockCheck,
   CircleCheckBig,
   CircleX,
   HandHeart,
@@ -13,8 +14,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import {
   formatThaiDate,
@@ -24,6 +27,13 @@ import {
   parsePositiveThinkingTaskNote,
   syncPositiveThinkingGoal,
 } from "./positiveThinkingTaskShared";
+
+type HistoryItem = {
+  id: string;
+  date: string;
+  done: boolean;
+  point: number;
+};
 
 function getTaskIcon(task: string) {
   switch (task) {
@@ -47,12 +57,22 @@ export default function PositiveThinkingTaskPage() {
   const userId = getCurrentUserId();
   const config = POSITIVE_THINKING_TASKS.find((item) => item.slug === task);
 
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
   const [done, setDone] = useState<boolean | null>(null);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   const Icon = getTaskIcon(task ?? "");
 
@@ -61,48 +81,76 @@ export default function PositiveThinkingTaskPage() {
     return done ? 100 : 0;
   }, [done]);
 
-  const loadTaskState = useCallback(async () => {
+  const monthlyPoints = useMemo(() => {
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    return history.filter((item) => item.date.startsWith(monthKey)).reduce((sum, item) => sum + item.point, 0);
+  }, [history]);
+
+  const loadTaskState = useCallback(async (forceRefresh = false) => {
     if (!task || task === "smile-when-disappointed") return;
 
     try {
       setLoading(true);
+      setHistoryLoading(true);
       setError(null);
 
       const response = await logsService.listMentalTaskLogs(userId ?? undefined, {
         activity: "positive-thinking",
         task,
-        limit: 20,
+        limit: 240,
+        forceRefresh,
       });
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
       }
 
-      const latestLog = [...(response.data || [])]
-        .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
-        .find((log) => {
-          const parsed = parsePositiveThinkingTaskNote(String(log.note));
-          return parsed?.task === task;
+      const sorted = [...(response.data || [])].sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a));
+
+      // Pre-fill current state from latest log
+      const latestLog = sorted.find((log) => {
+        const parsed = parsePositiveThinkingTaskNote(String(log.note));
+        return parsed?.task === task;
+      });
+
+      if (latestLog) {
+        const parsed = parsePositiveThinkingTaskNote(String(latestLog.note));
+        setDone(parsed ? getBoolean(parsed.payload.done, parsed.score > 0) : null);
+        setLastSavedDate(latestLog.log_date ? String(latestLog.log_date).slice(0, 10) : null);
+      } else {
+        setDone(null);
+        setLastSavedDate(null);
+      }
+
+      // Build weekly history — dedup by week start
+      const byWeek = new Map<string, HistoryItem>();
+      sorted.forEach((log) => {
+        if (!log.log_date) return;
+        const parsed = parsePositiveThinkingTaskNote(String(log.note));
+        if (!parsed || parsed.task !== task) return;
+        const logDate = new Date(String(log.log_date).slice(0, 10) + "T00:00:00");
+        if (Number.isNaN(logDate.getTime())) return;
+        const weekKey = toDateKey(getStartOfWeek(logDate));
+        if (byWeek.has(weekKey)) return;
+        const isDone = getBoolean(parsed.payload.done, parsed.score > 0);
+        byWeek.set(weekKey, {
+          id: String(log.id),
+          date: weekKey,
+          done: isDone,
+          point: isDone ? 1 : 0,
         });
+      });
 
-      if (!latestLog) {
-        setDone(null);
-        setLastSavedDate(null);
-        return;
-      }
-
-      const parsed = parsePositiveThinkingTaskNote(String(latestLog.note));
-      if (!parsed) {
-        setDone(null);
-        setLastSavedDate(null);
-        return;
-      }
-
-      setDone(getBoolean(parsed.payload.done, parsed.score > 0));
-      setLastSavedDate(latestLog.log_date);
+      setHistory(
+        Array.from(byWeek.values())
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 14)
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
+      setHistoryLoading(false);
     }
   }, [task, userId]);
 
@@ -149,8 +197,8 @@ export default function PositiveThinkingTaskPage() {
       }
 
       await syncPositiveThinkingGoal(userId ?? undefined);
-      await loadTaskState();
-      setSuccessMessage(done ? "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 100%" : "บันทึกสำเร็จ คะแนนหัวข้อนี้เป็น 0%");
+      await loadTaskState(true);
+      setSuccessMessage(done ? "บันทึกสำเร็จ ได้ +1 คะแนน" : "บันทึกสำเร็จ วันนี้ยังไม่ผ่านหัวข้อนี้");
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
@@ -171,8 +219,9 @@ export default function PositiveThinkingTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={config.label} showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-        <main className="space-y-4 px-4 py-4">
+        <main className={`space-y-4 px-4 py-4 ${loading ? "pointer-events-none opacity-70" : ""}`}>
           {error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
           ) : null}
@@ -192,7 +241,6 @@ export default function PositiveThinkingTaskPage() {
             </div>
           ) : null}
 
-          <div className={loading ? "pointer-events-none opacity-70" : ""}>
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -272,7 +320,52 @@ export default function PositiveThinkingTaskPage() {
             <SmilePlus size={14} />
             เลือกบันทึกตามสิ่งที่ทำได้ในรอบล่าสุดของคุณ
           </div>
-          </div>
+
+          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-semibold text-slate-900">ประวัติรายสัปดาห์</h3>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                <AlarmClockCheck size={13} />
+                เดือนนี้ได้ {monthlyPoints} คะแนน
+              </span>
+            </div>
+            {historyLoading ? (
+              <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+            ) : history.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {history.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white/70 px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
+                          item.done ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"
+                        }`}
+                      >
+                        {item.done ? <CircleCheckBig size={13} /> : <CircleX size={13} />}
+                      </span>
+                      <span className="text-sm text-slate-700">
+                        {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold ${item.done ? "text-emerald-600" : "text-slate-400"}`}
+                    >
+                      {item.done ? "+1 คะแนน" : "ไม่ผ่าน"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </main>
       </div>
     </MobileShell>
