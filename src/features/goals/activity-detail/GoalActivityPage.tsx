@@ -655,6 +655,11 @@ export default function GoalActivityPage() {
             variant="soft"
             subtitle="ติดตามกิจกรรมเล็ก ๆ ที่ช่วยให้ร่างกายและใจค่อย ๆ ผ่อนลง"
           />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
+          />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="relative overflow-hidden rounded-[28px] border border-white/80 p-5 shadow-[0_22px_48px_rgba(31,47,61,0.14)]">
