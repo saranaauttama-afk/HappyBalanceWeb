@@ -16,8 +16,7 @@ import InfoCard from "../../components/ui/InfoCard";
 import { articlesService } from "../../services/articles.service";
 import { goalsService } from "../../services/goals.service";
 import { profileService } from "../../services/profile.service";
-import { systemService } from "../../services/system.service";
-import type { Article, Goal, SystemVersionInfo, User } from "../../types/models";
+import type { Article, Goal, User } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
 import { calculateWellbeingScores } from "../../utils/wellbeing";
 
@@ -55,26 +54,13 @@ function formatPublishedDate(value?: string) {
   });
 }
 
-function formatThaiDateTime(value?: string) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("th-TH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function HomePage() {
   const userId = getCurrentUserId();
   const [user, setUser] = useState<User | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [versionInfo, setVersionInfo] = useState<SystemVersionInfo | null>(null);
-  const [activeArticleIndex, setActiveArticleIndex] = useState(0);
+const [activeArticleIndex, setActiveArticleIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,18 +103,10 @@ export default function HomePage() {
     setArticles(FALLBACK_ARTICLES);
   }, []);
 
-  const loadVersionInfo = useCallback(async () => {
-    const response = await systemService.getVersion();
-    if (response.success) {
-      setVersionInfo(response.data);
-    }
-  }, []);
-
   useEffect(() => {
     void loadHomeData();
     void loadArticles();
-    void loadVersionInfo();
-  }, [loadArticles, loadHomeData, loadVersionInfo]);
+  }, [loadArticles, loadHomeData]);
 
   const topArticles = useMemo(
     () => (articles.length > 0 ? articles.slice(0, 5) : FALLBACK_ARTICLES),
@@ -429,24 +407,6 @@ export default function HomePage() {
                       </p>
                     </div>
                   ) : null}
-                </div>
-              </InfoCard>
-
-              <InfoCard className="rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.08)] backdrop-blur">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold tracking-[0.14em] text-[#255f54]">DEPLOY STATUS</p>
-                    <h3 className="mt-1 text-sm font-semibold text-slate-900">
-                      {versionInfo?.version || "กำลังตรวจสอบเวอร์ชัน..."}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Deploy เมื่อ {formatThaiDateTime(versionInfo?.deployed_at)}
-                    </p>
-                  </div>
-
-                  <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f6a4f]">
-                    {versionInfo?.version ? "Connected" : "Checking"}
-                  </span>
                 </div>
               </InfoCard>
             </>

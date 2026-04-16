@@ -14,9 +14,8 @@ export function addDays(date: Date, days: number) {
 
 export function getStartOfWeek(date: Date) {
   const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const weekday = normalized.getDay();
-  const offset = weekday === 0 ? -6 : 1 - weekday;
-  return addDays(normalized, offset);
+  const weekday = normalized.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  return addDays(normalized, -weekday); // rewind to Sunday
 }
 
 export function getCurrentWeekRange() {
