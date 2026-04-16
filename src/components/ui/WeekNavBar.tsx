@@ -6,6 +6,7 @@ type WeekNavBarProps = {
   isCurrentWeek: boolean;
   onPrev?: () => void;
   onNext?: () => void;
+  isPrevDisabled?: boolean;
 };
 
 function formatWeekLabel(from: Date, to: Date) {
@@ -20,6 +21,7 @@ export default function WeekNavBar({
   isCurrentWeek,
   onPrev,
   onNext,
+  isPrevDisabled = false,
 }: WeekNavBarProps) {
   const showNav = !!(onPrev || onNext);
 
@@ -30,7 +32,8 @@ export default function WeekNavBar({
           <button
             type="button"
             onClick={onPrev}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+            disabled={isPrevDisabled}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-default disabled:opacity-30"
           >
             <ChevronLeft size={16} />
           </button>

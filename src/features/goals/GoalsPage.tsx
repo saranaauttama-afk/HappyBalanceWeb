@@ -196,7 +196,7 @@ export default function GoalsPage() {
   const userId = getCurrentUserId();
   const [weekStartDate, setWeekStartDate] = useState(() => {
     const saved = sessionStorage.getItem("goals-week");
-    if (saved) return new Date(saved + "T00:00:00");
+    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
     return getStartOfWeek(new Date());
   });
   const weekStartKey = toDateKey(weekStartDate);
@@ -543,6 +543,7 @@ export default function GoalsPage() {
           weekStartDate={weekStartDate}
           weekEndDate={weekEndDate}
           isCurrentWeek={isViewingCurrentWeek}
+          isPrevDisabled={toDateKey(weekStartDate) <= toDateKey(getStartOfWeek(new Date(new Date().getFullYear(), 3, 1)))}
           onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
           onNext={() => { if (!isViewingCurrentWeek) setWeekStartDate((prev) => addDays(prev, 7)); }}
         />

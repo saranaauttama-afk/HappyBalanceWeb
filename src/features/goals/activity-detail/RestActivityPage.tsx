@@ -117,7 +117,7 @@ export default function RestActivityPage() {
 
   const weekStartDate = useMemo(() => {
     const saved = sessionStorage.getItem("goals-week");
-    if (saved) return new Date(saved + "T00:00:00");
+    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
     return getStartOfWeek(new Date());
   }, []);
   const weekStartKey = toDateKey(weekStartDate);
