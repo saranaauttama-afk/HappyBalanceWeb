@@ -2,8 +2,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import {
   formatThaiDate,
   getBoolean,
@@ -25,6 +27,14 @@ type ListenHistoryItem = {
 
 export default function ListenAcceptTaskPage() {
   const userId = getCurrentUserId();
+
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
 
   const [listenCount, setListenCount] = useState(0);
   const [history, setHistory] = useState<ListenHistoryItem[]>([]);
@@ -162,6 +172,7 @@ export default function ListenAcceptTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title="ฟังผู้อื่นพูดและยอมรับในความคิดเห็นของผู้อื่น" showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
         <main className="space-y-4 px-4 py-4">
           {error ? (

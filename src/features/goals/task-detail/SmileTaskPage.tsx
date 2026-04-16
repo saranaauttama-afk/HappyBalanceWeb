@@ -2,8 +2,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import {
   formatThaiDate,
@@ -28,6 +30,14 @@ const config = POSITIVE_THINKING_TASKS.find((item) => item.slug === "smile-when-
 
 export default function SmileTaskPage() {
   const userId = getCurrentUserId();
+
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
 
   const [smileCount, setSmileCount] = useState(0);
   const [history, setHistory] = useState<SmileHistoryItem[]>([]);
@@ -162,6 +172,7 @@ export default function SmileTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title="ยิ้มเสมอเมื่อเจอเรื่องน่าผิดหวัง" showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
         <main className="space-y-4 px-4 py-4">
           {error ? (
@@ -219,7 +230,7 @@ export default function SmileTaskPage() {
                   -
                 </button>
 
-                <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                <div className="min-w-28 rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
                   <p className="text-3xl font-bold text-slate-900">{smileCount}</p>
                   <p className="text-xs text-slate-500">ครั้ง</p>
                 </div>
