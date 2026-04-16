@@ -154,6 +154,7 @@ export default function GoalActivityPage() {
   const [socialLatestDate, setSocialLatestDate] = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState(false);
   const [balanceCompletion, setBalanceCompletion] = useState<Record<string, boolean>>({});
+  const [balanceLatestDate, setBalanceLatestDate] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(() => {
@@ -358,16 +359,21 @@ export default function GoalActivityPage() {
         }
 
         const completionByTask = new Map<string, boolean>();
+        let balanceLatest: string | null = null;
         [...(response.data || [])]
           .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
           .forEach((log) => {
             const parsed = parseBalanceTaskNote(String(log.note));
             if (!parsed || parsed.activity !== activity || completionByTask.has(parsed.task)) return;
             completionByTask.set(parsed.task, parsed.score > 0);
+            if (log.log_date && (!balanceLatest || String(log.log_date) > balanceLatest)) {
+              balanceLatest = String(log.log_date).slice(0, 10);
+            }
           });
 
         if (!cancelled) {
           setBalanceCompletion(Object.fromEntries(completionByTask));
+          setBalanceLatestDate(balanceLatest);
         }
       } finally {
         if (!cancelled) {
@@ -1220,6 +1226,11 @@ export default function GoalActivityPage() {
             variant="soft"
             subtitle="รักษาความสัมพันธ์ที่ดีทั้งกับครอบครัวและผู้คนรอบตัว"
           />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
+          />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
             <section className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#18211d] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.22)]">
@@ -1263,6 +1274,21 @@ export default function GoalActivityPage() {
                   </p>
                 </div>
               </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {balanceLatestDate
+                        ? new Date(balanceLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1282,18 +1308,33 @@ export default function GoalActivityPage() {
                           <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                           <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
-                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <div className="mt-3 flex items-center justify-between gap-2">
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                                 balanceLoading
                                   ? "bg-slate-100 text-slate-500"
                                   : task.completed
                                   ? "bg-emerald-50 text-emerald-700"
+                                  : task.slug in balanceCompletion
+                                  ? "bg-rose-50 text-rose-600"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                              {balanceLoading
+                                ? "กำลังโหลด"
+                                : task.completed
+                                ? "บันทึกแล้ว"
+                                : task.slug in balanceCompletion
+                                ? "รอบันทึก"
+                                : "ยังไม่บันทึก"}
                             </span>
+                            {!balanceLoading && (
+                              <span className="text-xs text-slate-500">
+                                {!(task.slug in balanceCompletion)
+                                  ? "ยังไม่มีการบันทึกล่าสุด"
+                                  : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1329,6 +1370,11 @@ export default function GoalActivityPage() {
             showBell
             variant="soft"
             subtitle="จัดจังหวะการทำงานให้พอดี ไม่หนักจนเกินไป"
+          />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1374,6 +1420,21 @@ export default function GoalActivityPage() {
                     </p>
                   </div>
                 </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {balanceLatestDate
+                        ? new Date(balanceLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1387,18 +1448,33 @@ export default function GoalActivityPage() {
                         <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                         <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
 
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="mt-3 flex items-center justify-between gap-2">
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                               balanceLoading
                                 ? "bg-slate-100 text-slate-500"
                                 : task.completed
                                 ? "bg-emerald-50 text-emerald-700"
+                                : task.slug in balanceCompletion
+                                ? "bg-rose-50 text-rose-600"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                            {balanceLoading
+                              ? "กำลังโหลด"
+                              : task.completed
+                              ? "บันทึกแล้ว"
+                              : task.slug in balanceCompletion
+                              ? "รอบันทึก"
+                              : "ยังไม่บันทึก"}
                           </span>
+                          {!balanceLoading && (
+                            <span className="text-xs text-slate-500">
+                              {!(task.slug in balanceCompletion)
+                                ? "ยังไม่มีการบันทึกล่าสุด"
+                                : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1433,6 +1509,11 @@ export default function GoalActivityPage() {
             showBell
             variant="soft"
             subtitle="เว้นพื้นที่ให้ตัวเองด้วยกิจกรรมเล็ก ๆ ที่เติมพลัง"
+          />
+          <WeekNavBar
+            weekStartDate={weekStartDate}
+            weekEndDate={weekEndDate}
+            isCurrentWeek={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1476,6 +1557,21 @@ export default function GoalActivityPage() {
                     <p className="mt-2 text-sm font-medium text-white/90">Completed {completedCount} / {totalCount} tasks</p>
                   </div>
                 </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
+                    <p className="mt-1 text-sm font-semibold text-white/90">
+                      {balanceLatestDate
+                        ? new Date(balanceLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
+                        : "ยังไม่มีข้อมูล"}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
+                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -1492,18 +1588,33 @@ export default function GoalActivityPage() {
                       <div className="min-w-0 flex-1">
                         <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
                         <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <div className="mt-3 flex items-center justify-between gap-2">
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                               balanceLoading
                                 ? "bg-slate-100 text-slate-500"
                                 : task.completed
                                 ? "bg-emerald-50 text-emerald-700"
+                                : task.slug in balanceCompletion
+                                ? "bg-rose-50 text-rose-600"
                                 : "bg-slate-100 text-slate-600"
                             }`}
                           >
-                            {balanceLoading ? "กำลังโหลด" : task.completed ? "บันทึกแล้ว" : "รอบันทึก"}
+                            {balanceLoading
+                              ? "กำลังโหลด"
+                              : task.completed
+                              ? "บันทึกแล้ว"
+                              : task.slug in balanceCompletion
+                              ? "รอบันทึก"
+                              : "ยังไม่บันทึก"}
                           </span>
+                          {!balanceLoading && (
+                            <span className="text-xs text-slate-500">
+                              {!(task.slug in balanceCompletion)
+                                ? "ยังไม่มีการบันทึกล่าสุด"
+                                : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">

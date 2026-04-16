@@ -1,10 +1,22 @@
-﻿import { BellOff, BookOpenText, CircleCheckBig, CircleX, Film, Music4, Plus, Sparkles } from "lucide-react";
+import {
+  AlarmClockCheck,
+  BellOff,
+  BookOpenText,
+  CircleCheckBig,
+  CircleX,
+  Film,
+  Music4,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import {
   formatThaiDate,
@@ -27,6 +39,13 @@ type CounterHistoryItem = {
   achieved: boolean;
 };
 
+type WeekHistoryItem = {
+  id: string;
+  date: string;
+  done: boolean;
+  point: number;
+};
+
 function getTaskIcon(task: string) {
   switch (task) {
     case "mute-phone-after-work":
@@ -47,9 +66,19 @@ export default function PersonalLifeBalanceTaskPage() {
   const userId = getCurrentUserId();
   const config = PERSONAL_LIFE_BALANCE_TASKS.find((item) => item.slug === task);
 
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+
   const [done, setDone] = useState<boolean | null>(null);
   const [countValue, setCountValue] = useState(0);
   const [history, setHistory] = useState<CounterHistoryItem[]>([]);
+  const [weekHistory, setWeekHistory] = useState<WeekHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,23 +99,25 @@ export default function PersonalLifeBalanceTaskPage() {
   const monthlyPoints = useMemo(() => {
     const now = new Date();
     const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    if (config?.type === "counter") {
+      return history.filter((item) => item.date.startsWith(monthKey)).reduce((sum, item) => sum + item.point, 0);
+    }
+    return weekHistory.filter((item) => item.date.startsWith(monthKey)).reduce((sum, item) => sum + item.point, 0);
+  }, [config, history, weekHistory]);
 
-    return history
-      .filter((item) => item.date.startsWith(monthKey))
-      .reduce((sum, item) => sum + item.point, 0);
-  }, [history]);
-
-  const loadTaskState = useCallback(async () => {
+  const loadTaskState = useCallback(async (forceRefresh = false) => {
     if (!task || !config) return;
 
     try {
       setLoading(true);
+      setHistoryLoading(true);
       setError(null);
 
       const response = await logsService.listBalanceTaskLogs(userId ?? undefined, {
         activity: activityKey,
         task,
-        limit: config.type === "counter" ? 90 : 20,
+        limit: 240,
+        forceRefresh,
       });
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
@@ -99,6 +130,7 @@ export default function PersonalLifeBalanceTaskPage() {
         setDone(null);
         setCountValue(0);
         setHistory([]);
+        setWeekHistory([]);
         setLastSavedDate(null);
         return;
       }
@@ -108,6 +140,7 @@ export default function PersonalLifeBalanceTaskPage() {
         setDone(null);
         setCountValue(0);
         setHistory([]);
+        setWeekHistory([]);
         setLastSavedDate(null);
         return;
       }
@@ -139,12 +172,38 @@ export default function PersonalLifeBalanceTaskPage() {
           .slice(0, 14);
 
         setHistory(nextHistory);
+        setWeekHistory([]);
         setCountValue(Math.max(0, Math.round(getNumber(parsed.payload.count, 0))));
         setDone(null);
       } else {
         setDone(getBoolean(parsed.payload.done, parsed.score > 0));
         setCountValue(0);
         setHistory([]);
+
+        // Build weekly history — dedup by week start
+        const byWeek = new Map<string, WeekHistoryItem>();
+        sortedLogs.forEach((log) => {
+          if (!log.log_date) return;
+          const current = parseBalanceTaskNote(String(log.note));
+          if (!current || current.activity !== activityKey || current.task !== task) return;
+          const logDate = new Date(String(log.log_date).slice(0, 10) + "T00:00:00");
+          if (Number.isNaN(logDate.getTime())) return;
+          const weekKey = toDateKey(getStartOfWeek(logDate));
+          if (byWeek.has(weekKey)) return;
+          const isDone = getBoolean(current.payload.done, current.score > 0);
+          byWeek.set(weekKey, {
+            id: String(log.id),
+            date: weekKey,
+            done: isDone,
+            point: isDone ? 1 : 0,
+          });
+        });
+
+        setWeekHistory(
+          Array.from(byWeek.values())
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 14)
+        );
       }
 
       setLastSavedDate(latestLog.log_date);
@@ -152,6 +211,7 @@ export default function PersonalLifeBalanceTaskPage() {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
     } finally {
       setLoading(false);
+      setHistoryLoading(false);
     }
   }, [config, task, userId]);
 
@@ -214,16 +274,15 @@ export default function PersonalLifeBalanceTaskPage() {
       }
 
       await syncBalanceActivityGoal(activityKey, userId ?? undefined);
-      await loadTaskState();
-      setLastSavedDate(getTodayDate());
+      await loadTaskState(true);
       setSuccessMessage(
         config.type === "counter"
           ? countValue > 0
             ? `บันทึกสำเร็จ วันนี้ทำกิจกรรมนี้ ${countValue} ครั้ง ได้ +1 คะแนน`
             : "บันทึกสำเร็จ วันนี้ยังไม่มีจำนวนที่บันทึก"
           : done
-            ? "บันทึกสำเร็จ หัวข้อนี้ได้ 100%"
-            : "บันทึกสำเร็จ หัวข้อนี้ได้ 0%"
+            ? "บันทึกสำเร็จ ได้ +1 คะแนน"
+            : "บันทึกสำเร็จ วันนี้ยังไม่ผ่านหัวข้อนี้"
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
@@ -245,8 +304,9 @@ export default function PersonalLifeBalanceTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={config.label} showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
-        <main className="space-y-4 px-4 py-4">
+        <main className={`space-y-4 px-4 py-4 ${loading ? "pointer-events-none opacity-70" : ""}`}>
           {error ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
           ) : null}
@@ -266,166 +326,198 @@ export default function PersonalLifeBalanceTaskPage() {
             </div>
           ) : null}
 
-          <div className={loading ? "pointer-events-none opacity-70" : ""}>
-            <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
-                      <Icon size={18} />
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
-                      <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
-                    </div>
+          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5fbff] text-[#2e6a8b] shadow-sm">
+                    <Icon size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-semibold text-slate-900">{config.label}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
                   </div>
-                  {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
                 </div>
-
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                    scorePreview === null
-                      ? "bg-slate-100 text-slate-600"
-                      : scorePreview > 0
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-rose-50 text-rose-700"
-                  }`}
-                >
-                  {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
-                </span>
+                {config.helperText ? <p className="mt-3 text-sm text-slate-500">{config.helperText}</p> : null}
               </div>
 
-              {config.type === "counter" ? (
-                <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
-                  <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้วันนี้</p>
-                  <div className="mt-4 flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                      aria-label="ลดจำนวน"
-                    >
-                      -
-                    </button>
-
-                    <div className="min-w-[112px] rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
-                      <p className="text-3xl font-bold text-slate-900">{countValue}</p>
-                      <p className="text-xs text-slate-500">ครั้ง</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
-                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
-                      aria-label="เพิ่มจำนวน"
-                    >
-                      <Plus size={18} />
-                    </button>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {[1, 2, 3].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setCountValue(preset)}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
-                      >
-                        {preset} ครั้ง
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setDone(true)}
-                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                      done === true
-                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <CircleCheckBig size={18} />
-                    Yes
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setDone(false)}
-                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                      done === false
-                        ? "border-rose-300 bg-rose-50 text-rose-700"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <CircleX size={18} />
-                    No
-                  </button>
-                </div>
-              )}
-
-              <p className="mt-4 text-xs text-slate-500">
-                {loading
-                  ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
-                  : lastSavedDate
-                    ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
-                    : "ยังไม่เคยบันทึกหัวข้อนี้"}
-              </p>
-            </section>
-
-            <button
-              type="button"
-              onClick={() => void handleSave()}
-              disabled={saving || loading || (config.type === "boolean" && done === null)}
-              className={`w-full rounded-2xl py-4 font-semibold text-white ${
-                saving || loading || (config.type === "boolean" && done === null) ? "bg-slate-400" : "bg-[#c6968c]"
-              }`}
-            >
-              {saving ? "กำลังบันทึก..." : "บันทึกผล"}
-            </button>
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                  scorePreview === null
+                    ? "bg-slate-100 text-slate-600"
+                    : scorePreview > 0
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                {scorePreview === null ? "ยังไม่ได้เลือก" : `${scorePreview}%`}
+              </span>
+            </div>
 
             {config.type === "counter" ? (
-              <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
-                  <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                    เดือนนี้ได้ {monthlyPoints} คะแนน
-                  </span>
+              <div className="mt-5 rounded-[28px] border border-[#e8f2ec] bg-[linear-gradient(180deg,#f8fffb_0%,#eefbf5_100%)] p-4">
+                <p className="text-center text-sm text-slate-500">จำนวนครั้งที่ทำกิจกรรมนี้วันนี้</p>
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCountValue((prev) => Math.max(prev - 1, 0))}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                    aria-label="ลดจำนวน"
+                  >
+                    -
+                  </button>
+
+                  <div className="min-w-28 rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+                    <p className="text-3xl font-bold text-slate-900">{countValue}</p>
+                    <p className="text-xs text-slate-500">ครั้ง</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCountValue((prev) => Math.min(prev + 1, 20))}
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl font-semibold text-slate-700"
+                    aria-label="เพิ่มจำนวน"
+                  >
+                    <Plus size={18} />
+                  </button>
                 </div>
 
-                {loading ? (
-                  <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
-                ) : history.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกไว้</p>
-                ) : (
-                  <div className="mt-3 space-y-2">
-                    {history.map((item) => (
-                      <div
-                        key={`${item.date}-${item.id}`}
-                        className={`rounded-2xl border px-3 py-3 ${
-                          item.achieved ? "border-emerald-200 bg-emerald-50/70" : "border-rose-200 bg-rose-50/70"
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {[1, 2, 3].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setCountValue(preset)}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+                    >
+                      {preset} ครั้ง
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDone(true)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    done === true
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleCheckBig size={18} />
+                  Yes
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDone(false)}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    done === false
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <CircleX size={18} />
+                  No
+                </button>
+              </div>
+            )}
+
+            <p className="mt-4 text-xs text-slate-500">
+              {loading
+                ? "กำลังโหลดข้อมูลบันทึกล่าสุด..."
+                : lastSavedDate
+                  ? `บันทึกล่าสุด: ${formatThaiDate(lastSavedDate)}`
+                  : "ยังไม่เคยบันทึกหัวข้อนี้"}
+            </p>
+          </section>
+
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving || loading || (config.type === "boolean" && done === null)}
+            className={`w-full rounded-2xl py-4 font-semibold text-white ${
+              saving || loading || (config.type === "boolean" && done === null) ? "bg-slate-400" : "bg-[#c6968c]"
+            }`}
+          >
+            {saving ? "กำลังบันทึก..." : "บันทึกผล"}
+          </button>
+
+          <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-semibold text-slate-900">
+                {config.type === "counter" ? "ประวัติการบันทึกย้อนหลัง" : "ประวัติรายสัปดาห์"}
+              </h3>
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                <AlarmClockCheck size={13} />
+                รวม {monthlyPoints} คะแนน
+              </span>
+            </div>
+
+            {historyLoading ? (
+              <p className="mt-3 text-sm text-slate-500">กำลังโหลดข้อมูลบันทึก...</p>
+            ) : config.type === "counter" ? (
+              history.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกไว้</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {history.map((item) => (
+                    <div
+                      key={`${item.date}-${item.id}`}
+                      className={`rounded-2xl border px-3 py-3 ${
+                        item.achieved ? "border-emerald-200 bg-emerald-50/70" : "border-rose-200 bg-rose-50/70"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                          }`}
+                        >
+                          {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600">ทำกิจกรรมนี้ {item.count} ครั้ง</p>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : weekHistory.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">ยังไม่มีข้อมูลการบันทึกสำหรับหัวข้อนี้</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {weekHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white/70 px-3 py-2.5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
+                          item.done ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                              item.achieved ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                            }`}
-                          >
-                            {item.point > 0 ? `+${item.point} คะแนน` : "0 คะแนน"}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs text-slate-600">ทำกิจกรรมนี้ {item.count} ครั้ง</p>
-                      </div>
-                    ))}
+                        {item.done ? <CircleCheckBig size={13} /> : <CircleX size={13} />}
+                      </span>
+                      <span className="text-sm text-slate-700">
+                        {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <span className={`text-xs font-semibold ${item.done ? "text-emerald-600" : "text-slate-400"}`}>
+                      {item.done ? "+1 คะแนน" : "ไม่ผ่าน"}
+                    </span>
                   </div>
-                )}
-              </section>
-            ) : null}
-          </div>
+                ))}
+              </div>
+            )}
+          </section>
         </main>
       </div>
     </MobileShell>

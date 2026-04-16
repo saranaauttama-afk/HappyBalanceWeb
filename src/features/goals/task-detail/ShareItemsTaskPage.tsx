@@ -2,8 +2,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
+import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
+import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
 import {
   formatThaiDate,
   getBoolean,
@@ -25,6 +27,14 @@ type ShareHistoryItem = {
 
 export default function ShareItemsTaskPage() {
   const userId = getCurrentUserId();
+
+  const [weekStartKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-week");
+    return saved ?? toDateKey(getStartOfWeek(new Date()));
+  });
+  const weekStartDate = new Date(weekStartKey + "T00:00:00");
+  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
 
   const [shareCount, setShareCount] = useState(0);
   const [history, setHistory] = useState<ShareHistoryItem[]>([]);
@@ -162,6 +172,7 @@ export default function ShareItemsTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title="แบ่งปันสิ่งของให้เพื่อนร่วมงาน" showBack showBell variant="soft" />
+        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
 
         <main className="space-y-4 px-4 py-4">
           {error ? (
@@ -258,7 +269,7 @@ export default function ShareItemsTaskPage() {
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
               <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                เดือนนี้ได้ {monthlyPoints} คะแนน
+                รวม {monthlyPoints} คะแนน
               </span>
             </div>
 

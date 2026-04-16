@@ -326,7 +326,7 @@ export default function ThanksSorryTaskPage() {
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  เดือนนี้ได้ {monthlyPoints} คะแนน
+                  รวม {monthlyPoints} คะแนน
                 </span>
               </div>
 

@@ -326,7 +326,7 @@ export default function PositiveThinkingTaskPage() {
               <h3 className="text-base font-semibold text-slate-900">ประวัติรายสัปดาห์</h3>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                 <AlarmClockCheck size={13} />
-                เดือนนี้ได้ {monthlyPoints} คะแนน
+                รวม {monthlyPoints} คะแนน
               </span>
             </div>
             {historyLoading ? (
