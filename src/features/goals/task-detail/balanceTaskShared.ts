@@ -141,15 +141,38 @@ export function parsePersonalBalanceDailyNote(
 ): ParsedPersonalBalanceDailyNote | null {
   if (!note) return null;
   try {
-    const parsed = JSON.parse(note) as Partial<PersonalBalanceDailyPayload>;
-    if (parsed.entry_type !== "personal_balance_daily") return null;
-    if (!Array.isArray(parsed.items)) return null;
-    return {
-      date: String(parsed.date ?? ""),
-      week_key: String(parsed.week_key ?? ""),
-      items: parsed.items as string[],
-      score: Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0))),
-    };
+    const parsed = JSON.parse(note) as Record<string, unknown>;
+
+    // GAS-compatible format: balance_task + task:"daily-checkin" + items in payload
+    if (
+      parsed.entry_type === "balance_task" &&
+      parsed.task === "daily-checkin" &&
+      parsed.activity === "personal-life-balance"
+    ) {
+      const payload = parsed.payload as Record<string, unknown> | undefined;
+      if (!payload || !Array.isArray(payload.items)) return null;
+      return {
+        date: String(payload.date ?? ""),
+        week_key: String(payload.week_key ?? ""),
+        items: payload.items as string[],
+        score: Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0))),
+      };
+    }
+
+    // Legacy format saved before this fix (entry_type: "personal_balance_daily")
+    if (
+      parsed.entry_type === "personal_balance_daily" &&
+      Array.isArray(parsed.items)
+    ) {
+      return {
+        date: String(parsed.date ?? ""),
+        week_key: String(parsed.week_key ?? ""),
+        items: parsed.items as string[],
+        score: Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0))),
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }

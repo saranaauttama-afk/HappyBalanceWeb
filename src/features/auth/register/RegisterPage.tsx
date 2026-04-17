@@ -1,4 +1,4 @@
-﻿import { LockKeyhole, Mail, Phone, Sparkles, UserRound } from "lucide-react";
+import { LockKeyhole, Mail, Phone, Sparkles, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -198,37 +198,18 @@ export default function RegisterPage() {
             </p>
           </form>
 
+          {/* Social register — hidden for now
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200" />
             <span className="text-sm text-slate-500">หรือ สร้างบัญชีผ่าน</span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
-
           <div className="flex items-center justify-center gap-4">
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
-              aria-label="สร้างบัญชีผ่าน Facebook"
-            >
-              f
-            </button>
-
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
-              aria-label="สร้างบัญชีผ่าน Apple ID"
-            >
-              
-            </button>
-
-            <button
-              type="button"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"
-              aria-label="สร้างบัญชีผ่าน Gmail"
-            >
-              G
-            </button>
+            <button type="button" aria-label="Facebook" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white">f</button>
+            <button type="button" aria-label="Apple ID" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white"></button>
+            <button type="button" aria-label="Gmail" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-500 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur transition hover:bg-white">G</button>
           </div>
+          */}
         </div>
       </div>
     </MobileShell>

@@ -170,13 +170,16 @@ export default function PersonalLifeBalancePage() {
         energy: Math.max(1, Math.min(5, 1 + Math.round(checkedItems.length * 4 / 3))),
         stress: score >= 67 ? 1 : 2,
         note: JSON.stringify({
-          entry_type: "personal_balance_daily",
+          entry_type: "balance_task",
           category: "balance",
           activity: "personal-life-balance",
-          date: todayKey,
-          week_key: weekStartKey,
-          items: checkedItems,
+          task: "daily-checkin",
           score,
+          payload: {
+            items: checkedItems,
+            date: todayKey,
+            week_key: weekStartKey,
+          },
         }),
       });
       if (!res.success) throw new Error(res.error || "บันทึกไม่ได้");

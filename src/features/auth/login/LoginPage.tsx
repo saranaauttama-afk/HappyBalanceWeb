@@ -1,4 +1,4 @@
-﻿import { LockKeyhole, Mail, Sparkles } from "lucide-react";
+import { LockKeyhole, Mail, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
@@ -142,43 +142,18 @@ export default function LoginPage() {
             </p>
           </form>
 
+          {/* Social login — hidden for now
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200" />
             <span className="text-sm text-slate-500">หรือ เข้าสู่ระบบผ่าน</span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
-
           <div className="flex items-center justify-center gap-4">
-            <button
-              type="button"
-              disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
-              aria-label="เข้าสู่ระบบผ่าน Facebook"
-              title="Coming soon"
-            >
-              f
-            </button>
-
-            <button
-              type="button"
-              disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
-              aria-label="เข้าสู่ระบบผ่าน Apple ID"
-              title="Coming soon"
-            >
-              
-            </button>
-
-            <button
-              type="button"
-              disabled
-              className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"
-              aria-label="เข้าสู่ระบบผ่าน Gmail"
-              title="Coming soon"
-            >
-              G
-            </button>
+            <button type="button" disabled aria-label="Facebook" title="Coming soon" className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur">f</button>
+            <button type="button" disabled aria-label="Apple ID" title="Coming soon" className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur"></button>
+            <button type="button" disabled aria-label="Gmail" title="Coming soon" className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border border-white/70 bg-white/70 text-lg text-slate-400 shadow-[0_10px_24px_rgba(31,47,61,0.08)] backdrop-blur">G</button>
           </div>
+          */}
         </div>
       </div>
     </MobileShell>
