@@ -120,19 +120,6 @@ function getStatusText(score: number) {
   return "ยังไม่มีข้อมูล";
 }
 
-function formatThaiDate(value: Date) {
-  return value.toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function formatWeekLabel(from: Date, to: Date) {
-  const fromStr = from.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-  const toStr = to.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-  return `${fromStr} – ${toStr}`;
-}
 
 function parseRestTaskScore(note: string) {
   if (!note) return null;

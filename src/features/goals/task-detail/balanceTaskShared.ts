@@ -119,16 +119,6 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
 
 // ─── Personal-life-balance: daily chip format ────────────────────────────────
 
-type PersonalBalanceDailyPayload = {
-  entry_type: "personal_balance_daily";
-  category: "balance";
-  activity: "personal-life-balance";
-  date: string;
-  week_key: string;
-  items: string[];
-  score: number;
-};
-
 export type ParsedPersonalBalanceDailyNote = {
   date: string;
   week_key: string;

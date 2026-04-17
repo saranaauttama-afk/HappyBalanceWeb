@@ -3,6 +3,7 @@
   label: string;
   subtitle: string;
   type: "boolean";
+  helperText?: string;
 }
 
 export const WORK_BALANCE_TASKS: WorkBalanceTaskConfig[] = [

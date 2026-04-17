@@ -143,10 +143,6 @@ function clampMinute(value: number) {
   return value;
 }
 
-function getTodayDate() {
-  const now = new Date();
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
 
 function getLogTimestamp(log: DailyLog) {
   const createdAt = log.created_at ? new Date(log.created_at).getTime() : Number.NaN;

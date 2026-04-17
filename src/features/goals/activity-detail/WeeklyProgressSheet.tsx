@@ -125,7 +125,7 @@ export default function WeeklyProgressSheet({
     async function load() {
       setLoading(true);
       try {
-        const logs = await loadAllLogs(userId, category, activity);
+        const logs = await loadAllLogs(userId ?? null, category, activity);
         const currentWeekStart = getStartOfWeek(new Date());
         const totalTasks = TOTAL_TASKS[activity] ?? 1;
 
@@ -262,8 +262,8 @@ export default function WeeklyProgressSheet({
                     ticks={[0, 25, 50, 75, 100]}
                   />
                   <Tooltip
-                    formatter={(value: number) =>
-                      [`${value}%`, "คะแนนสัปดาห์"] as [string, string]
+                    formatter={(value: unknown) =>
+                      [`${value as number}%`, "คะแนนสัปดาห์"] as [string, string]
                     }
                     contentStyle={{
                       borderRadius: 12,

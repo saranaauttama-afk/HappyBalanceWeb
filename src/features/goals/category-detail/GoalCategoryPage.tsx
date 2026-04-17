@@ -212,19 +212,6 @@ function getScoreChip(score: number) {
   return "bg-slate-100 text-slate-600";
 }
 
-function formatThaiDate(value: Date) {
-  return value.toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function formatWeekLabel(from: Date, to: Date) {
-  const fromStr = from.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-  const toStr = to.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-  return `${fromStr} – ${toStr}`;
-}
 
 function parseRestTaskScore(note: string) {
   if (!note) return null;

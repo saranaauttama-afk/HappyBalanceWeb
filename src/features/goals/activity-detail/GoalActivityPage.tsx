@@ -13,7 +13,6 @@ import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
 import { WORKPLACE_RELATIONSHIP_TASKS } from "../tasks/workplaceRelationshipTasks";
 import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
-import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
 import { ChevronRight, Sparkles, TrendingUp } from "lucide-react";
 import WeeklyProgressSheet from "./WeeklyProgressSheet";
@@ -446,14 +445,6 @@ export default function GoalActivityPage() {
     [balanceCompletion]
   );
 
-  const personalLifeBalanceTasks = useMemo(
-    () =>
-      PERSONAL_LIFE_BALANCE_TASKS.map((task) => ({
-        ...task,
-        completed: balanceCompletion[task.slug] ?? false,
-      })),
-    [balanceCompletion]
-  );
 
   const communityParticipationTask = useMemo(() => {
     const task = SOCIAL_TASKS.find((item) => item.slug === "community-participation");
