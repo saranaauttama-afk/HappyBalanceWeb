@@ -181,11 +181,16 @@ export default function PersonalLifeBalancePage() {
       });
       if (!res.success) throw new Error(res.error || "บันทึกไม่ได้");
 
+      // Optimistic update for instant UI feedback
       setWeekData((prev) => ({
         ...prev,
         [todayKey]: { items: checkedItems, score },
       }));
 
+      // Force-refresh the cache so the next page visit loads fresh data
+      await loadWeek(true);
+
+      // Sync goal to radar chart in background (not blocking)
       void syncPersonalLifeBalanceGoal(userId ?? undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
