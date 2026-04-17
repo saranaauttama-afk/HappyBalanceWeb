@@ -15,7 +15,8 @@ import { BALANCE_TASKS } from "../tasks/balanceTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { WORK_BALANCE_TASKS } from "../tasks/workBalanceTasks";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Sparkles, TrendingUp } from "lucide-react";
+import WeeklyProgressSheet from "./WeeklyProgressSheet";
 import {
   getLogTimestamp as getPositiveThinkingLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -156,6 +157,7 @@ export default function GoalActivityPage() {
   const [balanceCompletion, setBalanceCompletion] = useState<Record<string, boolean>>({});
   const [balanceLatestDate, setBalanceLatestDate] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [showChart, setShowChart] = useState(false);
 
   useEffect(() => {
     if (category !== "mental" || activity !== "positive-thinking") {
@@ -600,6 +602,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-slate-900">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/70 bg-white/60 py-2.5 text-xs font-semibold text-slate-700 hover:bg-white/80"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -660,6 +670,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="mental"
+          activity="positive-thinking"
+          title="การมองโลกในแง่บวก"
+        />
       </MobileShell>
     );
   }
@@ -752,6 +769,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-slate-900">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/70 bg-white/60 py-2.5 text-xs font-semibold text-slate-700 hover:bg-white/80"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -812,6 +837,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="mental"
+          activity="stress-level"
+          title="ระดับความเครียด"
+        />
       </MobileShell>
     );
   }
@@ -895,6 +927,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -954,6 +994,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="social"
+          activity="family-relationship"
+          title="ความสัมพันธ์ระหว่างสมาชิกในครอบครัว"
+        />
       </MobileShell>
     );
   }
@@ -1039,6 +1086,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -1090,6 +1145,13 @@ export default function GoalActivityPage() {
             </Link>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="social"
+          activity="community-participation"
+          title="การมีส่วนร่วมในชุมชนและสังคมรอบข้าง"
+        />
       </MobileShell>
     );
   }
@@ -1174,6 +1236,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -1234,6 +1304,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="social"
+          activity="workplace-relationship"
+          title="ความสัมพันธ์ในที่ทำงาน"
+        />
       </MobileShell>
     );
   }
@@ -1319,6 +1396,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -1379,6 +1464,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="balance"
+          activity="family-social-balance"
+          title="สมดุลระหว่างครอบครัวและสังคม"
+        />
       </MobileShell>
     );
   }
@@ -1465,6 +1557,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -1518,6 +1618,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="balance"
+          activity="work-balance"
+          title="สมดุลการทำงาน"
+        />
       </MobileShell>
     );
   }
@@ -1602,6 +1709,14 @@ export default function GoalActivityPage() {
                     <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setShowChart(true)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
+                >
+                  <TrendingUp size={14} />
+                  ดูกราฟความก้าวหน้า
+                </button>
               </div>
             </section>
 
@@ -1657,6 +1772,13 @@ export default function GoalActivityPage() {
             </section>
           </main>
         </div>
+        <WeeklyProgressSheet
+          open={showChart}
+          onClose={() => setShowChart(false)}
+          category="balance"
+          activity="personal-life-balance"
+          title="สมดุลระหว่างชีวิตส่วนตัว"
+        />
       </MobileShell>
     );
   }
