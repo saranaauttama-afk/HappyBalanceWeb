@@ -46,18 +46,16 @@ async function request<T>(
     }
 
     if (method === "GET") {
-      const url = new URL(API_BASE_URL);
-      url.searchParams.set("action", action);
-
+      const params = new URLSearchParams({ action });
       if (body) {
         Object.entries(body).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            url.searchParams.set(key, String(value));
+            params.set(key, String(value));
           }
         });
       }
 
-      const response = await fetch(url.toString());
+      const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
