@@ -34,6 +34,7 @@ import {
   parseBalanceTaskNote,
 } from "../task-detail/balanceTaskShared";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
+import PersonalLifeBalancePage from "./PersonalLifeBalancePage";
 import ScaffoldedActivityPage from "./ScaffoldedActivityPage";
 
 const PHYSICAL_UNDER_CONSTRUCTION_MAP: Record<
@@ -1630,158 +1631,9 @@ export default function GoalActivityPage() {
   }
 
   if (category === "balance" && activity === "personal-life-balance") {
-    const completedCount = personalLifeBalanceTasks.filter((task) => task.completed).length;
-    const totalCount = personalLifeBalanceTasks.length;
-    const progressPercent = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
-
-    return (
-      <MobileShell>
-        <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
-          <div className="pointer-events-none absolute -left-20 top-14 h-56 w-56 rounded-full bg-[#ffc9a3]/20 blur-3xl" />
-          <div className="pointer-events-none absolute -right-20 bottom-28 h-56 w-56 rounded-full bg-[#7dcdb8]/20 blur-3xl" />
-
-          <AppHeader
-            title="สมดุลระหว่างชีวิตส่วนตัว"
-            showBack
-            showBell
-            variant="soft"
-            subtitle="เว้นพื้นที่ให้ตัวเองด้วยกิจกรรมเล็ก ๆ ที่เติมพลัง"
-          />
-          <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
-          />
-
-          <main className="relative z-10 space-y-4 px-4 py-4">
-            <section className="relative overflow-hidden rounded-[28px] border border-white/15 bg-[#18211d] p-5 shadow-[0_22px_48px_rgba(31,47,61,0.22)]">
-              <div className="pointer-events-none absolute inset-0">
-                <img
-                  src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80"
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,11,14,0.48)_0%,rgba(8,12,16,0.66)_40%,rgba(9,14,18,0.84)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1)_0%,rgba(24,33,29,0)_30%)]" />
-              </div>
-
-              <div className="relative z-10">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold tracking-[0.14em] text-white/75">PERSONAL LIFE BALANCE</p>
-                    <p className="mt-2 text-2xl font-extrabold leading-tight text-white/90">Make space for yourself</p>
-                  </div>
-                  <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.08)_100%)] text-2xl shadow-[0_12px_28px_rgba(0,0,0,0.24)] backdrop-blur-md">
-                    🌿
-                  </div>
-                </div>
-
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-[radial-gradient(circle_at_30%_28%,#f8f0a1_0%,#eddc4c_52%,#d5c033_100%)] text-4xl font-extrabold text-slate-900 shadow-[inset_0_10px_22px_rgba(255,255,255,0.28),0_12px_24px_rgba(0,0,0,0.16)]">
-                    {completedCount}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center justify-between text-xs text-white/75">
-                      <span>Total progress</span>
-                      <span className="font-semibold text-white">{progressPercent}%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-white/20">
-                      <div
-                        className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                        style={{ width: `${progressPercent}%` }}
-                      />
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-white/90">Completed {completedCount} / {totalCount} tasks</p>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
-                    <p className="text-xs text-white/60">บันทึกล่าสุด</p>
-                    <p className="mt-1 text-sm font-semibold text-white/90">
-                      {balanceLatestDate
-                        ? new Date(balanceLatestDate + "T00:00:00").toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })
-                        : "ยังไม่มีข้อมูล"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
-                    <p className="text-xs text-white/60">กิจกรรมทั้งหมด</p>
-                    <p className="mt-1 text-lg font-bold text-white/90">{totalCount}</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowChart(true)}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 py-2.5 text-xs font-semibold text-white/90 backdrop-blur-sm hover:bg-white/25"
-                >
-                  <TrendingUp size={14} />
-                  ดูกราฟความก้าวหน้า
-                </button>
-              </div>
-            </section>
-
-            <section className="space-y-3">
-              {personalLifeBalanceTasks.map((task) => (
-                <Link
-                  key={task.slug}
-                  to={`/goals/balance/personal-life-balance/${task.slug}`}
-                  className="block"
-                >
-                  <div className="relative overflow-hidden rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(31,47,61,0.14)]">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-lg font-semibold leading-7 text-slate-900">{task.label}</h3>
-                        <p className="mt-1 text-sm text-slate-500">{task.subtitle}</p>
-                        <div className="mt-3 flex items-center justify-between gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                              balanceLoading
-                                ? "bg-slate-100 text-slate-500"
-                                : task.completed
-                                ? "bg-emerald-50 text-emerald-700"
-                                : task.slug in balanceCompletion
-                                ? "bg-rose-50 text-rose-600"
-                                : "bg-slate-100 text-slate-600"
-                            }`}
-                          >
-                            {balanceLoading
-                              ? "กำลังโหลด"
-                              : task.completed
-                              ? "บันทึกแล้ว"
-                              : task.slug in balanceCompletion
-                              ? "รอบันทึก"
-                              : "ยังไม่บันทึก"}
-                          </span>
-                          {!balanceLoading && (
-                            <span className="text-xs text-slate-500">
-                              {!(task.slug in balanceCompletion)
-                                ? "ยังไม่มีการบันทึกล่าสุด"
-                                : `คะแนนล่าสุด ${task.completed ? 100 : 0}%`}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-400">
-                        <ChevronRight size={16} />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </section>
-          </main>
-        </div>
-        <WeeklyProgressSheet
-          open={showChart}
-          onClose={() => setShowChart(false)}
-          category="balance"
-          activity="personal-life-balance"
-          title="สมดุลระหว่างชีวิตส่วนตัว"
-        />
-      </MobileShell>
-    );
+    return <PersonalLifeBalancePage />;
   }
+
 
   if (category === "balance") {
     return (

@@ -117,6 +117,107 @@ function findLatestGoal(goals: Goal[], matcher: (goal: Goal) => boolean) {
   return filtered.sort((a, b) => getGoalTimestamp(b) - getGoalTimestamp(a))[0];
 }
 
+// ─── Personal-life-balance: daily chip format ────────────────────────────────
+
+type PersonalBalanceDailyPayload = {
+  entry_type: "personal_balance_daily";
+  category: "balance";
+  activity: "personal-life-balance";
+  date: string;
+  week_key: string;
+  items: string[];
+  score: number;
+};
+
+export type ParsedPersonalBalanceDailyNote = {
+  date: string;
+  week_key: string;
+  items: string[];
+  score: number;
+};
+
+export function parsePersonalBalanceDailyNote(
+  note: string
+): ParsedPersonalBalanceDailyNote | null {
+  if (!note) return null;
+  try {
+    const parsed = JSON.parse(note) as Partial<PersonalBalanceDailyPayload>;
+    if (parsed.entry_type !== "personal_balance_daily") return null;
+    if (!Array.isArray(parsed.items)) return null;
+    return {
+      date: String(parsed.date ?? ""),
+      week_key: String(parsed.week_key ?? ""),
+      items: parsed.items as string[],
+      score: Math.max(0, Math.min(100, Math.round(Number(parsed.score) || 0))),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function syncPersonalLifeBalanceGoal(userId?: string) {
+  const logsResponse = await logsService.listBalanceTaskLogs(userId, {
+    activity: "personal-life-balance",
+    limit: 500,
+    forceRefresh: true,
+  });
+  if (!logsResponse.success) {
+    throw new Error(logsResponse.error || "Could not load personal-life-balance logs");
+  }
+
+  // Collect latest daily score per date (new format only)
+  const scoreByDate = new Map<string, number>();
+  [...(logsResponse.data || [])]
+    .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
+    .forEach((log) => {
+      const parsed = parsePersonalBalanceDailyNote(String(log.note ?? ""));
+      if (!parsed) return;
+      const dateKey = String(log.log_date ?? "").slice(0, 10);
+      if (scoreByDate.has(dateKey)) return;
+      scoreByDate.set(dateKey, parsed.score);
+    });
+
+  const averageScore =
+    scoreByDate.size === 0
+      ? 0
+      : Math.round(
+          Array.from(scoreByDate.values()).reduce((s, v) => s + v, 0) /
+            scoreByDate.size
+        );
+
+  const goalsResponse = await goalsService.listGoals(userId);
+  if (!goalsResponse.success) {
+    throw new Error(goalsResponse.error || "Could not load goals");
+  }
+
+  const activityGoal = findLatestGoal(
+    goalsResponse.data || [],
+    (goal) =>
+      goal.category === "balance" && goal.activity === "personal-life-balance"
+  );
+
+  if (activityGoal) {
+    await goalsService.updateGoal({
+      id: activityGoal.id,
+      current_value: averageScore,
+      target_value: 100,
+      status: averageScore >= 100 ? "completed" : "active",
+    });
+    return;
+  }
+
+  await goalsService.createGoal({
+    user_id: userId,
+    category: "balance",
+    activity: "personal-life-balance",
+    current_value: averageScore,
+    target_value: 100,
+    status: averageScore >= 100 ? "completed" : "active",
+  });
+}
+
+// ─── Generic balance-task sync (family-social-balance, work-balance) ─────────
+
 export async function syncBalanceActivityGoal(activity: string, userId?: string) {
   const logsResponse = await logsService.listBalanceTaskLogs(userId ?? undefined, {
     activity,

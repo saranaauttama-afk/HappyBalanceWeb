@@ -13,7 +13,10 @@ import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
 import { addDays, getStartOfWeek, toDateKey } from "../../../utils/weekPeriod";
-import { parseBalanceTaskNote } from "../task-detail/balanceTaskShared";
+import {
+  parseBalanceTaskNote,
+  parsePersonalBalanceDailyNote,
+} from "../task-detail/balanceTaskShared";
 import { parsePositiveThinkingTaskNote } from "../task-detail/positiveThinkingTaskShared";
 import { parseSocialTaskNote } from "../task-detail/socialTaskShared";
 import { parseStressTaskNote } from "../task-detail/stressTaskShared";
@@ -138,21 +141,42 @@ export default function WeeklyProgressSheet({
             return d >= startKey && d <= endKey;
           });
 
-          const latestByTask = new Map<string, { score: number; ts: number }>();
-          for (const log of weekLogs) {
-            const parsed = parseLog(log, category, activity);
-            if (!parsed) continue;
-            const ts = getLogTimestamp(log);
-            const existing = latestByTask.get(parsed.task);
-            if (!existing || ts > existing.ts) {
-              latestByTask.set(parsed.task, { score: parsed.score, ts });
-            }
-          }
+          let score: number;
 
-          const completedCount = Array.from(latestByTask.values()).filter(
-            (v) => v.score > 0
-          ).length;
-          const score = Math.round((completedCount / totalTasks) * 100);
+          if (activity === "personal-life-balance") {
+            // New daily format: average score across logged days in week
+            const latestByDate = new Map<string, number>();
+            for (const log of weekLogs) {
+              const parsed = parsePersonalBalanceDailyNote(String(log.note ?? ""));
+              if (!parsed) continue;
+              const dateKey = String(log.log_date ?? "").slice(0, 10);
+              const ts = getLogTimestamp(log);
+              const existing = latestByDate.get(dateKey);
+              if (existing === undefined || ts > (existing as unknown as number)) {
+                latestByDate.set(dateKey, parsed.score);
+              }
+            }
+            const scores = Array.from(latestByDate.values());
+            score = scores.length === 0
+              ? 0
+              : Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+          } else {
+            // Standard task-dedup approach
+            const latestByTask = new Map<string, { score: number; ts: number }>();
+            for (const log of weekLogs) {
+              const parsed = parseLog(log, category, activity);
+              if (!parsed) continue;
+              const ts = getLogTimestamp(log);
+              const existing = latestByTask.get(parsed.task);
+              if (!existing || ts > existing.ts) {
+                latestByTask.set(parsed.task, { score: parsed.score, ts });
+              }
+            }
+            const completedCount = Array.from(latestByTask.values()).filter(
+              (v) => v.score > 0
+            ).length;
+            score = Math.round((completedCount / totalTasks) * 100);
+          }
           const label = weekStart.toLocaleDateString("th-TH", {
             day: "numeric",
             month: "short",
