@@ -131,6 +131,11 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
+function getTodayDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 function clampHour(value: number) {
   if (value < 0) return 23;
   if (value > 23) return 0;
@@ -312,6 +317,7 @@ export default function ActivityTaskPage() {
   const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
   const weekStartDate = new Date(weekStartKey + "T00:00:00");
   const weekEndDate = addDays(weekStartDate, 6);
+  const weekEndKey = toDateKey(weekEndDate);
   const config = REST_TASKS.find((t) => t.slug === task);
   const activeConfig = config ?? REST_TASKS[0];
 
@@ -537,7 +543,7 @@ export default function ActivityTaskPage() {
 
       setSleepHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey) {
         setSleepHour(Math.floor(history[0].sleptMinutes / 60));
         setSleepMinute(history[0].sleptMinutes % 60);
       }
@@ -606,7 +612,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setWaterHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey) {
         setWaterCount(Math.max(0, Math.round(history[0].glasses)));
       }
     } catch (err) {
@@ -659,7 +665,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setSleepOnTimeHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey && history[0].onTime) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].onTime) {
         setSleepOnTimeValue(true);
         return;
       }
@@ -717,7 +723,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setAvoidWaterBeforeBedHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey && history[0].avoidedLargeWater) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].avoidedLargeWater) {
         setAvoidWaterBeforeBedValue(true);
         return;
       }
@@ -772,7 +778,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setNoLongLateNapHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey && history[0].noLongLateNap) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].noLongLateNap) {
         setNoLongLateNapValue(true);
         return;
       }
@@ -827,7 +833,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setNoFood4HoursBeforeBedHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey && history[0].noFood4HoursBeforeBed) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].noFood4HoursBeforeBed) {
         setNoFood4HoursBeforeBedValue(true);
         return;
       }
@@ -882,7 +888,7 @@ export default function ActivityTaskPage() {
         .slice(0, 14);
       setScreenTimeHistory(history);
 
-      if (history.length > 0 && history[0].date === weekStartKey && history[0].limitedScreenTime) {
+      if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].limitedScreenTime) {
         setScreenTimeValue(true);
         return;
       }
@@ -956,7 +962,7 @@ export default function ActivityTaskPage() {
   }) {
     const response = await logsService.createDailyLog({
       user_id: userId ?? undefined,
-      log_date: weekStartKey,
+      log_date: getTodayDate(),
       mood: input.mood,
       energy: input.energy,
       stress: input.stress,

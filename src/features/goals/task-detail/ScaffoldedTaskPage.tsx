@@ -140,7 +140,8 @@ export default function ScaffoldedTaskPage() {
       const weekLog = [...(weekResponse.data || [])]
         .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
         .find((log) => {
-          if (log.log_date !== weekStartKey) return false;
+          const d = String(log.log_date ?? "").slice(0, 10);
+          if (d < weekStartKey || d > weekEndKey) return false;
           const parsed = parseScaffoldedTaskNote(String(log.note), resolvedCategory, config.activity);
           return parsed?.task === task;
         });
@@ -215,7 +216,7 @@ export default function ScaffoldedTaskPage() {
       const score = done ? 100 : 0;
       const response = await logsService.createDailyLog({
         user_id: userId ?? undefined,
-        log_date: weekStartKey,
+        log_date: getTodayDate(),
         mood: `task-${config.activity}-${taskConfig.slug}`,
         energy: done ? 4 : 2,
         stress: done ? 1 : 4,
