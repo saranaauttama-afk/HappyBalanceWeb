@@ -112,7 +112,8 @@ export default function ScaffoldedActivityPage() {
         let latestDate: string | null = null;
 
         sorted.forEach((log) => {
-          if (log.log_date !== weekStartKey) return;
+          const d = String(log.log_date ?? "").slice(0, 10);
+          if (d < weekStartKey || d > weekEndKey) return;
           const parsed = parseScaffoldedTaskNote(
             String(log.note),
             safeCategory,
