@@ -5,11 +5,11 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { authService } from "../../../services/auth.service";
 import { getPostAuthRedirectPath, setCurrentUser } from "../../../utils/authSession";
+import loginHeroImage from "../../../asset/images/login.jpg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const heroImage =
-    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1400&q=80";
+  const heroImage = loginHeroImage;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
