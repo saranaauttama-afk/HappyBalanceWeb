@@ -1,7 +1,6 @@
 import {
   Camera,
   ChevronRight,
-  ChartColumn,
   CircleHelp,
   LogOut,
   NotebookPen,
@@ -40,15 +39,6 @@ const menuItems = [
     accent: "from-[#d9e6fb] via-[#eaf2ff] to-[#f8fbff]",
     iconBg: "bg-[#edf3ff]",
     iconColor: "text-[#5674a5]",
-  },
-  {
-    label: "ผลประเมินภาวะสุขสมดุล",
-    subtitle: "ติดตามผลประเมินและพัฒนาการของคุณ",
-    to: "/profile/evaluation-result",
-    Icon: ChartColumn,
-    accent: "from-[#d6f2e7] via-[#ebfaf4] to-[#f8fffc]",
-    iconBg: "bg-[#e7f8f1]",
-    iconColor: "text-[#2f7b63]",
   },
   {
     label: "การตั้งค่า",
