@@ -5,7 +5,6 @@
   ClipboardPenLine,
   Sparkles,
   Stethoscope,
-  Target,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppHeader from "../../components/layout/AppHeader";
@@ -19,33 +18,6 @@ import type { Appointment, DailyLog } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
 import { isCurrentMonth } from "../../utils/weekPeriod";
 
-function getWeeklyGoalSessionKey(userId: string | undefined, weekStartDate: string) {
-  return `hb_weekly_goal:${userId ?? "demo-user-001"}:${weekStartDate}`;
-}
-
-function readWeeklyGoalSessionValue(key: string) {
-  if (typeof window === "undefined") return undefined;
-  const value = window.sessionStorage.getItem(key);
-  return value === null ? undefined : value;
-}
-
-function writeWeeklyGoalSessionValue(key: string, value: string) {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(key, value);
-}
-
-function resolveWeeklyGoalValue(serverGoal: string, localGoal: string | undefined) {
-  const normalizedServerGoal = String(serverGoal ?? "");
-  if (normalizedServerGoal.trim()) {
-    return normalizedServerGoal;
-  }
-
-  if (localGoal !== undefined) {
-    return localGoal;
-  }
-
-  return "";
-}
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -224,15 +196,9 @@ export default function AppointmentsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [savingDailyLog, setSavingDailyLog] = useState(false);
-  const [savingWeeklyGoal, setSavingWeeklyGoal] = useState(false);
-  const [loadingWeeklyGoal, setLoadingWeeklyGoal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [dailyLogMessage, setDailyLogMessage] = useState("");
-  const [weeklyGoal, setWeeklyGoal] = useState("");
-  const [weeklyGoalMessage, setWeeklyGoalMessage] = useState("");
-  const [weeklyGoalCache, setWeeklyGoalCache] = useState<Record<string, string>>({});
-  const weeklyGoalRequestRef = useRef(0);
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   const initialDate = useMemo(() => getStartOfToday(), []);
@@ -285,12 +251,7 @@ export default function AppointmentsPage() {
   const weekDays = useMemo(() => getWeekDays(weekStartDate), [weekStartDate]);
   const weekDateKeys = useMemo(() => weekDays.map((date) => toDateKey(date)), [weekDays]);
   const weekLabel = useMemo(() => formatWeekRange(weekStartDate), [weekStartDate]);
-  const cachedWeeklyGoal = weeklyGoalCache[weekStartKey];
-  const isEditableSelectedWeek = useMemo(() => isCurrentMonth(weekStartKey), [weekStartKey]);
-  const weeklyGoalSessionKey = useMemo(
-    () => getWeeklyGoalSessionKey(userId ?? undefined, weekStartKey),
-    [userId, weekStartKey]
-  );
+  const isEditableSelectedWeek = useMemo(() => isCurrentMonth(weekStartKey.slice(0, 7)), [weekStartKey]);
 
   const journalLogs = useMemo(
     () => dailyLogs.filter((item) => !isStructuredTaskNote(item.note)),
@@ -321,70 +282,6 @@ export default function AppointmentsPage() {
     setDailyLogMessage("");
   }, [selectedDateKey, selectedDailyLog]);
 
-  // Clear success message only when navigating to a different week (not on cache updates after save)
-  useEffect(() => {
-    setWeeklyGoalMessage("");
-  }, [weekStartKey]);
-
-  useEffect(() => {
-    const requestId = weeklyGoalRequestRef.current + 1;
-    weeklyGoalRequestRef.current = requestId;
-
-    const sessionWeeklyGoal = readWeeklyGoalSessionValue(weeklyGoalSessionKey);
-    const localWeeklyGoal =
-      cachedWeeklyGoal !== undefined ? cachedWeeklyGoal : sessionWeeklyGoal;
-
-    if (localWeeklyGoal !== undefined) {
-      setWeeklyGoal(localWeeklyGoal);
-      setLoadingWeeklyGoal(false);
-    } else {
-      setWeeklyGoal("");
-      setLoadingWeeklyGoal(true);
-    }
-
-    async function loadWeeklyGoal() {
-      try {
-        setError(null);
-
-        const response = await appointmentsService.listWeeklyGoals(
-          userId ?? undefined,
-          weekStartKey
-        );
-
-        if (!response.success) {
-          throw new Error(response.error || "ไม่สามารถโหลดเป้าหมายรายสัปดาห์ได้");
-        }
-
-        if (weeklyGoalRequestRef.current !== requestId) return;
-
-        const nextGoal = String(response.data?.[0]?.goal_text ?? "");
-        const resolvedGoal = resolveWeeklyGoalValue(nextGoal, localWeeklyGoal);
-
-        setWeeklyGoal(resolvedGoal);
-        writeWeeklyGoalSessionValue(weeklyGoalSessionKey, resolvedGoal);
-        setWeeklyGoalCache((current) => {
-          if (current[weekStartKey] === resolvedGoal) {
-            return current;
-          }
-
-          return {
-            ...current,
-            [weekStartKey]: resolvedGoal,
-          };
-        });
-      } catch (err) {
-        if (weeklyGoalRequestRef.current === requestId) {
-          setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
-        }
-      } finally {
-        if (weeklyGoalRequestRef.current === requestId) {
-          setLoadingWeeklyGoal(false);
-        }
-      }
-    }
-
-    void loadWeeklyGoal();
-  }, [cachedWeeklyGoal, userId, weekStartKey, weeklyGoalSessionKey]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -571,61 +468,6 @@ export default function AppointmentsPage() {
     setAppointmentTime(`${appointmentHour}:${minute}`);
   }
 
-  async function handleSaveWeeklyGoal() {
-    if (!isEditableSelectedWeek) {
-      setError("สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น");
-      return;
-    }
-
-    const trimmedGoal = weeklyGoal.trim();
-    setError(null);
-    setWeeklyGoalMessage("");
-
-    try {
-      setSavingWeeklyGoal(true);
-
-      const response = await appointmentsService.upsertWeeklyGoal({
-        user_id: userId ?? undefined,
-        week_start_date: weekStartKey,
-        goal_text: trimmedGoal,
-      });
-
-      if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถบันทึกเป้าหมายรายสัปดาห์ได้");
-      }
-
-      const latestGoalResponse = await appointmentsService.listWeeklyGoals(
-        userId ?? undefined,
-        weekStartKey
-      );
-
-      if (!latestGoalResponse.success) {
-        throw new Error(
-          latestGoalResponse.error || "บันทึกสำเร็จ แต่โหลดเป้าหมายรายสัปดาห์ล่าสุดไม่สำเร็จ"
-        );
-      }
-
-      const savedGoal = resolveWeeklyGoalValue(
-        String(latestGoalResponse.data?.[0]?.goal_text ?? response.data?.goal_text ?? trimmedGoal),
-        trimmedGoal
-      );
-      setWeeklyGoal(savedGoal);
-      writeWeeklyGoalSessionValue(weeklyGoalSessionKey, savedGoal);
-      setWeeklyGoalCache((current) => ({
-        ...current,
-        [weekStartKey]: savedGoal,
-      }));
-      setWeeklyGoalMessage(
-        trimmedGoal
-          ? `บันทึกเป้าหมายของสัปดาห์ ${weekLabel} เรียบร้อยแล้ว`
-          : `ล้างเป้าหมายของสัปดาห์ ${weekLabel} แล้ว`
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
-    } finally {
-      setSavingWeeklyGoal(false);
-    }
-  }
 
   return (
     <MobileShell>
@@ -674,68 +516,6 @@ export default function AppointmentsPage() {
                 <p className="text-xs text-emerald-700">บันทึกแล้ว</p>
                 <p className="text-lg font-semibold text-emerald-800">{weeklyJournalCount}</p>
               </div>
-            </div>
-          </InfoCard>
-
-          <InfoCard className={`${cardClassName} rounded-3xl`}>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf6ef] text-[#2f7b56]">
-                  <Target size={18} />
-                </span>
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900">เป้าหมายรายสัปดาห์</h3>
-                  <p className="text-sm text-slate-500">โฟกัสของสัปดาห์ {weekLabel}</p>
-                </div>
-              </div>
-
-              <textarea
-                value={weeklyGoal}
-                onChange={(e) => setWeeklyGoal(e.target.value)}
-                rows={3}
-                placeholder="เช่น สัปดาห์นี้ต้องการจัดเวลาพักผ่อนและงานให้สมดุลขึ้น"
-                disabled={loadingWeeklyGoal || savingWeeklyGoal || !isEditableSelectedWeek}
-                className={`w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-[#4c9f7f] ${
-                  loadingWeeklyGoal || savingWeeklyGoal || !isEditableSelectedWeek
-                    ? "cursor-wait bg-slate-50 text-slate-400"
-                    : "bg-white"
-                }`}
-              />
-
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-xs text-slate-400">
-                  {loadingWeeklyGoal ? (
-                    <span className="inline-flex items-center gap-2 text-slate-500">
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4c9f7f]" />
-                      กำลังโหลดเป้าหมายของสัปดาห์นี้...
-                    </span>
-                  ) : (
-                    isEditableSelectedWeek
-                      ? "ระบบจะเก็บเป้าหมายแยกตามสัปดาห์ที่เลือก"
-                      : "สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น"
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void handleSaveWeeklyGoal()}
-                  disabled={savingWeeklyGoal || loadingWeeklyGoal || !isEditableSelectedWeek}
-                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white transition ${
-                    savingWeeklyGoal || loadingWeeklyGoal || !isEditableSelectedWeek
-                      ? "cursor-not-allowed bg-slate-300"
-                      : "bg-[#4c9f7f] shadow-[0_12px_24px_rgba(76,159,127,0.3)] hover:brightness-105"
-                  }`}
-                >
-                  {loadingWeeklyGoal
-                    ? "กำลังโหลด..."
-                    : savingWeeklyGoal
-                      ? "กำลังบันทึก..."
-                      : "บันทึกเป้าหมาย"}
-                </button>
-              </div>
-
-              {weeklyGoalMessage ? (
-                <p className="text-xs font-medium text-emerald-700">{weeklyGoalMessage}</p>
-              ) : null}
             </div>
           </InfoCard>
 
