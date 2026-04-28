@@ -1,24 +1,24 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type WeekNavBarProps = {
-  weekStartDate: Date;
-  weekEndDate: Date;
-  isCurrentWeek: boolean;
+  monthDate: Date;
+  isCurrentMonth: boolean;
   onPrev?: () => void;
   onNext?: () => void;
   isPrevDisabled?: boolean;
+  // legacy props kept for compat — ignored
+  weekStartDate?: Date;
+  weekEndDate?: Date;
+  isCurrentWeek?: boolean;
 };
 
-function formatWeekLabel(from: Date, to: Date) {
-  const fromStr = from.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
-  const toStr = to.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
-  return `${fromStr} – ${toStr}`;
+function formatMonthLabel(date: Date) {
+  return date.toLocaleDateString("th-TH", { month: "long", year: "numeric" });
 }
 
 export default function WeekNavBar({
-  weekStartDate,
-  weekEndDate,
-  isCurrentWeek,
+  monthDate,
+  isCurrentMonth,
   onPrev,
   onNext,
   isPrevDisabled = false,
@@ -43,9 +43,9 @@ export default function WeekNavBar({
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-700">
-            {formatWeekLabel(weekStartDate, weekEndDate)}
+            {formatMonthLabel(monthDate)}
           </span>
-          {!isCurrentWeek && (
+          {!isCurrentMonth && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
               ย้อนหลัง
             </span>
@@ -56,7 +56,7 @@ export default function WeekNavBar({
           <button
             type="button"
             onClick={onNext}
-            disabled={isCurrentWeek}
+            disabled={isCurrentMonth}
             className="inline-flex h-7 w-7 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-default disabled:opacity-30"
           >
             <ChevronRight size={16} />

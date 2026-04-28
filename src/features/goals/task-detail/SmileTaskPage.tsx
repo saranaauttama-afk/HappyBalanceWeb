@@ -5,7 +5,7 @@ import MobileShell from "../../../components/layout/MobileShell";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { getStartOfMonth, isCurrentMonth, toMonthKey } from '../../../utils/weekPeriod';
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import {
   formatThaiDate,
@@ -32,12 +32,11 @@ export default function SmileTaskPage() {
   const userId = getCurrentUserId();
 
   const [weekStartKey] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    return saved ?? toDateKey(getStartOfWeek(new Date()));
+    const saved = sessionStorage.getItem("goals-month");
+    return saved ?? toMonthKey(new Date());
   });
-  const weekStartDate = new Date(weekStartKey + "T00:00:00");
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const weekStartDate = getStartOfMonth(new Date(weekStartKey + "-01T00:00:00"));
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey);
 
   const [smileCount, setSmileCount] = useState(0);
   const [history, setHistory] = useState<SmileHistoryItem[]>([]);
@@ -172,7 +171,7 @@ export default function SmileTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title="ยิ้มเสมอเมื่อเจอเรื่องน่าผิดหวัง" showBack showBell variant="soft" />
-        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+        <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
         <main className="space-y-4 px-4 py-4">
           {error ? (

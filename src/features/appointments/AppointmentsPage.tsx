@@ -17,7 +17,7 @@ import { appointmentsService } from "../../services/appointments.service";
 import { logsService } from "../../services/logs.service";
 import type { Appointment, DailyLog } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
-import { isCurrentWeek } from "../../utils/weekPeriod";
+import { isCurrentMonth } from "../../utils/weekPeriod";
 
 function getWeeklyGoalSessionKey(userId: string | undefined, weekStartDate: string) {
   return `hb_weekly_goal:${userId ?? "demo-user-001"}:${weekStartDate}`;
@@ -286,7 +286,7 @@ export default function AppointmentsPage() {
   const weekDateKeys = useMemo(() => weekDays.map((date) => toDateKey(date)), [weekDays]);
   const weekLabel = useMemo(() => formatWeekRange(weekStartDate), [weekStartDate]);
   const cachedWeeklyGoal = weeklyGoalCache[weekStartKey];
-  const isEditableSelectedWeek = useMemo(() => isCurrentWeek(weekStartKey), [weekStartKey]);
+  const isEditableSelectedWeek = useMemo(() => isCurrentMonth(weekStartKey), [weekStartKey]);
   const weeklyGoalSessionKey = useMemo(
     () => getWeeklyGoalSessionKey(userId ?? undefined, weekStartKey),
     [userId, weekStartKey]
@@ -434,7 +434,7 @@ export default function AppointmentsPage() {
 
   async function handleSaveDailyLog() {
     if (!isEditableSelectedWeek) {
-      setError("สามารถบันทึกได้เฉพาะสัปดาห์ปัจจุบันเท่านั้น");
+      setError("สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น");
       return;
     }
 
@@ -573,7 +573,7 @@ export default function AppointmentsPage() {
 
   async function handleSaveWeeklyGoal() {
     if (!isEditableSelectedWeek) {
-      setError("สามารถบันทึกได้เฉพาะสัปดาห์ปัจจุบันเท่านั้น");
+      setError("สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น");
       return;
     }
 
@@ -712,7 +712,7 @@ export default function AppointmentsPage() {
                   ) : (
                     isEditableSelectedWeek
                       ? "ระบบจะเก็บเป้าหมายแยกตามสัปดาห์ที่เลือก"
-                      : "สามารถบันทึกได้เฉพาะสัปดาห์ปัจจุบันเท่านั้น"
+                      : "สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น"
                   )}
                 </div>
                 <button
@@ -854,7 +854,7 @@ export default function AppointmentsPage() {
                   <p className="text-sm text-slate-500">
                     {isEditableSelectedWeek
                       ? "เลือกวันจากสัปดาห์ที่แสดงเพื่อดูย้อนหลังหรือบันทึกเพิ่ม"
-                      : "สามารถบันทึกได้เฉพาะสัปดาห์ปัจจุบันเท่านั้น"}
+                      : "สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น"}
                   </p>
                 </div>
               </div>

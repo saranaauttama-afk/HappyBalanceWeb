@@ -16,7 +16,7 @@ import MobileShell from "../../../components/layout/MobileShell";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { getStartOfMonth, isCurrentMonth, toMonthKey } from '../../../utils/weekPeriod';
 import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
 import {
   formatThaiDate,
@@ -59,12 +59,11 @@ export default function FamilyRelationshipTaskPage() {
   const config = FAMILY_RELATIONSHIP_TASKS.find((item) => item.slug === task);
 
   const [weekStartKey] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    return saved ?? toDateKey(getStartOfWeek(new Date()));
+    const saved = sessionStorage.getItem("goals-month");
+    return saved ?? toMonthKey(new Date());
   });
-  const weekStartDate = new Date(weekStartKey + "T00:00:00");
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const weekStartDate = getStartOfMonth(new Date(weekStartKey + "-01T00:00:00"));
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey);
 
   const [done, setDone] = useState<boolean | null>(null);
   const [lastSavedDate, setLastSavedDate] = useState<string | null>(null);
@@ -124,26 +123,26 @@ export default function FamilyRelationshipTaskPage() {
       }
 
       // Build weekly history — dedup by week start
-      const byWeek = new Map<string, HistoryItem>();
+      const byMonth = new Map<string, HistoryItem>();
       sorted.forEach((log) => {
         if (!log.log_date) return;
         const parsed = parseSocialTaskNote(String(log.note));
         if (!parsed || parsed.activity !== activityKey || parsed.task !== task) return;
         const logDate = new Date(String(log.log_date).slice(0, 10) + "T00:00:00");
         if (Number.isNaN(logDate.getTime())) return;
-        const weekKey = toDateKey(getStartOfWeek(logDate));
-        if (byWeek.has(weekKey)) return;
+        const mk = toMonthKey(logDate);
+        if (byMonth.has(mk)) return;
         const isDone = getBoolean(parsed.payload.done, parsed.score > 0);
-        byWeek.set(weekKey, {
+        byMonth.set(mk, {
           id: String(log.id),
-          date: weekKey,
+          date: mk,
           done: isDone,
           point: isDone ? 1 : 0,
         });
       });
 
       setHistory(
-        Array.from(byWeek.values())
+        Array.from(byMonth.values())
           .sort((a, b) => b.date.localeCompare(a.date))
           .slice(0, 14)
       );
@@ -220,7 +219,7 @@ export default function FamilyRelationshipTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={config.label} showBack showBell variant="soft" />
-        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+        <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
         <main className={`space-y-4 px-4 py-4 ${loading ? "pointer-events-none opacity-70" : ""}`}>
           {error ? (
@@ -324,7 +323,7 @@ export default function FamilyRelationshipTaskPage() {
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-slate-900">ประวัติรายสัปดาห์</h3>
+              <h3 className="text-base font-semibold text-slate-900">ประวัติรายเดือน</h3>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                 <AlarmClockCheck size={13} />
                 รวม {monthlyPoints} คะแนน

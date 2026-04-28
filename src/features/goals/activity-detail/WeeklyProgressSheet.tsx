@@ -12,7 +12,7 @@ import {
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, toDateKey } from "../../../utils/weekPeriod";
+import { toDateKey, getStartOfMonth, addDays } from '../../../utils/weekPeriod';
 import {
   parseBalanceTaskNote,
   parsePersonalBalanceDailyNote,
@@ -126,7 +126,7 @@ export default function WeeklyProgressSheet({
       setLoading(true);
       try {
         const logs = await loadAllLogs(userId ?? null, category, activity);
-        const currentWeekStart = getStartOfWeek(new Date());
+        const currentWeekStart = getStartOfMonth(new Date());
         const totalTasks = TOTAL_TASKS[activity] ?? 1;
 
         const points: WeekPoint[] = [];

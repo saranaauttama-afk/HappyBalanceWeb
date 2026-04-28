@@ -5,7 +5,7 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { getEndOfMonth, getStartOfMonth, isCurrentMonth, toDateKey, toMonthKey } from "../../../utils/weekPeriod";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
 import {
   getLogTimestamp,
@@ -51,15 +51,15 @@ export default function ScaffoldedActivityPage() {
       : undefined;
   const resolvedCategory = config?.category;
 
-  const weekStartDate = useMemo(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
-    return getStartOfWeek(new Date());
+  const monthKey = useMemo(() => {
+    const saved = sessionStorage.getItem("goals-month");
+    return saved ?? toMonthKey(new Date());
   }, []);
+  const weekStartDate = getStartOfMonth(new Date(monthKey + "-01T00:00:00"));
   const weekStartKey = toDateKey(weekStartDate);
-  const weekEndDate = addDays(weekStartDate, 6);
+  const weekEndDate = getEndOfMonth(weekStartDate);
   const weekEndKey = toDateKey(weekEndDate);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const isViewingCurrentWeek = isCurrentMonth(monthKey);
 
   const [scoreMap, setScoreMap] = useState<Record<string, number>>({});
   const [latestLogDate, setLatestLogDate] = useState<string | null>(null);
@@ -175,11 +175,7 @@ export default function ScaffoldedActivityPage() {
           variant="soft"
           subtitle={config.subtitle}
         />
-        <WeekNavBar
-          weekStartDate={weekStartDate}
-          weekEndDate={weekEndDate}
-          isCurrentWeek={isViewingCurrentWeek}
-        />
+        <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
         <main className="relative z-10 space-y-4 px-4 py-4">
           {/* Hero card */}

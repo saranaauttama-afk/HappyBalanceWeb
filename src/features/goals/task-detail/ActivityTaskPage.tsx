@@ -21,7 +21,7 @@ import { getCurrentUserId } from "../../../utils/authSession";
 import { REST_TASKS, type TaskConfig } from "../tasks/restTasks";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
 import ScaffoldedTaskPage from "./ScaffoldedTaskPage";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth } from '../../../utils/weekPeriod';
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 
 type TaskValue = number | boolean | null;
@@ -310,13 +310,13 @@ export default function ActivityTaskPage() {
   const userId = getCurrentUserId();
   const isRestFlow = category === "physical" && activity === "rest";
   const [weekStartKey] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
+    const saved = sessionStorage.getItem("goals-month");
     if (saved) return saved;
-    return toDateKey(getStartOfWeek(new Date()));
+    return toDateKey(getStartOfMonth(new Date()));
   });
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey.slice(0, 7));
   const weekStartDate = new Date(weekStartKey + "T00:00:00");
-  const weekEndDate = addDays(weekStartDate, 6);
+  const weekEndDate = getEndOfMonth(weekStartDate);
   const weekEndKey = toDateKey(weekEndDate);
   const config = REST_TASKS.find((t) => t.slug === task);
   const activeConfig = config ?? REST_TASKS[0];
@@ -1486,7 +1486,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การนอนหลับ" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -1552,7 +1552,7 @@ export default function ActivityTaskPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  สัปดาห์นี้ได้ {monthlySleepPoints} คะแนน
+                  เดือนนี้ได้ {monthlySleepPoints} คะแนน
                 </span>
               </div>
 
@@ -1601,7 +1601,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="การดื่มน้ำ" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -1742,7 +1742,7 @@ export default function ActivityTaskPage() {
 
             {!isViewingCurrentWeek ? (
               <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-700">
-                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะสัปดาห์ปัจจุบัน
+                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะเดือนปัจจุบัน
               </div>
             ) : (
               <button
@@ -1761,7 +1761,7 @@ export default function ActivityTaskPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  สัปดาห์นี้ได้ {monthlyWaterPoints} คะแนน
+                  เดือนนี้ได้ {monthlyWaterPoints} คะแนน
                 </span>
               </div>
 
@@ -1810,7 +1810,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="เข้านอนและตื่นนอนตรงเวลา" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -1894,7 +1894,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  สัปดาห์นี้ได้ {monthlySleepOnTimePoints} คะแนน
+                  เดือนนี้ได้ {monthlySleepOnTimePoints} คะแนน
                 </span>
               </div>
 
@@ -1942,7 +1942,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่ดื่มน้ำปริมาณมากก่อนนอน" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -2028,7 +2028,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  สัปดาห์นี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
+                  เดือนนี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
                 </span>
               </div>
 
@@ -2076,7 +2076,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ไม่งีบหลับหลังบ่าย 3 โมงเกิน 1 ชม." showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -2160,7 +2160,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  สัปดาห์นี้ได้ {monthlyNoLongLateNapPoints} คะแนน
+                  เดือนนี้ได้ {monthlyNoLongLateNapPoints} คะแนน
                 </span>
               </div>
 
@@ -2208,7 +2208,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="งดอาหารอย่างน้อย 4 ชม. ก่อนนอน" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -2294,7 +2294,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  สัปดาห์นี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
+                  เดือนนี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
                 </span>
               </div>
 
@@ -2342,7 +2342,7 @@ export default function ActivityTaskPage() {
       <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
           <AppHeader title="ลดเวลาอยู่กับหน้าจอก่อนนอน" showBack showBell variant="soft" />
-          <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+          <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
           <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
             {renderStatusBanner()}
@@ -2412,7 +2412,7 @@ export default function ActivityTaskPage() {
 
             {!isViewingCurrentWeek ? (
               <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-700">
-                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะสัปดาห์ปัจจุบัน
+                ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะเดือนปัจจุบัน
               </div>
             ) : (
               <button
@@ -2432,7 +2432,7 @@ export default function ActivityTaskPage() {
                 <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   <AlarmClockCheck size={13} />
-                  สัปดาห์นี้ได้ {monthlyScreenTimePoints} คะแนน
+                  เดือนนี้ได้ {monthlyScreenTimePoints} คะแนน
                 </span>
               </div>
 
@@ -2488,7 +2488,7 @@ export default function ActivityTaskPage() {
     <MobileShell>
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={activeConfig.label} showBack showBell variant="soft" />
-        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+        <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
         <main className={`space-y-4 px-4 py-4 ${activeTaskLoading ? "pointer-events-none opacity-70" : ""}`}>
           {renderStatusBanner()}

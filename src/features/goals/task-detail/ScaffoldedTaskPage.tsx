@@ -15,11 +15,10 @@ import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { getEndOfMonth, getStartOfMonth, isCurrentMonth, toDateKey, toMonthKey } from "../../../utils/weekPeriod";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
 import {
-  formatThaiDate,
   getBoolean,
   getLogTimestamp,
   getScaffoldedEntryType,
@@ -68,14 +67,16 @@ export default function ScaffoldedTaskPage() {
   const resolvedCategory = config?.category;
   const taskConfig = config?.tasks.find((item) => item.slug === task);
 
-  const [weekStartKey] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
+  const [monthKey] = useState(() => {
+    const saved = sessionStorage.getItem("goals-month");
     if (saved) return saved;
-    return toDateKey(getStartOfWeek(new Date()));
+    return toMonthKey(new Date());
   });
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
-  const weekStartDate = new Date(weekStartKey + "T00:00:00");
-  const weekEndDate = addDays(weekStartDate, 6);
+  const isViewingCurrentWeek = isCurrentMonth(monthKey);
+  const weekStartDate = getStartOfMonth(new Date(monthKey + "-01T00:00:00"));
+  const weekEndDate = getEndOfMonth(weekStartDate);
+  const weekStartKey = toDateKey(weekStartDate);
+  const weekEndKey = toDateKey(weekEndDate);
 
   const [done, setDone] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,15 +88,10 @@ export default function ScaffoldedTaskPage() {
 
   const Icon = getActivityIcon(activity);
 
-  const monthlyPoints = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const monthKey = `${year}-${month}`;
-    return history
-      .filter((item) => item.date.startsWith(monthKey))
-      .reduce((sum, item) => sum + item.point, 0);
-  }, [history]);
+  const monthlyPoints = useMemo(
+    () => history.filter((item) => item.date.startsWith(monthKey)).reduce((sum, item) => sum + item.point, 0),
+    [history, monthKey]
+  );
 
   const loadTaskState = useCallback(async (forceRefresh = false) => {
     if (!config || !task || !resolvedCategory) return;
@@ -105,11 +101,6 @@ export default function ScaffoldedTaskPage() {
       setHistoryLoading(true);
       setError(null);
 
-      const weekEndKey = toDateKey(
-        new Date(new Date(weekStartKey + "T00:00:00").setDate(
-          new Date(weekStartKey + "T00:00:00").getDate() + 6
-        ))
-      );
 
       const [weekResponse, historyResponse] = await Promise.all([
         listScaffoldedTaskLogs(
@@ -157,9 +148,9 @@ export default function ScaffoldedTaskPage() {
         setDone(null);
       }
 
-      // Build history — dedup by week (handles old records saved on non-Monday dates)
+      // Build history — dedup by month
       if (historyResponse.success) {
-        const byWeek = new Map<string, ScaffoldedHistoryItem>();
+        const byMonth = new Map<string, ScaffoldedHistoryItem>();
         [...(historyResponse.data || [])]
           .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
           .forEach((log) => {
@@ -168,13 +159,13 @@ export default function ScaffoldedTaskPage() {
             if (!parsed || parsed.task !== task) return;
             const logDate = new Date(log.log_date + "T00:00:00");
             if (Number.isNaN(logDate.getTime())) return;
-            const weekKey = toDateKey(getStartOfWeek(logDate));
-            if (byWeek.has(weekKey)) return;
+            const mk = toMonthKey(logDate);
+            if (byMonth.has(mk)) return;
 
             const isDone = getBoolean(parsed.payload.done, parsed.score > 0);
-            byWeek.set(weekKey, {
+            byMonth.set(mk, {
               id: log.id,
-              date: weekKey,
+              date: mk,
               done: isDone,
               score: parsed.score,
               point: isDone ? 1 : 0,
@@ -182,9 +173,9 @@ export default function ScaffoldedTaskPage() {
           });
 
         setHistory(
-          Array.from(byWeek.values())
+          Array.from(byMonth.values())
             .sort((a, b) => b.date.localeCompare(a.date))
-            .slice(0, 14)
+            .slice(0, 12)
         );
       }
     } catch (err) {
@@ -265,7 +256,7 @@ export default function ScaffoldedTaskPage() {
     <MobileShell>
       <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,#fff6db_0%,#f7fdff_42%,#e8f7ef_100%)]">
         <AppHeader title={taskConfig.label} showBack showBell variant="soft" />
-        <WeekNavBar weekStartDate={weekStartDate} weekEndDate={weekEndDate} isCurrentWeek={isViewingCurrentWeek} />
+        <WeekNavBar monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek} />
 
         <main className={`space-y-4 px-4 py-4 ${loading ? "pointer-events-none opacity-70" : ""}`}>
           {error ? (
@@ -348,7 +339,7 @@ export default function ScaffoldedTaskPage() {
 
           {!isViewingCurrentWeek ? (
             <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center text-sm text-amber-700">
-              ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะสัปดาห์ปัจจุบัน
+              ดูย้อนหลังเท่านั้น — บันทึกได้เฉพาะเดือนปัจจุบัน
             </div>
           ) : (
             <button
@@ -365,10 +356,10 @@ export default function ScaffoldedTaskPage() {
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-slate-900">ประวัติรายสัปดาห์</h3>
+              <h3 className="text-base font-semibold text-slate-900">ประวัติรายเดือน</h3>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                 <AlarmClockCheck size={13} />
-                สัปดาห์นี้ได้ {monthlyPoints} คะแนน
+                เดือนนี้ได้ {monthlyPoints} คะแนน
               </span>
             </div>
 
@@ -388,7 +379,7 @@ export default function ScaffoldedTaskPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-slate-900">{formatThaiDate(item.date)}</p>
+                      <p className="text-sm font-medium text-slate-900">{new Date(item.date + "-01T00:00:00").toLocaleDateString("th-TH", { month: "long", year: "numeric" })}</p>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           item.done ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"

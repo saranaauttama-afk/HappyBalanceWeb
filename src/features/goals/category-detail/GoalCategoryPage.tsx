@@ -10,7 +10,7 @@ import { goalsService } from "../../../services/goals.service";
 import { logsService } from "../../../services/logs.service";
 import type { Goal } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, toMonthKey, addMonths } from '../../../utils/weekPeriod';
 import {
   getLogTimestamp as getMentalLogTimestamp,
   parsePositiveThinkingTaskNote,
@@ -276,16 +276,17 @@ export default function GoalCategoryPage() {
   const config = CATEGORY_MAP[category ?? "physical"] ?? CATEGORY_MAP.physical;
   const userId = getCurrentUserId();
   const [weekStartDate, setWeekStartDate] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
-    return getStartOfWeek(new Date());
+    const saved = sessionStorage.getItem("goals-month");
+    if (saved) return getStartOfMonth(new Date(saved + "-01T00:00:00"));
+    return getStartOfMonth(new Date());
   });
   const weekStartKey = toDateKey(weekStartDate);
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const monthKey = toMonthKey(weekStartDate);
+  const weekEndDate = getEndOfMonth(weekStartDate);
+  const isViewingCurrentWeek = isCurrentMonth(monthKey);
 
   useEffect(() => {
-    sessionStorage.setItem("goals-week", weekStartKey);
+    sessionStorage.setItem("goals-month", monthKey);
   }, [weekStartKey]);
   const usesLiveProgress = ["physical", "mental", "social", "balance"].includes(category ?? "");
 
@@ -693,12 +694,10 @@ export default function GoalCategoryPage() {
           subtitle={loading ? "กำลังโหลดข้อมูล..." : "เลือกกิจกรรมเพื่ออัปเดตคะแนน"}
         />
         <WeekNavBar
-          weekStartDate={weekStartDate}
-          weekEndDate={weekEndDate}
-          isCurrentWeek={isViewingCurrentWeek}
-          isPrevDisabled={toDateKey(weekStartDate) <= toDateKey(getStartOfWeek(new Date(new Date().getFullYear(), 3, 1)))}
-          onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
-          onNext={() => { if (!isViewingCurrentWeek) setWeekStartDate((prev) => addDays(prev, 7)); }}
+          monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
+          isPrevDisabled={toDateKey(weekStartDate) <= toDateKey(getStartOfMonth(new Date(new Date().getFullYear(), 3, 1)))}
+          onPrev={() => setWeekStartDate((prev) => addMonths(prev, -1))}
+          onNext={() => { if (!isViewingCurrentWeek) setWeekStartDate((prev) => addMonths(prev, 1)); }}
         />
 
         <main className="relative z-10 space-y-4 px-4 py-4">

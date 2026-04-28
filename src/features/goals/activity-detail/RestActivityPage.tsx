@@ -8,7 +8,7 @@ import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth } from '../../../utils/weekPeriod';
 import { REST_TASKS } from "../tasks/restTasks";
 
 
@@ -116,20 +116,19 @@ export default function RestActivityPage() {
   const [error, setError] = useState<string | null>(null);
 
   const weekStartDate = useMemo(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
-    return getStartOfWeek(new Date());
+    const saved = sessionStorage.getItem("goals-month");
+    if (saved) return getStartOfMonth(new Date(saved + "-01T00:00:00"));
+    return getStartOfMonth(new Date());
   }, []);
   const weekStartKey = toDateKey(weekStartDate);
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey.slice(0, 7));
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const weekEndKey = toDateKey(addDays(weekStartDate, 6));
+      const weekEndKey = toDateKey(getEndOfMonth(weekStartDate));
       const logsResponse = await logsService.listRestTaskLogs(userId ?? undefined, {
         limit: 240,
         from: weekStartKey,
@@ -199,9 +198,7 @@ export default function RestActivityPage() {
           subtitle={loading ? "กำลังโหลดข้อมูล..." : "ติดตามกิจกรรมพักผ่อนและคุณภาพการนอน"}
         />
         <WeekNavBar
-          weekStartDate={weekStartDate}
-          weekEndDate={weekEndDate}
-          isCurrentWeek={isViewingCurrentWeek}
+          monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
         />
 
         <main className="relative z-10 space-y-4 px-4 py-4">

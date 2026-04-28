@@ -1,7 +1,7 @@
 import { api } from "./api";
 import type { ApiResponse } from "../types/models";
 import type { DailyLog } from "../types/models";
-import { getCurrentWeekRange } from "../utils/weekPeriod";
+import { getCurrentMonthRange } from "../utils/weekPeriod";
 
 const DEMO_USER_ID = "demo-user-001";
 const READ_CACHE_TTL_MS = 90 * 1000;
@@ -89,11 +89,11 @@ function applyCurrentWeekDefaults<T extends { from?: string; to?: string }>(filt
     return filters;
   }
 
-  const currentWeek = getCurrentWeekRange();
+  const currentMonth = getCurrentMonthRange();
   return {
     ...filters,
-    from: currentWeek.from,
-    to: currentWeek.to,
+    from: currentMonth.from,
+    to: currentMonth.to,
   };
 }
 

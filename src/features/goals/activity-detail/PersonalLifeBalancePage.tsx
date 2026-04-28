@@ -6,12 +6,7 @@ import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import {
-  addDays,
-  getStartOfWeek,
-  isCurrentWeek,
-  toDateKey,
-} from "../../../utils/weekPeriod";
+import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, addDays } from '../../../utils/weekPeriod';
 import {
   getLogTimestamp,
   parsePersonalBalanceDailyNote,
@@ -86,13 +81,13 @@ export default function PersonalLifeBalancePage() {
   const todayKey = useMemo(getTodayKey, []);
 
   const [weekStartDate, setWeekStartDate] = useState(() => {
-    const saved = sessionStorage.getItem("goals-week");
-    if (saved) return getStartOfWeek(new Date(saved + "T00:00:00"));
-    return getStartOfWeek(new Date());
+    const saved = sessionStorage.getItem("goals-month");
+    if (saved) return getStartOfMonth(new Date(saved + "-01T00:00:00"));
+    return getStartOfMonth(new Date());
   });
   const weekStartKey = toDateKey(weekStartDate);
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const weekEndDate = getEndOfMonth(weekStartDate);
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey.slice(0, 7));
 
   const weekDays = useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStartDate, i)),
@@ -100,7 +95,7 @@ export default function PersonalLifeBalancePage() {
   );
 
   const minWeekKey = toDateKey(
-    getStartOfWeek(new Date(new Date().getFullYear(), 3, 1))
+    getStartOfMonth(new Date(new Date().getFullYear(), 3, 1))
   );
 
   const [weekData, setWeekData] = useState<Record<string, DayData>>({});
@@ -243,9 +238,7 @@ export default function PersonalLifeBalancePage() {
           subtitle="บันทึกสิ่งที่ทำเพื่อตัวเองในวันนี้"
         />
         <WeekNavBar
-          weekStartDate={weekStartDate}
-          weekEndDate={weekEndDate}
-          isCurrentWeek={isViewingCurrentWeek}
+          monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           isPrevDisabled={weekStartKey <= minWeekKey}
           onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
           onNext={() => {

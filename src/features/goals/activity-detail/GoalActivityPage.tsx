@@ -5,7 +5,7 @@ import MobileShell from "../../../components/layout/MobileShell";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { addDays, getStartOfWeek, isCurrentWeek, toDateKey } from "../../../utils/weekPeriod";
+import { getStartOfMonth, isCurrentMonth, toMonthKey } from '../../../utils/weekPeriod';
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import { STRESS_TASKS } from "../tasks/stressTasks";
 import { SOCIAL_TASKS } from "../tasks/socialTasks";
@@ -138,12 +138,11 @@ export default function GoalActivityPage() {
   }
 
   const weekStartKey = (() => {
-    const saved = sessionStorage.getItem("goals-week");
-    return saved ?? toDateKey(getStartOfWeek(new Date()));
+    const saved = sessionStorage.getItem("goals-month");
+    return saved ?? toMonthKey(new Date());
   })();
-  const weekStartDate = new Date(weekStartKey + "T00:00:00");
-  const weekEndDate = addDays(weekStartDate, 6);
-  const isViewingCurrentWeek = isCurrentWeek(weekStartKey);
+  const weekStartDate = getStartOfMonth(new Date(weekStartKey + "-01T00:00:00"));
+  const isViewingCurrentWeek = isCurrentMonth(weekStartKey);
 
   const [positiveThinkingCompletion, setPositiveThinkingCompletion] = useState<Record<string, boolean>>({});
   const [positiveThinkingLatestDate, setPositiveThinkingLatestDate] = useState<string | null>(null);
@@ -525,9 +524,7 @@ export default function GoalActivityPage() {
             subtitle="บันทึกกิจกรรมเล็ก ๆ ที่ช่วยให้ใจมองโลกในมุมที่ดีขึ้น"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -692,9 +689,7 @@ export default function GoalActivityPage() {
             subtitle="ติดตามกิจกรรมเล็ก ๆ ที่ช่วยให้ร่างกายและใจค่อย ๆ ผ่อนลง"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -858,9 +853,7 @@ export default function GoalActivityPage() {
             subtitle="บันทึกความสัมพันธ์ที่ดีในบ้านอย่างต่อเนื่อง"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1017,9 +1010,7 @@ export default function GoalActivityPage() {
             subtitle="ประเมินภาพรวมด้วยคำตอบแบบ Yes / No"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1167,9 +1158,7 @@ export default function GoalActivityPage() {
             subtitle="สร้างบรรยากาศการทำงานที่ร่วมมือกันได้ดี"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1326,9 +1315,7 @@ export default function GoalActivityPage() {
             subtitle="รักษาความสัมพันธ์ที่ดีทั้งกับครอบครัวและผู้คนรอบตัว"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
@@ -1486,9 +1473,7 @@ export default function GoalActivityPage() {
             subtitle="จัดจังหวะการทำงานให้พอดี ไม่หนักจนเกินไป"
           />
           <WeekNavBar
-            weekStartDate={weekStartDate}
-            weekEndDate={weekEndDate}
-            isCurrentWeek={isViewingCurrentWeek}
+            monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           />
 
           <main className="relative z-10 space-y-4 px-4 py-4">
