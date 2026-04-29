@@ -1,4 +1,4 @@
-﻿import {
+import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -18,7 +18,6 @@ import type { Appointment, DailyLog } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
 import { isCurrentMonth } from "../../utils/weekPeriod";
 
-
 function pad(value: number) {
   return String(value).padStart(2, "0");
 }
@@ -37,31 +36,22 @@ function toDateKey(date: Date) {
 
 function parseDateValue(value: string) {
   if (!value) return null;
-
-  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (dateOnlyMatch) {
-    const year = Number(dateOnlyMatch[1]);
-    const month = Number(dateOnlyMatch[2]);
-    const day = Number(dateOnlyMatch[3]);
-    const parsed = new Date(year, month - 1, day);
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const parsed = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
-
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed;
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function getLogTimestamp(log: DailyLog) {
   const createdAt = log.created_at ? new Date(log.created_at).getTime() : Number.NaN;
   if (Number.isFinite(createdAt)) return createdAt;
-
   const updatedAt = log.updated_at ? new Date(log.updated_at).getTime() : Number.NaN;
   if (Number.isFinite(updatedAt)) return updatedAt;
-
   const logDate = log.log_date ? new Date(log.log_date).getTime() : Number.NaN;
   if (Number.isFinite(logDate)) return logDate;
-
   return 0;
 }
 
@@ -69,15 +59,8 @@ function isStructuredTaskNote(note: unknown) {
   if (typeof note !== "string") return false;
   const trimmed = note.trim();
   if (!trimmed.startsWith("{")) return false;
-
   try {
-    const parsed = JSON.parse(trimmed) as {
-      entry_type?: unknown;
-      category?: unknown;
-      activity?: unknown;
-      task?: unknown;
-    };
-
+    const parsed = JSON.parse(trimmed) as { entry_type?: unknown; category?: unknown; activity?: unknown; task?: unknown };
     return (
       typeof parsed.entry_type === "string" &&
       typeof parsed.category === "string" &&
@@ -100,62 +83,24 @@ function addDays(date: Date, days: number) {
   return new Date(next.getFullYear(), next.getMonth(), next.getDate());
 }
 
-function getStartOfWeek(date: Date) {
-  const normalized = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const weekday = normalized.getDay();
-  const offset = weekday === 0 ? -6 : 1 - weekday;
-  return addDays(normalized, offset);
-}
-
-function getWeekDays(weekStartDate: Date) {
-  return Array.from({ length: 7 }, (_, index) => addDays(weekStartDate, index));
-}
-
 function getDefaultAppointmentSelection() {
   const now = new Date();
   now.setDate(now.getDate() + 1);
   now.setHours(10, 0, 0, 0);
-  return {
-    date: toDateInputValue(now),
-    time: toTimeInputValue(now),
-  };
+  return { date: toDateInputValue(now), time: toTimeInputValue(now) };
 }
 
 function formatThaiDate(date: Date) {
-  return date.toLocaleDateString("th-TH", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  return date.toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatThaiDateTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
   return date.toLocaleString("th-TH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    hourCycle: "h23",
+    year: "numeric", month: "short", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false, hourCycle: "h23",
   });
-}
-
-function formatWeekRange(startDate: Date) {
-  const endDate = addDays(startDate, 6);
-  const startLabel = startDate.toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "short",
-  });
-  const endLabel = endDate.toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-
-  return `${startLabel} - ${endLabel}`;
 }
 
 function formatTypeLabel(value: string) {
@@ -179,10 +124,9 @@ function getStatusStyle(status: Appointment["status"]) {
   return "bg-rose-50 text-rose-700";
 }
 
-const cardClassName =
-  "border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(31,47,61,0.12)] backdrop-blur";
+const cardClassName = "border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(31,47,61,0.12)] backdrop-blur";
 const quickAppointmentTimes = ["09:00", "13:00", "16:00", "19:00"];
-const appointmentHourOptions = Array.from({ length: 24 }, (_, index) => pad(index));
+const appointmentHourOptions = Array.from({ length: 24 }, (_, i) => pad(i));
 const appointmentMinuteOptions = ["00", "15", "30", "45"];
 const weekDayLabels = ["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."];
 
@@ -201,9 +145,9 @@ export default function AppointmentsPage() {
   const [dailyLogMessage, setDailyLogMessage] = useState("");
   const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const initialDate = useMemo(() => getStartOfToday(), []);
-  const [weekStartDate, setWeekStartDate] = useState(() => getStartOfWeek(initialDate));
-  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const today = useMemo(() => getStartOfToday(), []);
+  const [monthStart, setMonthStart] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(today);
 
   const defaultAppointmentSelection = useMemo(() => getDefaultAppointmentSelection(), []);
   const [appointmentDate, setAppointmentDate] = useState(defaultAppointmentSelection.date);
@@ -219,20 +163,12 @@ export default function AppointmentsPage() {
     try {
       setLoading(true);
       setError(null);
-
       const [appointmentsResponse, dailyLogsResponse] = await Promise.all([
         appointmentsService.listAppointments(userId ?? undefined),
         userId ? logsService.listDailyLogs(userId) : logsService.listDailyLogs(),
       ]);
-
-      if (!appointmentsResponse.success) {
-        throw new Error(appointmentsResponse.error || "ไม่สามารถโหลดข้อมูลการนัดหมายได้");
-      }
-
-      if (!dailyLogsResponse.success) {
-        throw new Error(dailyLogsResponse.error || "ไม่สามารถโหลดบันทึกประจำวันได้");
-      }
-
+      if (!appointmentsResponse.success) throw new Error(appointmentsResponse.error || "ไม่สามารถโหลดข้อมูลการนัดหมายได้");
+      if (!dailyLogsResponse.success) throw new Error(dailyLogsResponse.error || "ไม่สามารถโหลดบันทึกประจำวันได้");
       setAppointments(appointmentsResponse.data || []);
       setDailyLogs(dailyLogsResponse.data || []);
     } catch (err) {
@@ -242,16 +178,33 @@ export default function AppointmentsPage() {
     }
   }, [userId]);
 
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+  useEffect(() => { void loadData(); }, [loadData]);
+
+  // Month-level derived values
+  const monthKey = useMemo(
+    () => `${monthStart.getFullYear()}-${pad(monthStart.getMonth() + 1)}`,
+    [monthStart]
+  );
+  const isCurrentMonthShown = useMemo(() => isCurrentMonth(monthKey), [monthKey]);
+  const monthLabel = useMemo(
+    () => monthStart.toLocaleDateString("th-TH", { month: "long", year: "numeric" }),
+    [monthStart]
+  );
+  const monthDays = useMemo(() => {
+    const year = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => new Date(year, month, i + 1));
+  }, [monthStart]);
+  const monthDateKeys = useMemo(() => monthDays.map((d) => toDateKey(d)), [monthDays]);
+  // Mon-first offset: Mon=0 … Sun=6
+  const monthStartOffset = useMemo(() => {
+    const dow = monthStart.getDay();
+    return dow === 0 ? 6 : dow - 1;
+  }, [monthStart]);
 
   const selectedDateKey = useMemo(() => toDateKey(selectedDate), [selectedDate]);
-  const weekStartKey = useMemo(() => toDateKey(weekStartDate), [weekStartDate]);
-  const weekDays = useMemo(() => getWeekDays(weekStartDate), [weekStartDate]);
-  const weekDateKeys = useMemo(() => weekDays.map((date) => toDateKey(date)), [weekDays]);
-  const weekLabel = useMemo(() => formatWeekRange(weekStartDate), [weekStartDate]);
-  const isEditableSelectedWeek = useMemo(() => isCurrentMonth(weekStartKey.slice(0, 7)), [weekStartKey]);
+  const isEditableMonth = useMemo(() => isCurrentMonth(selectedDateKey.slice(0, 7)), [selectedDateKey]);
 
   const journalLogs = useMemo(
     () => dailyLogs.filter((item) => !isStructuredTaskNote(item.note)),
@@ -282,6 +235,60 @@ export default function AppointmentsPage() {
     setDailyLogMessage("");
   }, [selectedDateKey, selectedDailyLog]);
 
+  const monthlyAppointments = useMemo(() => {
+    const keySet = new Set(monthDateKeys);
+    return [...appointments]
+      .filter((item) => {
+        const date = parseDateValue(item.appointment_date);
+        if (!date) return false;
+        return keySet.has(toDateKey(date));
+      })
+      .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime());
+  }, [appointments, monthDateKeys]);
+
+  const appointmentDaySet = useMemo(() => {
+    const keys = new Set<string>();
+    appointments.forEach((item) => {
+      const date = parseDateValue(item.appointment_date);
+      if (date) keys.add(toDateKey(date));
+    });
+    return keys;
+  }, [appointments]);
+
+  const dailyLogDaySet = useMemo(() => {
+    const keys = new Set<string>();
+    monthDateKeys.forEach((key) => { if (dailyLogByDate.has(key)) keys.add(key); });
+    return keys;
+  }, [dailyLogByDate, monthDateKeys]);
+
+  const monthlyPendingCount = useMemo(
+    () => monthlyAppointments.filter((item) => item.status === "pending").length,
+    [monthlyAppointments]
+  );
+  const monthlyJournalCount = dailyLogDaySet.size;
+
+  function handleChangeMonth(offset: number) {
+    setMonthStart((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+  }
+
+  function handleSelectCurrentMonth() {
+    const t = getStartOfToday();
+    setMonthStart(new Date(t.getFullYear(), t.getMonth(), 1));
+    setSelectedDate(t);
+  }
+
+  function handleSelectDate(date: Date) {
+    setSelectedDate(date);
+    setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+
+  function handleAppointmentHourChange(hour: string) {
+    setAppointmentTime(`${hour}:${appointmentMinute}`);
+  }
+
+  function handleAppointmentMinuteChange(minute: string) {
+    setAppointmentTime(`${appointmentHour}:${minute}`);
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -292,13 +299,11 @@ export default function AppointmentsPage() {
       setError("กรุณาเลือกวันและเวลาให้ครบ");
       return;
     }
-
     const parsedDate = new Date(`${appointmentDate}T${appointmentTime}`);
     if (Number.isNaN(parsedDate.getTime())) {
       setError("กรุณาเลือกวันเวลาให้ถูกต้อง");
       return;
     }
-
     const tomorrow = addDays(getStartOfToday(), 1);
     if (parsedDate < tomorrow) {
       setError(`กรุณาเลือกวันนัดหมายล่วงหน้าเท่านั้น (ตั้งแต่ ${formatThaiDate(tomorrow)} เป็นต้นไป)`);
@@ -314,11 +319,7 @@ export default function AppointmentsPage() {
         status: "pending",
         note: note.trim(),
       });
-
-      if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถส่งคำขอนัดหมายได้");
-      }
-
+      if (!response.success) throw new Error(response.error || "ไม่สามารถส่งคำขอนัดหมายได้");
       setSuccessMessage("ส่งคำขอนัดหมายเรียบร้อยแล้ว");
       setNote("");
       await loadData();
@@ -330,23 +331,19 @@ export default function AppointmentsPage() {
   }
 
   async function handleSaveDailyLog() {
-    if (!isEditableSelectedWeek) {
+    if (!isEditableMonth) {
       setError("สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น");
       return;
     }
-
     setError(null);
     setDailyLogMessage("");
-
     const trimmedNote = dailyNote.trim();
     if (!trimmedNote) {
       setError("กรุณากรอกบันทึกประจำวันก่อนบันทึก");
       return;
     }
-
     try {
       setSavingDailyLog(true);
-
       const response = await logsService.createDailyLog({
         user_id: userId ?? undefined,
         log_date: selectedDateKey,
@@ -355,19 +352,11 @@ export default function AppointmentsPage() {
         stress: 3,
         note: trimmedNote,
       });
-
-      if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลประจำวันได้");
-      }
-
+      if (!response.success) throw new Error(response.error || "ไม่สามารถบันทึกข้อมูลประจำวันได้");
       const logsResponse = userId
         ? await logsService.listDailyLogs(userId)
         : await logsService.listDailyLogs();
-
-      if (!logsResponse.success) {
-        throw new Error(logsResponse.error || "บันทึกสำเร็จ แต่โหลดข้อมูลล่าสุดไม่สำเร็จ");
-      }
-
+      if (!logsResponse.success) throw new Error(logsResponse.error || "บันทึกสำเร็จ แต่โหลดข้อมูลล่าสุดไม่สำเร็จ");
       setDailyLogs(logsResponse.data || []);
       setDailyLogMessage(`บันทึกวันที่ ${formatThaiDate(selectedDate)} เรียบร้อยแล้ว`);
     } catch (err) {
@@ -379,18 +368,12 @@ export default function AppointmentsPage() {
 
   async function handleDeleteAppointment() {
     if (!deleteConfirmId) return;
-
     setError(null);
     setDeletingId(deleteConfirmId);
     setDeleteConfirmId(null);
     try {
-      const response = await appointmentsService.deleteAppointment(
-        deleteConfirmId,
-        userId ?? undefined
-      );
-      if (!response.success) {
-        throw new Error(response.error || "ไม่สามารถลบรายการนัดหมายได้");
-      }
+      const response = await appointmentsService.deleteAppointment(deleteConfirmId, userId ?? undefined);
+      if (!response.success) throw new Error(response.error || "ไม่สามารถลบรายการนัดหมายได้");
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
@@ -399,75 +382,7 @@ export default function AppointmentsPage() {
     }
   }
 
-  const weeklyAppointments = useMemo(() => {
-    const keySet = new Set(weekDateKeys);
-    return [...appointments]
-      .filter((item) => {
-        const date = parseDateValue(item.appointment_date);
-        if (!date) return false;
-        return keySet.has(toDateKey(date));
-      })
-      .sort((a, b) => {
-        return new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime();
-      });
-  }, [appointments, weekDateKeys]);
-
-  const appointmentDaySet = useMemo(() => {
-    const keys = new Set<string>();
-    weeklyAppointments.forEach((item) => {
-      const date = parseDateValue(item.appointment_date);
-      if (!date) return;
-      keys.add(toDateKey(date));
-    });
-    return keys;
-  }, [weeklyAppointments]);
-
-  const dailyLogDaySet = useMemo(() => {
-    const keys = new Set<string>();
-    weekDateKeys.forEach((key) => {
-      if (dailyLogByDate.has(key)) {
-        keys.add(key);
-      }
-    });
-    return keys;
-  }, [dailyLogByDate, weekDateKeys]);
-
-  const weeklyPendingCount = useMemo(
-    () => weeklyAppointments.filter((item) => item.status === "pending").length,
-    [weeklyAppointments]
-  );
-
-  const weeklyJournalCount = dailyLogDaySet.size;
-
-  function handleChangeWeek(offset: number) {
-    const selectedOffset = Math.max(
-      0,
-      Math.min(6, Math.round((selectedDate.getTime() - weekStartDate.getTime()) / 86400000))
-    );
-    const nextWeekStart = addDays(weekStartDate, offset * 7);
-    setWeekStartDate(nextWeekStart);
-    setSelectedDate(addDays(nextWeekStart, selectedOffset));
-  }
-
-  function handleSelectDate(date: Date) {
-    setSelectedDate(date);
-    setWeekStartDate(getStartOfWeek(date));
-  }
-
-  function handleSelectCurrentWeek() {
-    const today = getStartOfToday();
-    setWeekStartDate(getStartOfWeek(today));
-    setSelectedDate(today);
-  }
-
-  function handleAppointmentHourChange(hour: string) {
-    setAppointmentTime(`${hour}:${appointmentMinute}`);
-  }
-
-  function handleAppointmentMinuteChange(minute: string) {
-    setAppointmentTime(`${appointmentHour}:${minute}`);
-  }
-
+  const todayKey = toDateKey(today);
 
   return (
     <MobileShell>
@@ -478,88 +393,85 @@ export default function AppointmentsPage() {
 
         <AppHeader
           title="การนัดหมาย"
-          subtitle="ติดตามการนัดหมายและบันทึกรายสัปดาห์ในหน้าเดียว"
+          subtitle="ติดตามการนัดหมายและบันทึกรายเดือนในหน้าเดียว"
           showBell
           variant="soft"
         />
 
         <main className="relative z-10 flex-1 space-y-4 px-4 py-4">
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-              {error}
-            </div>
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</div>
           ) : null}
-
           {successMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              {successMessage}
-            </div>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{successMessage}</div>
           ) : null}
-
           {dailyLogMessage ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-              {dailyLogMessage}
-            </div>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">{dailyLogMessage}</div>
           ) : null}
 
+          {/* Summary strip */}
           <InfoCard className={`${cardClassName} rounded-3xl`}>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-2xl bg-white/80 px-2 py-3">
-                <p className="text-xs text-slate-500">นัดหมายสัปดาห์นี้</p>
-                <p className="text-lg font-semibold text-slate-900">{weeklyAppointments.length}</p>
+                <p className="text-xs text-slate-500">นัดหมายเดือนนี้</p>
+                <p className="text-lg font-semibold text-slate-900">{monthlyAppointments.length}</p>
               </div>
               <div className="rounded-2xl bg-amber-50 px-2 py-3">
                 <p className="text-xs text-amber-700">รอยืนยัน</p>
-                <p className="text-lg font-semibold text-amber-800">{weeklyPendingCount}</p>
+                <p className="text-lg font-semibold text-amber-800">{monthlyPendingCount}</p>
               </div>
               <div className="rounded-2xl bg-emerald-50 px-2 py-3">
                 <p className="text-xs text-emerald-700">บันทึกแล้ว</p>
-                <p className="text-lg font-semibold text-emerald-800">{weeklyJournalCount}</p>
+                <p className="text-lg font-semibold text-emerald-800">{monthlyJournalCount}</p>
               </div>
             </div>
           </InfoCard>
 
+          {/* Monthly calendar */}
           <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl`}>
             <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
-            <div className="space-y-4">
+            <div className="space-y-3">
+              {/* Header */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf4ff] text-[#4e7498]">
                     <CalendarDays size={18} />
                   </span>
                   <div>
-                    <h2 className="text-base font-semibold text-slate-900">ปฏิทินรายสัปดาห์</h2>
-                    <p className="text-sm text-slate-500">{weekLabel}</p>
+                    <h2 className="text-base font-semibold text-slate-900">ปฏิทินรายเดือน</h2>
+                    <p className="text-sm text-slate-500">{monthLabel}</p>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    onClick={() => handleChangeWeek(-1)}
+                    onClick={() => handleChangeMonth(-1)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    aria-label="สัปดาห์ก่อนหน้า"
+                    aria-label="เดือนก่อนหน้า"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
                     type="button"
-                    onClick={handleSelectCurrentWeek}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                    onClick={handleSelectCurrentMonth}
+                    disabled={isCurrentMonthShown}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-default disabled:opacity-40"
                   >
-                    สัปดาห์นี้
+                    เดือนนี้
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleChangeWeek(1)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    aria-label="สัปดาห์ถัดไป"
+                    onClick={() => handleChangeMonth(1)}
+                    disabled={isCurrentMonthShown}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:cursor-default disabled:opacity-30"
+                    aria-label="เดือนถัดไป"
                   >
                     <ChevronRight size={16} />
                   </button>
                 </div>
               </div>
 
+              {/* Legend */}
               <div className="flex items-center gap-4 text-xs text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -571,48 +483,49 @@ export default function AppointmentsPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
-                {weekDays.map((date, index) => {
+              {/* Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day-of-week headers */}
+                {weekDayLabels.map((label) => (
+                  <div key={label} className="py-1 text-center text-[11px] font-medium text-slate-400">
+                    {label}
+                  </div>
+                ))}
+
+                {/* Leading empty cells */}
+                {Array.from({ length: monthStartOffset }).map((_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+
+                {/* Day cells */}
+                {monthDays.map((date) => {
                   const cellKey = toDateKey(date);
                   const hasAppointment = appointmentDaySet.has(cellKey);
-                  const hasDailyLog = dailyLogDaySet.has(cellKey);
-                  const isToday = cellKey === toDateKey(getStartOfToday());
+                  const hasDailyLog = dailyLogByDate.has(cellKey);
+                  const isToday = cellKey === todayKey;
                   const isSelected = cellKey === selectedDateKey;
 
-                  const dateClass = isSelected
+                  const cellClass = isSelected
                     ? "bg-[#2f556a] text-white"
                     : isToday
                       ? "border border-[#d88d80]/60 bg-[#fff2ee] text-[#a55f4f]"
-                      : "bg-white/85 text-slate-700";
+                      : "bg-white/85 text-slate-700 hover:brightness-95";
 
                   return (
                     <button
                       key={cellKey}
                       type="button"
                       onClick={() => handleSelectDate(date)}
-                      className={`relative rounded-2xl px-2 py-3 text-center transition hover:brightness-95 ${dateClass}`}
+                      className={`relative rounded-xl pb-3 pt-2 text-center text-sm font-semibold transition ${cellClass}`}
                     >
-                      <p className="text-[11px] font-medium opacity-80">{weekDayLabels[index]}</p>
-                      <p className="mt-1 text-base font-semibold">{date.getDate()}</p>
-                      <p className="text-[11px] opacity-70">
-                        {date.toLocaleDateString("th-TH", { month: "short" })}
-                      </p>
-
+                      {date.getDate()}
                       {(hasDailyLog || hasAppointment) && (
-                        <span className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1">
+                        <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-0.5">
                           {hasDailyLog ? (
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                isSelected ? "bg-white" : "bg-emerald-500"
-                              }`}
-                            />
+                            <span className={`h-1 w-1 rounded-full ${isSelected ? "bg-white" : "bg-emerald-500"}`} />
                           ) : null}
                           {hasAppointment ? (
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                isSelected ? "bg-white/80" : "bg-[#d88d80]"
-                              }`}
-                            />
+                            <span className={`h-1 w-1 rounded-full ${isSelected ? "bg-white/80" : "bg-[#d88d80]"}`} />
                           ) : null}
                         </span>
                       )}
@@ -623,6 +536,7 @@ export default function AppointmentsPage() {
             </div>
           </InfoCard>
 
+          {/* Daily log */}
           <InfoCard className={`${cardClassName} rounded-3xl`}>
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -632,8 +546,8 @@ export default function AppointmentsPage() {
                 <div>
                   <h3 className="text-base font-semibold text-slate-900">บันทึกประจำวัน</h3>
                   <p className="text-sm text-slate-500">
-                    {isEditableSelectedWeek
-                      ? "เลือกวันจากสัปดาห์ที่แสดงเพื่อดูย้อนหลังหรือบันทึกเพิ่ม"
+                    {isEditableMonth
+                      ? "เลือกวันจากปฏิทินเพื่อดูย้อนหลังหรือบันทึกเพิ่ม"
                       : "สามารถบันทึกได้เฉพาะเดือนปัจจุบันเท่านั้น"}
                   </p>
                 </div>
@@ -649,9 +563,9 @@ export default function AppointmentsPage() {
                 onChange={(e) => setDailyNote(e.target.value)}
                 rows={4}
                 placeholder="วันนี้คุณรู้สึกอย่างไร หรือมีอะไรอยากบันทึก..."
-                disabled={savingDailyLog || !isEditableSelectedWeek}
+                disabled={savingDailyLog || !isEditableMonth}
                 className={`w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:border-[#d88d80] ${
-                  savingDailyLog || !isEditableSelectedWeek
+                  savingDailyLog || !isEditableMonth
                     ? "cursor-not-allowed bg-slate-50 text-slate-400"
                     : "bg-white"
                 }`}
@@ -660,9 +574,9 @@ export default function AppointmentsPage() {
               <button
                 type="button"
                 onClick={() => void handleSaveDailyLog()}
-                disabled={savingDailyLog || !isEditableSelectedWeek}
+                disabled={savingDailyLog || !isEditableMonth}
                 className={`w-full rounded-2xl px-4 py-3 font-medium text-white transition ${
-                  savingDailyLog || !isEditableSelectedWeek
+                  savingDailyLog || !isEditableMonth
                     ? "cursor-not-allowed bg-slate-300"
                     : "bg-[#4c9f7f] shadow-[0_14px_30px_rgba(76,159,127,0.3)] hover:brightness-105"
                 }`}
@@ -672,6 +586,7 @@ export default function AppointmentsPage() {
             </div>
           </InfoCard>
 
+          {/* Appointment booking form */}
           <InfoCard className={`${cardClassName} rounded-3xl`}>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex items-center gap-3">
@@ -720,9 +635,7 @@ export default function AppointmentsPage() {
                       className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
                     >
                       {appointmentHourOptions.map((hour) => (
-                        <option key={hour} value={hour}>
-                          {hour}
-                        </option>
+                        <option key={hour} value={hour}>{hour}</option>
                       ))}
                     </select>
                     <select
@@ -731,9 +644,7 @@ export default function AppointmentsPage() {
                       className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-[#d88d80]"
                     >
                       {appointmentMinuteOptions.map((minute) => (
-                        <option key={minute} value={minute}>
-                          {minute}
-                        </option>
+                        <option key={minute} value={minute}>{minute}</option>
                       ))}
                     </select>
                   </div>
@@ -792,35 +703,28 @@ export default function AppointmentsPage() {
             </form>
           </InfoCard>
 
+          {/* Appointment list */}
           <InfoCard className={`${cardClassName} rounded-3xl`}>
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-900">รายการนัดหมายในสัปดาห์นี้</h3>
-
+              <h3 className="text-sm font-semibold text-slate-900">รายการนัดหมายในเดือนนี้</h3>
               {loading ? (
                 <p className="text-sm text-slate-500">กำลังโหลดข้อมูลการนัดหมาย...</p>
-              ) : weeklyAppointments.length === 0 ? (
-                <p className="text-sm text-slate-500">ยังไม่มีรายการนัดหมายในสัปดาห์ที่เลือก</p>
+              ) : monthlyAppointments.length === 0 ? (
+                <p className="text-sm text-slate-500">ยังไม่มีรายการนัดหมายในเดือนที่เลือก</p>
               ) : (
                 <div className="space-y-3">
-                  {weeklyAppointments.map((item) => (
+                  {monthlyAppointments.map((item) => (
                     <div key={item.id} className="rounded-2xl bg-white/80 px-4 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="font-medium text-slate-900">{formatTypeLabel(item.type)}</p>
-                          <p className="mt-1 text-sm text-slate-500">
-                            {formatThaiDateTime(item.appointment_date)}
-                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{formatThaiDateTime(item.appointment_date)}</p>
                           {item.note ? (
                             <p className="mt-2 text-sm leading-6 text-slate-500">{item.note}</p>
                           ) : null}
                         </div>
-
                         <div className="flex shrink-0 items-center gap-2">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(
-                              item.status
-                            )}`}
-                          >
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${getStatusStyle(item.status)}`}>
                             {formatStatusLabel(item.status)}
                           </span>
                           <button
