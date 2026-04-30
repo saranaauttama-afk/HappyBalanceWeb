@@ -6,7 +6,7 @@ import MobileShell from "../../components/layout/MobileShell";
 import { adminService, type AdminUserRow } from "../../services/admin.service";
 import { getCurrentUser } from "../../utils/authSession";
 
-const ADMIN_EMAIL = "chaninatwattana@gmail.com";
+const ADMIN_EMAILS = new Set(["chaninatwattana@gmail.com", "kwansrn@hotmail.com"]);
 
 function ScorePill({ score }: { score: number | null }) {
   if (score === null) {
@@ -46,13 +46,13 @@ export default function AdminPage() {
 
   // Guard: only admin can access
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user || !ADMIN_EMAILS.has(user.email)) {
       navigate("/home", { replace: true });
     }
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) return;
+    if (!user || !ADMIN_EMAILS.has(user.email)) return;
 
     async function load() {
       try {
@@ -120,7 +120,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!user || user.email !== ADMIN_EMAIL) return null;
+  if (!user || !ADMIN_EMAILS.has(user.email)) return null;
 
   return (
     <MobileShell>

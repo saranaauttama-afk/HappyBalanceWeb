@@ -18,7 +18,7 @@ import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
 import { clearCurrentUser, getCurrentUser, getCurrentUserId } from "../../utils/authSession";
 
-const ADMIN_EMAIL = "chaninatwattana@gmail.com";
+const ADMIN_EMAILS = new Set(["chaninatwattana@gmail.com", "kwansrn@hotmail.com"]);
 
 const MAX_AVATAR_SIZE_MB = 2;
 const MAX_AVATAR_DIMENSION = 720;
@@ -390,7 +390,7 @@ export default function ProfilePage() {
               </Link>
             ))}
 
-            {getCurrentUser()?.email === ADMIN_EMAIL && (
+            {ADMIN_EMAILS.has(getCurrentUser()?.email ?? "") && (
               <Link to="/admin" className="group block">
                 <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl`}>
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#c9dff7] via-[#daeaf9] to-[#eef6ff]" />
