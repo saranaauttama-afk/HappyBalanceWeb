@@ -1,4 +1,4 @@
-import { Activity, Dumbbell, Heart, Search, ShieldCheck, Users } from "lucide-react";
+import { Activity, Crown, Dumbbell, Heart, Search, ShieldCheck, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../../components/layout/AppHeader";
@@ -20,6 +20,15 @@ function ScorePill({ score }: { score: number | null }) {
   return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>{score}</span>;
 }
 
+function ScoreBar({ score, color }: { score: number | null; color: string }) {
+  const pct = score ?? 0;
+  return (
+    <div className="flex-1 rounded-full bg-slate-100">
+      <div className={`h-2 rounded-full ${color} transition-all duration-500`} style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
 function avgOf(users: AdminUserRow[], key: keyof AdminUserRow) {
   const vals = users.map((u) => u[key]).filter((v): v is number => typeof v === "number");
   if (vals.length === 0) return null;
@@ -33,6 +42,90 @@ function formatThaiMonth(dateStr: string | null) {
   return d.toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" });
 }
 
+const SCORE_ROWS = [
+  { label: "ร่างกาย", key: "physical" as const, icon: Dumbbell, color: "bg-emerald-400", text: "text-emerald-600" },
+  { label: "จิตใจ",   key: "mental"   as const, icon: Heart,    color: "bg-sky-400",     text: "text-sky-600"     },
+  { label: "สังคม",   key: "social"   as const, icon: ShieldCheck, color: "bg-violet-400", text: "text-violet-600" },
+  { label: "สมดุล",  key: "balance"  as const, icon: Activity,  color: "bg-amber-400",   text: "text-amber-600"   },
+];
+
+function UserDetailSheet({ u, onClose }: { u: AdminUserRow; onClose: () => void }) {
+  const isAdminUser = ADMIN_EMAILS.has(u.email);
+  const initial = (u.fullName || u.email).charAt(0).toUpperCase();
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col justify-end"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div
+        className="relative rounded-t-3xl bg-white px-5 pb-8 pt-5 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* drag pill */}
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
+
+        {/* close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200"
+        >
+          <X size={16} />
+        </button>
+
+        {/* avatar + name */}
+        <div className="mb-5 flex items-center gap-3">
+          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white ${isAdminUser ? "bg-linear-to-br from-amber-400 to-amber-600" : "bg-linear-to-br from-[#4e7498] to-[#2f556a]"}`}>
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate font-semibold text-slate-800">{u.fullName || "—"}</p>
+              {isAdminUser && (
+                <span className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                  <Crown size={9} />Admin
+                </span>
+              )}
+            </div>
+            <p className="truncate text-xs text-slate-400">{u.email}</p>
+          </div>
+        </div>
+
+        {/* stats */}
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <p className="text-[11px] text-slate-400">บันทึกทั้งหมด</p>
+            <p className="mt-0.5 text-2xl font-bold text-slate-800">{u.logCount}</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <p className="text-[11px] text-slate-400">ใช้งานล่าสุด</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-700">{formatThaiMonth(u.lastActive)}</p>
+          </div>
+        </div>
+
+        {/* score bars */}
+        <div className="space-y-2.5">
+          {SCORE_ROWS.map(({ label, key, icon: Icon, color, text }) => {
+            const score = u[key] as number | null;
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <Icon size={13} className="shrink-0 text-slate-400" />
+                <span className="w-12 text-xs text-slate-600">{label}</span>
+                <ScoreBar score={score} color={color} />
+                <span className={`w-8 text-right text-sm font-semibold ${score !== null ? text : "text-slate-300"}`}>
+                  {score ?? "-"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const navigate = useNavigate();
   const userEmail = useMemo(() => getCurrentUser()?.email ?? "", []);
@@ -44,8 +137,8 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<"email" | "physical" | "mental" | "social" | "balance" | "lastActive">("lastActive");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedUser, setSelectedUser] = useState<AdminUserRow | null>(null);
 
-  // Guard: only admin can access
   useEffect(() => {
     if (!isAdmin) navigate("/home", { replace: true });
   }, [isAdmin, navigate]);
@@ -80,6 +173,11 @@ export default function AdminPage() {
           u.fullName.toLowerCase().includes(q)
       )
       .sort((a, b) => {
+        // admins always on top
+        const aIsAdmin = ADMIN_EMAILS.has(a.email);
+        const bIsAdmin = ADMIN_EMAILS.has(b.email);
+        if (aIsAdmin !== bIsAdmin) return aIsAdmin ? -1 : 1;
+
         let av: string | number | null = a[sortKey] as string | number | null;
         let bv: string | number | null = b[sortKey] as string | number | null;
         if (av === null) av = sortDir === "asc" ? Infinity : -Infinity;
@@ -168,22 +266,14 @@ export default function AdminPage() {
           {!loading && users.length > 0 && (
             <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur">
               <p className="mb-3 text-sm font-semibold text-slate-700">คะแนนเฉลี่ยแยกหมวด</p>
-              {[
-                { label: "ร่างกาย", key: "physical" as const, icon: Dumbbell, color: "bg-emerald-400" },
-                { label: "จิตใจ", key: "mental" as const, icon: Heart, color: "bg-sky-400" },
-                { label: "สังคม", key: "social" as const, icon: ShieldCheck, color: "bg-violet-400" },
-                { label: "สมดุล", key: "balance" as const, icon: Activity, color: "bg-amber-400" },
-              ].map(({ label, key, icon: Icon, color }) => {
+              {SCORE_ROWS.map(({ label, key, icon: Icon, color }) => {
                 const avg = avgOf(users, key) ?? 0;
                 return (
                   <div key={key} className="mb-2 flex items-center gap-3">
                     <Icon size={14} className="shrink-0 text-slate-400" />
                     <span className="w-12 text-xs text-slate-600">{label}</span>
                     <div className="flex-1 rounded-full bg-slate-100">
-                      <div
-                        className={`h-2 rounded-full ${color}`}
-                        style={{ width: `${avg}%` }}
-                      />
+                      <div className={`h-2 rounded-full ${color}`} style={{ width: `${avg}%` }} />
                     </div>
                     <span className="w-8 text-right text-xs font-semibold text-slate-700">{avg}</span>
                   </div>
@@ -205,8 +295,7 @@ export default function AdminPage() {
           </div>
 
           {/* User table */}
-          <div className="rounded-3xl border border-white/70 bg-white/80 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur overflow-hidden">
-            {/* Table header */}
+          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/80 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur">
             <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-2">
               <SortBtn col="email" label="ผู้ใช้" />
               <SortBtn col="physical" label="กาย" />
@@ -226,23 +315,34 @@ export default function AdminPage() {
               </p>
             ) : (
               <div className="divide-y divide-slate-100">
-                {filtered.map((u) => (
-                  <div key={u.userId} className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-800">
-                        {u.fullName || "—"}
-                      </p>
-                      <p className="truncate text-[11px] text-slate-400">{u.email}</p>
-                      <p className="text-[11px] text-slate-400">
-                        {u.lastActive ? formatThaiMonth(u.lastActive) : "ยังไม่มีข้อมูล"}
-                      </p>
-                    </div>
-                    <ScorePill score={u.physical} />
-                    <ScorePill score={u.mental} />
-                    <ScorePill score={u.social} />
-                    <ScorePill score={u.balance} />
-                  </div>
-                ))}
+                {filtered.map((u) => {
+                  const isAdminRow = ADMIN_EMAILS.has(u.email);
+                  return (
+                    <button
+                      key={u.userId}
+                      type="button"
+                      onClick={() => setSelectedUser(u)}
+                      className={`grid w-full grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 px-4 py-3 text-left active:opacity-70 ${isAdminRow ? "bg-amber-50/70" : "hover:bg-slate-50/60"}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="truncate text-sm font-medium text-slate-800">
+                            {u.fullName || "—"}
+                          </p>
+                          {isAdminRow && <Crown size={11} className="shrink-0 text-amber-500" />}
+                        </div>
+                        <p className="truncate text-[11px] text-slate-400">{u.email}</p>
+                        <p className="text-[11px] text-slate-400">
+                          {u.lastActive ? formatThaiMonth(u.lastActive) : "ยังไม่มีข้อมูล"}
+                        </p>
+                      </div>
+                      <ScorePill score={u.physical} />
+                      <ScorePill score={u.mental} />
+                      <ScorePill score={u.social} />
+                      <ScorePill score={u.balance} />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -252,6 +352,10 @@ export default function AdminPage() {
           </p>
         </main>
       </div>
+
+      {selectedUser && (
+        <UserDetailSheet u={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
     </MobileShell>
   );
 }
