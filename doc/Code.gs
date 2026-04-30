@@ -1480,7 +1480,9 @@ function getAppSettings_() {
   var rows = getAllObjects_(SHEET_NAMES.appSettings);
   var flat = {};
   rows.forEach(function (row) {
-    flat[String(row.key || "")] = String(row.value || "");
+    // Sheets auto-converts string "false"/"true" to booleans — handle both
+    var v = row.value;
+    flat[String(row.key || "")] = (v === false) ? "false" : (v === true) ? "true" : String(v || "");
   });
 
   var categories = ["physical", "mental", "social", "balance"];
