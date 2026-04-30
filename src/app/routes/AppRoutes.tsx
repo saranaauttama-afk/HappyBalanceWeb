@@ -42,6 +42,7 @@ import PersonalLifeBalanceTaskPage from "../../features/goals/task-detail/Person
 import ThanksSorryTaskPage from "../../features/goals/task-detail/ThanksSorryTaskPage";
 import WorkBalanceTaskPage from "../../features/goals/task-detail/WorkBalanceTaskPage";
 import ArticleDetailPage from "../../features/articles/ArticleDetailPage";
+import AdminPage from "../../features/admin/AdminPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -85,6 +86,7 @@ export default function AppRoutes() {
         <Route path="/profile/help" element={<HelpPage />} />
         <Route path="/daily-log" element={<DailyLogPage />} />
         <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
+        <Route path="/admin" element={<AdminPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route

@@ -2,6 +2,7 @@ import {
   Camera,
   ChevronRight,
   CircleHelp,
+  LayoutDashboard,
   LogOut,
   NotebookPen,
   SlidersHorizontal,
@@ -15,7 +16,9 @@ import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { profileService } from "../../services/profile.service";
 import type { User } from "../../types/models";
-import { clearCurrentUser, getCurrentUserId } from "../../utils/authSession";
+import { clearCurrentUser, getCurrentUser, getCurrentUserId } from "../../utils/authSession";
+
+const ADMIN_EMAIL = "chaninatwattana@gmail.com";
 
 const MAX_AVATAR_SIZE_MB = 2;
 const MAX_AVATAR_DIMENSION = 720;
@@ -386,6 +389,26 @@ export default function ProfilePage() {
                 </InfoCard>
               </Link>
             ))}
+
+            {getCurrentUser()?.email === ADMIN_EMAIL && (
+              <Link to="/admin" className="group block">
+                <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl`}>
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#c9dff7] via-[#daeaf9] to-[#eef6ff]" />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#e8f3ff] text-[#3a6ea8]">
+                        <LayoutDashboard size={18} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-semibold text-slate-800">Admin Dashboard</span>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">ดูภาพรวม progress ผู้ใช้ทั้งหมด</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-slate-400 transition group-hover:translate-x-0.5" />
+                  </div>
+                </InfoCard>
+              </Link>
+            )}
           </div>
 
           <button type="button" onClick={handleLogout} className="block w-full text-left">
