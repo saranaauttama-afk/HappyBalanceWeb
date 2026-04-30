@@ -314,6 +314,8 @@ function doPost(e) {
         return jsonOutput_(upsertMonthlyGoal_(body));
       case "updateAppSetting":
         return jsonOutput_(updateAppSetting_(body));
+      case "adminDeleteUser":
+        return jsonOutput_(adminDeleteUser_(body));
       default:
         return jsonOutput_({
           success: false,
@@ -1469,6 +1471,35 @@ function getAdminDashboard_(adminEmail) {
       users: rows,
     },
   };
+}
+
+function adminDeleteUser_(payload) {
+  var ADMIN_EMAILS_GAS = ["chaninatwattana@gmail.com", "kwansrn@hotmail.com"];
+  var adminEmail = String(payload.adminEmail || "").trim().toLowerCase();
+  if (ADMIN_EMAILS_GAS.indexOf(adminEmail) === -1) {
+    throw new Error("Access denied");
+  }
+
+  var userId = String(payload.userId || "").trim();
+  if (!userId) throw new Error("Missing userId");
+
+  var sheet = getSheet_(SHEET_NAMES.users);
+  var rows = getAllObjects_(SHEET_NAMES.users);
+  var index = rows.findIndex(function (row) {
+    return String(row.id || "") === userId;
+  });
+
+  if (index === -1) throw new Error("User not found");
+
+  var targetEmail = String(rows[index].email || "").trim().toLowerCase();
+  if (ADMIN_EMAILS_GAS.indexOf(targetEmail) !== -1) {
+    throw new Error("Cannot delete admin users");
+  }
+
+  sheet.deleteRow(index + 2);
+  bumpUserDataVersion_(userId);
+
+  return { success: true, data: { userId: userId } };
 }
 
 /* =========================

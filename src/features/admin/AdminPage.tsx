@@ -1,4 +1,4 @@
-import { Activity, Crown, Dumbbell, Heart, Search, ShieldCheck, Users, X } from "lucide-react";
+import { Activity, AlertTriangle, Crown, Dumbbell, Heart, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../../components/layout/AppHeader";
@@ -178,6 +178,67 @@ function UserDetailSheet({ u, onClose }: { u: AdminUserRow; onClose: () => void 
   );
 }
 
+function DeleteConfirmDialog({
+  u,
+  deleting,
+  onConfirm,
+  onCancel,
+}: {
+  u: AdminUserRow;
+  deleting: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const initial = (u.fullName || u.email).charAt(0).toUpperCase();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-5" onClick={onCancel}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative mx-auto w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Warning icon */}
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100">
+          <AlertTriangle size={26} className="text-rose-500" />
+        </div>
+
+        <h3 className="mb-1 text-center text-base font-bold text-slate-800">ลบผู้ใช้งาน?</h3>
+        <p className="mb-5 text-center text-xs text-slate-500">การกระทำนี้ไม่สามารถยกเลิกได้</p>
+
+        {/* User info */}
+        <div className="mb-5 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-[#4e7498] to-[#2f556a] text-sm font-bold text-white">
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-800">{u.fullName || "—"}</p>
+            <p className="truncate text-[11px] text-slate-400">{u.email}</p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={deleting}
+            className="flex-1 rounded-2xl bg-slate-100 py-3 text-sm font-semibold text-slate-600 active:opacity-70"
+          >
+            ยกเลิก
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={deleting}
+            className="flex-1 rounded-2xl bg-rose-500 py-3 text-sm font-semibold text-white shadow-sm active:opacity-80 disabled:opacity-60"
+          >
+            {deleting ? "กำลังลบ..." : "ลบ"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const navigate = useNavigate();
   const userEmail = useMemo(() => getCurrentUser()?.email ?? "", []);
@@ -199,6 +260,8 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<"ok" | "error" | null>(null);
   const [settingsLoadError, setSettingsLoadError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) navigate("/home", { replace: true });
@@ -261,6 +324,20 @@ export default function AdminPage() {
       setSaveResult("error");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await adminService.deleteUser(userEmail, deleteTarget.userId);
+      if (res.success) {
+        setUsers((prev) => prev.filter((u) => u.userId !== deleteTarget.userId));
+        setDeleteTarget(null);
+      }
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -475,29 +552,46 @@ export default function AdminPage() {
                 {filtered.map((u) => {
                   const isAdminRow = ADMIN_EMAILS.has(u.email);
                   return (
-                    <button
+                    <div
                       key={u.userId}
-                      type="button"
-                      onClick={() => setSelectedUser(u)}
-                      className={`grid w-full grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 px-4 py-3 text-left active:opacity-70 ${isAdminRow ? "bg-amber-50/70" : "hover:bg-slate-50/60"}`}
+                      className={`flex items-center gap-1 pr-2 ${isAdminRow ? "bg-amber-50/70" : ""}`}
                     >
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="truncate text-sm font-medium text-slate-800">
-                            {u.fullName || "—"}
+                      {/* clickable info area */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser(u)}
+                        className="grid min-w-0 flex-1 grid-cols-[1fr_auto_auto_auto_auto] items-center gap-2 px-4 py-3 text-left active:opacity-70"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-medium text-slate-800">
+                              {u.fullName || "—"}
+                            </p>
+                            {isAdminRow && <Crown size={11} className="shrink-0 text-amber-500" />}
+                          </div>
+                          <p className="truncate text-[11px] text-slate-400">{u.email}</p>
+                          <p className="text-[11px] text-slate-400">
+                            {u.lastActive ? formatThaiMonth(u.lastActive) : "ยังไม่มีข้อมูล"}
                           </p>
-                          {isAdminRow && <Crown size={11} className="shrink-0 text-amber-500" />}
                         </div>
-                        <p className="truncate text-[11px] text-slate-400">{u.email}</p>
-                        <p className="text-[11px] text-slate-400">
-                          {u.lastActive ? formatThaiMonth(u.lastActive) : "ยังไม่มีข้อมูล"}
-                        </p>
-                      </div>
-                      <ScorePill score={u.physical} />
-                      <ScorePill score={u.mental} />
-                      <ScorePill score={u.social} />
-                      <ScorePill score={u.balance} />
-                    </button>
+                        <ScorePill score={u.physical} />
+                        <ScorePill score={u.mental} />
+                        <ScorePill score={u.social} />
+                        <ScorePill score={u.balance} />
+                      </button>
+
+                      {/* delete button — only for non-admin users */}
+                      {!isAdminRow && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(u)}
+                          className="shrink-0 rounded-xl p-2 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-400 active:opacity-70"
+                          aria-label="ลบผู้ใช้"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -512,6 +606,15 @@ export default function AdminPage() {
 
       {selectedUser && (
         <UserDetailSheet u={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
+
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          u={deleteTarget}
+          deleting={deleting}
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setDeleteTarget(null)}
+        />
       )}
     </MobileShell>
   );

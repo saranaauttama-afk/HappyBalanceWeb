@@ -36,4 +36,8 @@ export const adminService = {
   async getDashboard(adminEmail: string): Promise<ApiResponse<AdminDashboardData>> {
     return api.get<AdminDashboardData>("getAdminDashboard", { adminEmail });
   },
+
+  async deleteUser(adminEmail: string, userId: string): Promise<ApiResponse<{ userId: string }>> {
+    return api.post("adminDeleteUser", { adminEmail, userId });
+  },
 };
