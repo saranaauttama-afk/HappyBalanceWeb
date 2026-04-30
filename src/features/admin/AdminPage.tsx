@@ -35,7 +35,7 @@ function formatThaiMonth(dateStr: string | null) {
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const user = useMemo(() => getCurrentUser(), []);
 
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
