@@ -35,7 +35,8 @@ function formatThaiMonth(dateStr: string | null) {
 
 export default function AdminPage() {
   const navigate = useNavigate();
-  const user = useMemo(() => getCurrentUser(), []);
+  const userEmail = useMemo(() => getCurrentUser()?.email ?? "", []);
+  const isAdmin = ADMIN_EMAILS.has(userEmail);
 
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,19 +47,17 @@ export default function AdminPage() {
 
   // Guard: only admin can access
   useEffect(() => {
-    if (!user || !ADMIN_EMAILS.has(user.email)) {
-      navigate("/home", { replace: true });
-    }
-  }, [user, navigate]);
+    if (!isAdmin) navigate("/home", { replace: true });
+  }, [isAdmin, navigate]);
 
   useEffect(() => {
-    if (!user || !ADMIN_EMAILS.has(user.email)) return;
+    if (!isAdmin) return;
 
     async function load() {
       try {
         setLoading(true);
         setError(null);
-        const res = await adminService.getDashboard(user!.email);
+        const res = await adminService.getDashboard(userEmail);
         if (!res.success) throw new Error(res.error || "โหลดข้อมูลไม่สำเร็จ");
         setUsers(res.data?.users ?? []);
       } catch (err) {
@@ -69,7 +68,7 @@ export default function AdminPage() {
     }
 
     void load();
-  }, [user]);
+  }, [isAdmin, userEmail]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -120,7 +119,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!user || !ADMIN_EMAILS.has(user.email)) return null;
+  if (!isAdmin) return null;
 
   return (
     <MobileShell>
