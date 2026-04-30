@@ -1397,7 +1397,7 @@ function getAdminDashboard_(adminEmail) {
 
   var todayDate = new Date();
   var firstOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
-  var monthCutoff = formatDateKey_(addDays_(firstOfMonth, -6));
+  var monthCutoff = formatDateKey_(firstOfMonth);
 
   // All activities per category — same order as GoalsPage so the denominator matches.
   var CATEGORY_ACTIVITIES = {
