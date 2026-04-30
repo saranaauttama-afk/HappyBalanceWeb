@@ -1377,12 +1377,6 @@ function getAdminDashboard_(adminEmail) {
     return String(u.status || "active") === "active";
   });
 
-  var evaluations = getAllObjectsIfSheetExists_(SHEET_NAMES.wellbeingEvaluations);
-  var evalByUserId = {};
-  evaluations.forEach(function (ev) {
-    evalByUserId[String(ev.user_id || "")] = ev;
-  });
-
   var dailyLogs = getAllObjectsIfSheetExists_(SHEET_NAMES.dailyLogs);
   var logCountByUser = {};
   var lastActiveByUser = {};
@@ -1399,41 +1393,37 @@ function getAdminDashboard_(adminEmail) {
   var nowPrefix = nowIso_().slice(0, 7);
   var activeThisMonth = 0;
 
-  // Activity scores: scan once, build both the current-month category averages
-  // and the per-user latest activity list for the detail panel.
   var activityScoreRows = getAllObjectsIfSheetExists_(SHEET_NAMES.weeklyActivityScores);
 
-  // cutoff = Monday of current week or first day of month minus 6 days (whichever is earlier)
-  // so we always include the current (possibly cross-month) week.
   var todayDate = new Date();
   var firstOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
   var monthCutoff = formatDateKey_(addDays_(firstOfMonth, -6));
 
-  var latestActivityByKey = {};   // for activities detail panel (all-time latest)
-  var monthCatBuckets = {};       // uid -> { category -> [score, ...] }
+  var latestActivityByKey = {};  // uid|cat|act -> row (current month only)
+  var monthCatBuckets = {};      // uid -> { category -> [score, ...] }
 
   activityScoreRows.forEach(function (row) {
     var uid = String(row.user_id || "");
     if (!uid) return;
     var weekStart = String(row.week_start_date || "");
+    if (weekStart < monthCutoff) return;  // current month window only
+
     var cat = String(row.category || "");
     var act = String(row.activity || "");
+    var score = Number(row.score);
+    if (!Number.isFinite(score) || !cat) return;
 
-    // latest per user/category/activity (all-time, for detail panel)
+    // latest within this month per user/category/activity (for detail panel)
     var key = uid + "|" + cat + "|" + act;
     var existing = latestActivityByKey[key];
     if (!existing || weekStart > String(existing.week_start_date || "")) {
       latestActivityByKey[key] = row;
     }
 
-    // current-month bucket (week starts within this month window)
-    if (weekStart >= monthCutoff) {
-      var score = Number(row.score);
-      if (!Number.isFinite(score) || !cat) return;
-      if (!monthCatBuckets[uid]) monthCatBuckets[uid] = {};
-      if (!monthCatBuckets[uid][cat]) monthCatBuckets[uid][cat] = [];
-      monthCatBuckets[uid][cat].push(score);
-    }
+    // accumulate for category average
+    if (!monthCatBuckets[uid]) monthCatBuckets[uid] = {};
+    if (!monthCatBuckets[uid][cat]) monthCatBuckets[uid][cat] = [];
+    monthCatBuckets[uid][cat].push(score);
   });
 
   var activitiesByUser = {};
@@ -1454,39 +1444,22 @@ function getAdminDashboard_(adminEmail) {
     return Math.round(arr.reduce(function (s, v) { return s + v; }, 0) / arr.length);
   }
 
-  function toNullableScore(value) {
-    if (value === null || value === undefined || value === "") return null;
-    var n = Number(value);
-    return Number.isFinite(n) ? n : null;
-  }
-
   var rows = users.map(function (u) {
     var uid = String(u.id || "");
-    var ev = evalByUserId[uid] || null;
     var lastActive = lastActiveByUser[uid] || null;
     if (lastActive && lastActive.slice(0, 7) === nowPrefix) {
       activeThisMonth += 1;
     }
-
-    // Use current-month average; fall back to initial wellbeing evaluation
-    var physical = monthCatAvg(uid, "physical");
-    if (physical === null && ev) physical = toNullableScore(ev.physical_score);
-    var mental = monthCatAvg(uid, "mental");
-    if (mental === null && ev) mental = toNullableScore(ev.mental_score);
-    var social = monthCatAvg(uid, "social");
-    if (social === null && ev) social = toNullableScore(ev.social_score);
-    var balance = monthCatAvg(uid, "balance");
-    if (balance === null && ev) balance = toNullableScore(ev.balance_score);
 
     return {
       userId: uid,
       email: String(u.email || ""),
       fullName: String(u.full_name || ""),
       lastActive: lastActive,
-      physical: physical,
-      mental: mental,
-      social: social,
-      balance: balance,
+      physical: monthCatAvg(uid, "physical"),
+      mental:   monthCatAvg(uid, "mental"),
+      social:   monthCatAvg(uid, "social"),
+      balance:  monthCatAvg(uid, "balance"),
       logCount: logCountByUser[uid] || 0,
       activities: activitiesByUser[uid] || [],
     };
