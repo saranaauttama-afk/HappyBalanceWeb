@@ -3,8 +3,25 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppHeader from "../../components/layout/AppHeader";
 import MobileShell from "../../components/layout/MobileShell";
-import { adminService, type AdminUserRow } from "../../services/admin.service";
+import { adminService, type AdminActivityScore, type AdminUserRow } from "../../services/admin.service";
 import { getCurrentUser } from "../../utils/authSession";
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  "rest":                    "พักผ่อน",
+  "food-intake":             "โภชนาการ",
+  "exercise":                "ออกกำลังกาย",
+  "body-hygiene":            "สุขอนามัย",
+  "positive-thinking":       "คิดบวก",
+  "stress-level":            "จัดการความเครียด",
+  "life-satisfaction":       "ความพึงพอใจในชีวิต",
+  "self-worth":              "คุณค่าในตนเอง",
+  "family-relationship":     "ความสัมพันธ์ครอบครัว",
+  "community-participation": "การมีส่วนร่วมชุมชน",
+  "workplace-relationship":  "ความสัมพันธ์ที่ทำงาน",
+  "family-social-balance":   "สมดุลครอบครัว-สังคม",
+  "work-balance":            "สมดุลการทำงาน",
+  "personal-life-balance":   "สมดุลชีวิตส่วนตัว",
+};
 
 const ADMIN_EMAILS = new Set(["chaninatwattana@gmail.com", "kwansrn@hotmail.com"]);
 
@@ -49,9 +66,30 @@ const SCORE_ROWS = [
   { label: "สมดุล",  key: "balance"  as const, icon: Activity,  color: "bg-amber-400",   text: "text-amber-600"   },
 ];
 
+function ActivityRows({ activities, category, color }: { activities: AdminActivityScore[]; category: string; color: string }) {
+  const rows = activities.filter((a) => a.category === category);
+  if (rows.length === 0) return null;
+  return (
+    <div className="mt-1 space-y-1.5 pl-5">
+      {rows.map((a) => (
+        <div key={a.activity} className="flex items-center gap-2">
+          <span className="w-32 shrink-0 truncate text-[11px] text-slate-400">
+            {ACTIVITY_LABELS[a.activity] ?? a.activity}
+          </span>
+          <div className="flex-1 rounded-full bg-slate-100">
+            <div className={`h-1.5 rounded-full ${color} opacity-70`} style={{ width: `${a.score}%` }} />
+          </div>
+          <span className="w-6 shrink-0 text-right text-[11px] text-slate-500">{a.score}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function UserDetailSheet({ u, onClose }: { u: AdminUserRow; onClose: () => void }) {
   const isAdminUser = ADMIN_EMAILS.has(u.email);
   const initial = (u.fullName || u.email).charAt(0).toUpperCase();
+  const hasActivities = u.activities.length > 0;
 
   return (
     <div
@@ -59,67 +97,80 @@ function UserDetailSheet({ u, onClose }: { u: AdminUserRow; onClose: () => void 
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-      <div
-        className="relative rounded-t-3xl bg-white px-5 pb-8 pt-5 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* drag pill */}
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
 
-        {/* close */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200"
+      {/* constrain to mobile shell width */}
+      <div className="relative mx-auto w-full max-w-120">
+        <div
+          className="max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white px-5 pb-8 pt-5 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
         >
-          <X size={16} />
-        </button>
+          {/* drag pill */}
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
 
-        {/* avatar + name */}
-        <div className="mb-5 flex items-center gap-3">
-          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white ${isAdminUser ? "bg-linear-to-br from-amber-400 to-amber-600" : "bg-linear-to-br from-[#4e7498] to-[#2f556a]"}`}>
-            {initial}
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className="truncate font-semibold text-slate-800">{u.fullName || "—"}</p>
-              {isAdminUser && (
-                <span className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                  <Crown size={9} />Admin
-                </span>
-              )}
+          {/* close */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200"
+          >
+            <X size={16} />
+          </button>
+
+          {/* avatar + name */}
+          <div className="mb-5 flex items-center gap-3">
+            <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white ${isAdminUser ? "bg-linear-to-br from-amber-400 to-amber-600" : "bg-linear-to-br from-[#4e7498] to-[#2f556a]"}`}>
+              {initial}
             </div>
-            <p className="truncate text-xs text-slate-400">{u.email}</p>
-          </div>
-        </div>
-
-        {/* stats */}
-        <div className="mb-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-[11px] text-slate-400">บันทึกทั้งหมด</p>
-            <p className="mt-0.5 text-2xl font-bold text-slate-800">{u.logCount}</p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-[11px] text-slate-400">ใช้งานล่าสุด</p>
-            <p className="mt-0.5 text-sm font-semibold text-slate-700">{formatThaiMonth(u.lastActive)}</p>
-          </div>
-        </div>
-
-        {/* score bars */}
-        <div className="space-y-2.5">
-          {SCORE_ROWS.map(({ label, key, icon: Icon, color, text }) => {
-            const score = u[key] as number | null;
-            return (
-              <div key={key} className="flex items-center gap-3">
-                <Icon size={13} className="shrink-0 text-slate-400" />
-                <span className="w-12 text-xs text-slate-600">{label}</span>
-                <ScoreBar score={score} color={color} />
-                <span className={`w-8 text-right text-sm font-semibold ${score !== null ? text : "text-slate-300"}`}>
-                  {score ?? "-"}
-                </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate font-semibold text-slate-800">{u.fullName || "—"}</p>
+                {isAdminUser && (
+                  <span className="flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                    <Crown size={9} />Admin
+                  </span>
+                )}
               </div>
-            );
-          })}
+              <p className="truncate text-xs text-slate-400">{u.email}</p>
+            </div>
+          </div>
+
+          {/* stats */}
+          <div className="mb-5 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-[11px] text-slate-400">บันทึกทั้งหมด</p>
+              <p className="mt-0.5 text-2xl font-bold text-slate-800">{u.logCount}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-[11px] text-slate-400">ใช้งานล่าสุด</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700">{formatThaiMonth(u.lastActive)}</p>
+            </div>
+          </div>
+
+          {/* category scores + sub-activities */}
+          <div className="space-y-3">
+            {SCORE_ROWS.map(({ label, key, icon: Icon, color, text }) => {
+              const score = u[key] as number | null;
+              return (
+                <div key={key}>
+                  <div className="flex items-center gap-3">
+                    <Icon size={13} className="shrink-0 text-slate-400" />
+                    <span className="w-12 text-xs font-medium text-slate-600">{label}</span>
+                    <ScoreBar score={score} color={color} />
+                    <span className={`w-8 text-right text-sm font-semibold ${score !== null ? text : "text-slate-300"}`}>
+                      {score ?? "-"}
+                    </span>
+                  </div>
+                  {hasActivities && (
+                    <ActivityRows activities={u.activities} category={key} color={color} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {!hasActivities && (
+            <p className="mt-3 text-center text-xs text-slate-400">ยังไม่มีข้อมูลกิจกรรม</p>
+          )}
         </div>
       </div>
     </div>

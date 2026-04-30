@@ -1,6 +1,12 @@
 import { api } from "./api";
 import type { ApiResponse } from "../types/models";
 
+export type AdminActivityScore = {
+  category: string;
+  activity: string;
+  score: number;
+};
+
 export type AdminUserRow = {
   userId: string;
   email: string;
@@ -11,6 +17,7 @@ export type AdminUserRow = {
   social: number | null;
   balance: number | null;
   logCount: number;
+  activities: AdminActivityScore[];
 };
 
 export type AdminDashboardData = {

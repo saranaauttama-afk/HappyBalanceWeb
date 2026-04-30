@@ -1390,18 +1390,42 @@ function getAdminDashboard_(adminEmail) {
   var nowPrefix = nowIso_().slice(0, 7);
   var activeThisMonth = 0;
 
+  // latest activity score per user per category+activity
+  var activityScoreRows = getAllObjectsIfSheetExists_(SHEET_NAMES.weeklyActivityScores);
+  var latestActivityByKey = {};
+  activityScoreRows.forEach(function (row) {
+    var uid = String(row.user_id || "");
+    if (!uid) return;
+    var key = uid + "|" + String(row.category || "") + "|" + String(row.activity || "");
+    var existing = latestActivityByKey[key];
+    if (!existing || String(row.week_start_date || "") > String(existing.week_start_date || "")) {
+      latestActivityByKey[key] = row;
+    }
+  });
+  var activitiesByUser = {};
+  Object.keys(latestActivityByKey).forEach(function (key) {
+    var row = latestActivityByKey[key];
+    var uid = String(row.user_id || "");
+    if (!activitiesByUser[uid]) activitiesByUser[uid] = [];
+    activitiesByUser[uid].push({
+      category: String(row.category || ""),
+      activity: String(row.activity || ""),
+      score: Math.round(Number(row.score) || 0),
+    });
+  });
+
+  function toNullableScore(value) {
+    if (value === null || value === undefined || value === "") return null;
+    var n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
   var rows = users.map(function (u) {
     var uid = String(u.id || "");
     var ev = evalByUserId[uid] || null;
     var lastActive = lastActiveByUser[uid] || null;
     if (lastActive && lastActive.slice(0, 7) === nowPrefix) {
       activeThisMonth += 1;
-    }
-
-    function toNullableScore(value) {
-      if (value === null || value === undefined || value === "") return null;
-      var n = Number(value);
-      return Number.isFinite(n) ? n : null;
     }
 
     return {
@@ -1414,6 +1438,7 @@ function getAdminDashboard_(adminEmail) {
       social: ev ? toNullableScore(ev.social_score) : null,
       balance: ev ? toNullableScore(ev.balance_score) : null,
       logCount: logCountByUser[uid] || 0,
+      activities: activitiesByUser[uid] || [],
     };
   });
 
