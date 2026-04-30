@@ -193,7 +193,11 @@ export default function AdminPage() {
   const [categoryEnabled, setCategoryEnabled] = useState<CategoryEnabled>({
     physical: true, mental: true, social: true, balance: true,
   });
-  const [togglingKey, setTogglingKey] = useState<CategoryKey | null>(null);
+  const [savedSettings, setSavedSettings] = useState<CategoryEnabled>({
+    physical: true, mental: true, social: true, balance: true,
+  });
+  const [saving, setSaving] = useState(false);
+  const [saveResult, setSaveResult] = useState<"ok" | "error" | null>(null);
 
   useEffect(() => {
     if (!isAdmin) navigate("/home", { replace: true });
@@ -221,14 +225,40 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    settingsService.getCategorySettings().then((s) => setCategoryEnabled(s.categoryEnabled));
+    settingsService.getCategorySettings().then((s) => {
+      setCategoryEnabled(s.categoryEnabled);
+      setSavedSettings(s.categoryEnabled);
+    });
   }, [isAdmin]);
 
-  async function handleToggle(cat: CategoryKey, next: boolean) {
-    setTogglingKey(cat);
+  function handleToggle(cat: CategoryKey, next: boolean) {
     setCategoryEnabled((prev) => ({ ...prev, [cat]: next }));
-    await settingsService.updateCategoryEnabled(userEmail, cat, next);
-    setTogglingKey(null);
+  }
+
+  const hasChanges = (Object.keys(categoryEnabled) as CategoryKey[]).some(
+    (k) => categoryEnabled[k] !== savedSettings[k]
+  );
+
+  async function handleSaveSettings() {
+    setSaving(true);
+    setSaveResult(null);
+    try {
+      const cats = Object.keys(categoryEnabled) as CategoryKey[];
+      const results = await Promise.all(
+        cats.map((cat) => settingsService.updateCategoryEnabled(userEmail, cat, categoryEnabled[cat]))
+      );
+      const allOk = results.every((r) => r.success);
+      if (allOk) {
+        setSavedSettings({ ...categoryEnabled });
+        setSaveResult("ok");
+      } else {
+        setSaveResult("error");
+      }
+    } catch {
+      setSaveResult("error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const filtered = useMemo(() => {
@@ -356,7 +386,6 @@ export default function AdminPage() {
             <div className="space-y-2">
               {SCORE_ROWS.map(({ label, key, icon: Icon }) => {
                 const enabled = categoryEnabled[key];
-                const toggling = togglingKey === key;
                 const onColor = { physical: "bg-emerald-400", mental: "bg-sky-400", social: "bg-violet-400", balance: "bg-amber-400" }[key];
                 return (
                   <div key={key} className="flex items-center justify-between gap-3">
@@ -371,9 +400,9 @@ export default function AdminPage() {
                       type="button"
                       role="switch"
                       aria-checked={enabled}
-                      disabled={toggling}
-                      onClick={() => void handleToggle(key, !enabled)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${enabled ? onColor : "bg-slate-200"} ${toggling ? "opacity-50" : ""}`}
+                      disabled={saving}
+                      onClick={() => handleToggle(key, !enabled)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${enabled ? onColor : "bg-slate-200"} ${saving ? "opacity-50" : ""}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${enabled ? "translate-x-6" : "translate-x-1"}`} />
                     </button>
@@ -381,6 +410,24 @@ export default function AdminPage() {
                 );
               })}
             </div>
+            <button
+              type="button"
+              disabled={!hasChanges || saving}
+              onClick={() => void handleSaveSettings()}
+              className={`mt-4 w-full rounded-2xl py-2.5 text-sm font-semibold transition-all duration-200 ${
+                hasChanges && !saving
+                  ? "bg-[#2f556a] text-white shadow-sm active:opacity-80"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              }`}
+            >
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
+            </button>
+            {saveResult === "ok" && (
+              <p className="mt-2 text-center text-xs text-emerald-600">บันทึกสำเร็จ</p>
+            )}
+            {saveResult === "error" && (
+              <p className="mt-2 text-center text-xs text-rose-500">บันทึกไม่สำเร็จ — กรุณาตรวจสอบว่า deploy GAS version ใหม่แล้ว</p>
+            )}
           </div>
 
           {/* Search */}
