@@ -259,6 +259,8 @@ function doGet(e) {
         );
       case "listArticles":
         return jsonOutput_(listArticles_(getParam_(e, "limit")));
+      case "getAdminDashboard":
+        return jsonOutput_(getAdminDashboard_(getParam_(e, "adminEmail")));
       default:
         return jsonOutput_({
           success: false,
@@ -1348,6 +1350,92 @@ function upsertMonthlyGoal_(payload) {
   return {
     success: true,
     data: updated,
+  };
+}
+
+/* =========================
+   ADMIN
+========================= */
+
+function getAdminDashboard_(adminEmail) {
+  var ADMIN_EMAILS_GAS = ["chaninatwattana@gmail.com", "kwansrn@hotmail.com"];
+  var normalized = String(adminEmail || "").trim().toLowerCase();
+  if (ADMIN_EMAILS_GAS.indexOf(normalized) === -1) {
+    throw new Error("Access denied");
+  }
+
+  var users = getAllObjects_(SHEET_NAMES.users).filter(function (u) {
+    return String(u.status || "active") === "active";
+  });
+
+  var evaluations = getAllObjectsIfSheetExists_(SHEET_NAMES.wellbeingEvaluations);
+  var evalByUserId = {};
+  evaluations.forEach(function (ev) {
+    evalByUserId[String(ev.user_id || "")] = ev;
+  });
+
+  var dailyLogs = getAllObjectsIfSheetExists_(SHEET_NAMES.dailyLogs);
+  var logCountByUser = {};
+  var lastActiveByUser = {};
+  dailyLogs.forEach(function (log) {
+    var uid = String(log.user_id || "");
+    if (!uid) return;
+    logCountByUser[uid] = (logCountByUser[uid] || 0) + 1;
+    var logDate = String(log.log_date || "");
+    if (logDate && (!lastActiveByUser[uid] || logDate > lastActiveByUser[uid])) {
+      lastActiveByUser[uid] = logDate;
+    }
+  });
+
+  var nowPrefix = nowIso_().slice(0, 7);
+  var activeThisMonth = 0;
+
+  var rows = users.map(function (u) {
+    var uid = String(u.id || "");
+    var ev = evalByUserId[uid] || null;
+    var lastActive = lastActiveByUser[uid] || null;
+    if (lastActive && lastActive.slice(0, 7) === nowPrefix) {
+      activeThisMonth += 1;
+    }
+
+    function toNullableScore(value) {
+      if (value === null || value === undefined || value === "") return null;
+      var n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    return {
+      userId: uid,
+      email: String(u.email || ""),
+      fullName: String(u.full_name || ""),
+      lastActive: lastActive,
+      physical: ev ? toNullableScore(ev.physical_score) : null,
+      mental: ev ? toNullableScore(ev.mental_score) : null,
+      social: ev ? toNullableScore(ev.social_score) : null,
+      balance: ev ? toNullableScore(ev.balance_score) : null,
+      logCount: logCountByUser[uid] || 0,
+    };
+  });
+
+  function avgScores(key) {
+    var vals = rows.map(function (r) { return r[key]; }).filter(function (v) { return v !== null; });
+    if (vals.length === 0) return null;
+    return Math.round(vals.reduce(function (s, v) { return s + v; }, 0) / vals.length);
+  }
+
+  return {
+    success: true,
+    data: {
+      summary: {
+        totalUsers: rows.length,
+        activeThisMonth: activeThisMonth,
+        avgPhysical: avgScores("physical"),
+        avgMental: avgScores("mental"),
+        avgSocial: avgScores("social"),
+        avgBalance: avgScores("balance"),
+      },
+      users: rows,
+    },
   };
 }
 
