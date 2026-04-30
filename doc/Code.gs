@@ -1399,49 +1399,62 @@ function getAdminDashboard_(adminEmail) {
   var firstOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
   var monthCutoff = formatDateKey_(addDays_(firstOfMonth, -6));
 
-  var latestActivityByKey = {};  // uid|cat|act -> row (current month only)
-  var monthCatBuckets = {};      // uid -> { category -> [score, ...] }
+  // All activities per category — same order as GoalsPage so the denominator matches.
+  var CATEGORY_ACTIVITIES = {
+    "physical": ["rest", "food-intake", "exercise", "body-hygiene"],
+    "mental":   ["positive-thinking", "stress-level", "life-satisfaction", "self-worth"],
+    "social":   ["family-relationship", "community-participation", "workplace-relationship"],
+    "balance":  ["family-social-balance", "work-balance", "personal-life-balance"],
+  };
+
+  // uid|cat|act -> { weekStart, score, row } — latest week within the month window
+  var latestByActKey = {};
 
   activityScoreRows.forEach(function (row) {
     var uid = String(row.user_id || "");
     if (!uid) return;
     var weekStart = String(row.week_start_date || "");
-    if (weekStart < monthCutoff) return;  // current month window only
+    if (weekStart < monthCutoff) return;
 
     var cat = String(row.category || "");
     var act = String(row.activity || "");
     var score = Number(row.score);
     if (!Number.isFinite(score) || !cat) return;
 
-    // latest within this month per user/category/activity (for detail panel)
     var key = uid + "|" + cat + "|" + act;
-    var existing = latestActivityByKey[key];
-    if (!existing || weekStart > String(existing.week_start_date || "")) {
-      latestActivityByKey[key] = row;
+    var existing = latestByActKey[key];
+    if (!existing || weekStart > existing.weekStart) {
+      latestByActKey[key] = { weekStart: weekStart, score: score, row: row };
     }
-
-    // accumulate for category average
-    if (!monthCatBuckets[uid]) monthCatBuckets[uid] = {};
-    if (!monthCatBuckets[uid][cat]) monthCatBuckets[uid][cat] = [];
-    monthCatBuckets[uid][cat].push(score);
   });
 
+  // Build per-user activity list for detail panel (uses same latest-per-act data).
   var activitiesByUser = {};
-  Object.keys(latestActivityByKey).forEach(function (key) {
-    var row = latestActivityByKey[key];
+  Object.keys(latestByActKey).forEach(function (key) {
+    var entry = latestByActKey[key];
+    var row = entry.row;
     var uid = String(row.user_id || "");
     if (!activitiesByUser[uid]) activitiesByUser[uid] = [];
     activitiesByUser[uid].push({
       category: String(row.category || ""),
       activity: String(row.activity || ""),
-      score: Math.round(Number(row.score) || 0),
+      score: Math.round(entry.score),
     });
   });
 
+  // Category score = sum(latest activity scores) / total activities in category.
+  // Activities with no data contribute 0 — same denominator as GoalsPage.
   function monthCatAvg(uid, cat) {
-    var arr = monthCatBuckets[uid] && monthCatBuckets[uid][cat];
-    if (!arr || arr.length === 0) return null;
-    return Math.round(arr.reduce(function (s, v) { return s + v; }, 0) / arr.length);
+    var acts = CATEGORY_ACTIVITIES[cat];
+    if (!acts || acts.length === 0) return null;
+    var hasAny = false;
+    var sum = 0;
+    acts.forEach(function (act) {
+      var entry = latestByActKey[uid + "|" + cat + "|" + act];
+      if (entry) { hasAny = true; sum += entry.score; }
+    });
+    if (!hasAny) return null;
+    return Math.round(sum / acts.length);
   }
 
   var rows = users.map(function (u) {
