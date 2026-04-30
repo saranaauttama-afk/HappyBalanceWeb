@@ -3,6 +3,7 @@ import {
   Brain,
   ChevronRight,
   LoaderCircle,
+  Lock,
   Scale,
   Users,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { goalsService } from "../../services/goals.service";
 import { logsService } from "../../services/logs.service";
 import type { Goal } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
+import { settingsService, type CategoryEnabled } from "../../services/settings.service";
 import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, toMonthKey, addMonths } from '../../utils/weekPeriod';
 import {
   getLogTimestamp as getMentalLogTimestamp,
@@ -199,6 +201,13 @@ export default function GoalsPage() {
   const [liveScoresLoading, setLiveScoresLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categoryEnabled, setCategoryEnabled] = useState<CategoryEnabled>({
+    physical: true, mental: true, social: true, balance: true,
+  });
+
+  useEffect(() => {
+    settingsService.getCategorySettings().then((s) => setCategoryEnabled(s.categoryEnabled));
+  }, []);
   const snapshotImage =
     "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1400&q=80";
 
@@ -638,54 +647,72 @@ export default function GoalsPage() {
               </InfoCard>
 
               <section className="space-y-3">
-                {summaries.map((category) => (
-                  <Link key={category.key} to={`/goals/${category.key}`} className="block">
-                    <InfoCard className="relative overflow-hidden rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(31,47,61,0.14)]">
-                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
+                {summaries.map((category) => {
+                  const enabled = categoryEnabled[category.key];
+                  const cardContent = (
+                    <InfoCard className={`relative overflow-hidden rounded-3xl border-white/70 bg-white/80 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur ${enabled ? "transition hover:-translate-y-0.5 hover:shadow-[0_20px_44px_rgba(31,47,61,0.14)]" : "grayscale"}`}>
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-linear-to-r from-[#d8e8f6] via-[#ebf4fd] to-[#f8fcff]" />
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span
-                              className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white ${category.iconColor}`}
-                            >
+                            <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white ${enabled ? category.iconColor : "text-slate-400"}`}>
                               <category.Icon size={17} />
                             </span>
-                            <h3 className="text-base font-semibold text-slate-900">{category.label}</h3>
+                            <h3 className={`text-base font-semibold ${enabled ? "text-slate-900" : "text-slate-400"}`}>{category.label}</h3>
                           </div>
 
                           <p className="mt-2 text-sm text-slate-500">{category.subtitle}</p>
 
                           <div className="mt-3 h-2 rounded-full bg-slate-200">
-                            <div
-                              className={`h-2 rounded-full ${category.progressColor} transition-all ${liveScoresLoading ? "animate-pulse opacity-60" : ""}`}
-                              style={{ width: `${category.progress}%` }}
-                            />
+                            {enabled && (
+                              <div
+                                className={`h-2 rounded-full ${category.progressColor} transition-all ${liveScoresLoading ? "animate-pulse opacity-60" : ""}`}
+                                style={{ width: `${category.progress}%` }}
+                              />
+                            )}
                           </div>
 
                           <div className="mt-2 flex items-center justify-between gap-2">
-                            <p className="text-sm text-slate-500">
-                              {liveScoresLoading ? "กำลังคำนวณจากบันทึกล่าสุด" : `${category.count} กิจกรรม`}
+                            <p className="text-sm text-slate-400">
+                              {enabled ? (liveScoresLoading ? "กำลังคำนวณจากบันทึกล่าสุด" : `${category.count} กิจกรรม`) : "ปิดใช้งานชั่วคราว"}
                             </p>
-                            {liveScoresLoading ? (
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                <LoaderCircle size={12} className="animate-spin" />
-                                กำลังโหลด
-                              </span>
+                            {enabled ? (
+                              liveScoresLoading ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                  <LoaderCircle size={12} className="animate-spin" />
+                                  กำลังโหลด
+                                </span>
+                              ) : (
+                                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${category.chipStyle}`}>
+                                  {category.progress}% • {category.statusText}
+                                </span>
+                              )
                             ) : (
-                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${category.chipStyle}`}>
-                                {category.progress}% • {category.statusText}
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-400">
+                                <Lock size={10} />
+                                ปิดอยู่
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white text-slate-400">
-                          <ChevronRight size={16} />
+                        <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white ${enabled ? "text-slate-400" : "text-slate-300"}`}>
+                          {enabled ? <ChevronRight size={16} /> : <Lock size={15} />}
                         </span>
                       </div>
                     </InfoCard>
-                  </Link>
-                ))}
+                  );
+
+                  return enabled ? (
+                    <Link key={category.key} to={`/goals/${category.key}`} className="block">
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    <div key={category.key} className="block cursor-not-allowed opacity-60">
+                      {cardContent}
+                    </div>
+                  );
+                })}
               </section>
 
               {goals.length === 0 ? (

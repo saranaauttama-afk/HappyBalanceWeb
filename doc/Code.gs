@@ -15,9 +15,12 @@ const SHEET_NAMES = {
   weeklyTaskScores: "weekly_task_scores",
   weeklyActivityScores: "weekly_activity_scores",
   articles: "articles",
+  appSettings: "app_settings",
 };
 const APP_SCRIPT_VERSION = "GAS-PERF-BALANCE-2026-04-14";
 const APP_SCRIPT_DEPLOYED_AT = "2026-04-14T00:00:00+07:00";
+
+const APP_SETTINGS_HEADERS = ["key", "value", "updated_at"];
 
 const STRUCTURED_TASK_LOG_HEADERS = [
   "id",
@@ -261,6 +264,8 @@ function doGet(e) {
         return jsonOutput_(listArticles_(getParam_(e, "limit")));
       case "getAdminDashboard":
         return jsonOutput_(getAdminDashboard_(getParam_(e, "adminEmail")));
+      case "getAppSettings":
+        return jsonOutput_(getAppSettings_());
       default:
         return jsonOutput_({
           success: false,
@@ -307,6 +312,8 @@ function doPost(e) {
         return jsonOutput_(upsertWeeklyGoal_(body));
       case "upsertMonthlyGoal":
         return jsonOutput_(upsertMonthlyGoal_(body));
+      case "updateAppSetting":
+        return jsonOutput_(updateAppSetting_(body));
       default:
         return jsonOutput_({
           success: false,
@@ -1461,6 +1468,63 @@ function getAdminDashboard_(adminEmail) {
       },
       users: rows,
     },
+  };
+}
+
+/* =========================
+   APP SETTINGS
+========================= */
+
+function getAppSettings_() {
+  ensureSheetWithHeaders_(SHEET_NAMES.appSettings, APP_SETTINGS_HEADERS);
+  var rows = getAllObjects_(SHEET_NAMES.appSettings);
+  var flat = {};
+  rows.forEach(function (row) {
+    flat[String(row.key || "")] = String(row.value || "");
+  });
+
+  var categories = ["physical", "mental", "social", "balance"];
+  var categoryEnabled = {};
+  categories.forEach(function (cat) {
+    var key = "category_enabled_" + cat;
+    categoryEnabled[cat] = flat[key] !== "false";
+  });
+
+  return {
+    success: true,
+    data: { categoryEnabled: categoryEnabled },
+  };
+}
+
+function updateAppSetting_(payload) {
+  var ADMIN_EMAILS_GAS = ["chaninatwattana@gmail.com", "kwansrn@hotmail.com"];
+  var adminEmail = String(payload.adminEmail || "").trim().toLowerCase();
+  if (ADMIN_EMAILS_GAS.indexOf(adminEmail) === -1) {
+    throw new Error("Access denied");
+  }
+
+  var key = String(payload.key || "").trim();
+  var value = String(payload.value || "").trim();
+  if (!key) throw new Error("Missing key");
+
+  ensureSheetWithHeaders_(SHEET_NAMES.appSettings, APP_SETTINGS_HEADERS);
+
+  var sheet = getSheet_(SHEET_NAMES.appSettings);
+  var rows = getAllObjects_(SHEET_NAMES.appSettings);
+  var index = rows.findIndex(function (row) {
+    return String(row.key || "") === key;
+  });
+
+  var now = nowIso_();
+  if (index === -1) {
+    appendObject_(SHEET_NAMES.appSettings, { key: key, value: value, updated_at: now });
+  } else {
+    updateRowByIndex_(sheet, index + 2, { key: key, value: value, updated_at: now });
+  }
+
+  return {
+    success: true,
+    data: { key: key, value: value },
   };
 }
 

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import AppHeader from "../../components/layout/AppHeader";
 import MobileShell from "../../components/layout/MobileShell";
 import { adminService, type AdminActivityScore, type AdminUserRow } from "../../services/admin.service";
+import { settingsService, type CategoryEnabled, type CategoryKey } from "../../services/settings.service";
 import { getCurrentUser } from "../../utils/authSession";
 
 const ACTIVITY_LABELS: Record<string, string> = {
@@ -189,6 +190,10 @@ export default function AdminPage() {
   const [sortKey, setSortKey] = useState<"email" | "physical" | "mental" | "social" | "balance" | "lastActive">("lastActive");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selectedUser, setSelectedUser] = useState<AdminUserRow | null>(null);
+  const [categoryEnabled, setCategoryEnabled] = useState<CategoryEnabled>({
+    physical: true, mental: true, social: true, balance: true,
+  });
+  const [togglingKey, setTogglingKey] = useState<CategoryKey | null>(null);
 
   useEffect(() => {
     if (!isAdmin) navigate("/home", { replace: true });
@@ -213,6 +218,18 @@ export default function AdminPage() {
 
     void load();
   }, [isAdmin, userEmail]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    settingsService.getCategorySettings().then((s) => setCategoryEnabled(s.categoryEnabled));
+  }, [isAdmin]);
+
+  async function handleToggle(cat: CategoryKey, next: boolean) {
+    setTogglingKey(cat);
+    setCategoryEnabled((prev) => ({ ...prev, [cat]: next }));
+    await settingsService.updateCategoryEnabled(userEmail, cat, next);
+    setTogglingKey(null);
+  }
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -332,6 +349,39 @@ export default function AdminPage() {
               })}
             </div>
           )}
+
+          {/* Category toggles */}
+          <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur">
+            <p className="mb-3 text-sm font-semibold text-slate-700">เปิด/ปิดแบบสอบถามแต่ละหมวด</p>
+            <div className="space-y-2">
+              {SCORE_ROWS.map(({ label, key, icon: Icon }) => {
+                const enabled = categoryEnabled[key];
+                const toggling = togglingKey === key;
+                const onColor = { physical: "bg-emerald-400", mental: "bg-sky-400", social: "bg-violet-400", balance: "bg-amber-400" }[key];
+                return (
+                  <div key={key} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Icon size={15} className={enabled ? "text-slate-500" : "text-slate-300"} />
+                      <span className={`text-sm ${enabled ? "text-slate-700" : "text-slate-400"}`}>{label}</span>
+                      {!enabled && (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-400">ปิดใช้งาน</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={enabled}
+                      disabled={toggling}
+                      onClick={() => void handleToggle(key, !enabled)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${enabled ? onColor : "bg-slate-200"} ${toggling ? "opacity-50" : ""}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${enabled ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
           {/* Search */}
           <div className="relative">
