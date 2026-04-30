@@ -18,19 +18,36 @@ let _cacheAt = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
 export const settingsService = {
-  async getCategorySettings(): Promise<AppSettingsData> {
-    if (_cache && Date.now() - _cacheAt < CACHE_TTL) return _cache;
+  invalidateCache() {
+    _cache = null;
+    _cacheAt = 0;
+  },
+
+  async getCategorySettings(options?: { fresh?: boolean }): Promise<{ data: AppSettingsData; fromServer: boolean; error?: string }> {
+    if (!options?.fresh && _cache && Date.now() - _cacheAt < CACHE_TTL) {
+      return { data: _cache, fromServer: false };
+    }
     try {
       const res = await api.get<AppSettingsData>("getAppSettings");
-      if (res.success && res.data) {
-        _cache = res.data;
+      if (res.success && res.data?.categoryEnabled) {
+        const merged: AppSettingsData = {
+          categoryEnabled: {
+            ...DEFAULT_SETTINGS.categoryEnabled,
+            ...res.data.categoryEnabled,
+          },
+        };
+        _cache = merged;
         _cacheAt = Date.now();
-        return res.data;
+        return { data: merged, fromServer: true };
       }
-    } catch {
-      // fall through to default
+      const errMsg = res.error ?? "getAppSettings returned no data";
+      console.warn("[settings] load failed:", errMsg, res);
+      return { data: DEFAULT_SETTINGS, fromServer: false, error: errMsg };
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn("[settings] load error:", errMsg);
+      return { data: DEFAULT_SETTINGS, fromServer: false, error: errMsg };
     }
-    return DEFAULT_SETTINGS;
   },
 
   async updateCategoryEnabled(

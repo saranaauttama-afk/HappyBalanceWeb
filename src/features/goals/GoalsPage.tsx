@@ -206,7 +206,7 @@ export default function GoalsPage() {
   });
 
   useEffect(() => {
-    settingsService.getCategorySettings().then((s) => setCategoryEnabled(s.categoryEnabled));
+    settingsService.getCategorySettings().then(({ data }) => setCategoryEnabled(data.categoryEnabled));
   }, []);
   const snapshotImage =
     "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1400&q=80";

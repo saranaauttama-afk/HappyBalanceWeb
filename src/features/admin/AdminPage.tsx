@@ -198,6 +198,7 @@ export default function AdminPage() {
   });
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<"ok" | "error" | null>(null);
+  const [settingsLoadError, setSettingsLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) navigate("/home", { replace: true });
@@ -225,9 +226,11 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    settingsService.getCategorySettings().then((s) => {
-      setCategoryEnabled(s.categoryEnabled);
-      setSavedSettings(s.categoryEnabled);
+    settingsService.invalidateCache();
+    settingsService.getCategorySettings({ fresh: true }).then(({ data, error }) => {
+      setCategoryEnabled(data.categoryEnabled);
+      setSavedSettings(data.categoryEnabled);
+      setSettingsLoadError(error ?? null);
     });
   }, [isAdmin]);
 
@@ -383,6 +386,12 @@ export default function AdminPage() {
           {/* Category toggles */}
           <div className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_14px_32px_rgba(31,47,61,0.1)] backdrop-blur">
             <p className="mb-3 text-sm font-semibold text-slate-700">เปิด/ปิดแบบสอบถามแต่ละหมวด</p>
+            {settingsLoadError && (
+              <p className="mb-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-500">
+                โหลดค่าจาก server ไม่สำเร็จ — แสดงค่า default<br />
+                <span className="opacity-70">{settingsLoadError}</span>
+              </p>
+            )}
             <div className="space-y-2">
               {SCORE_ROWS.map(({ label, key, icon: Icon }) => {
                 const enabled = categoryEnabled[key];
