@@ -18,7 +18,8 @@ import { goalsService } from "../../services/goals.service";
 import { profileService } from "../../services/profile.service";
 import type { Article, Goal, User } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
-import { calculateWellbeingScores } from "../../utils/wellbeing";
+import { useLiveScores } from "../../hooks/useLiveScores";
+import { toDateKey, getStartOfMonth, getEndOfMonth } from "../../utils/weekPeriod";
 
 const FALLBACK_ARTICLES: Article[] = [
   {
@@ -60,11 +61,21 @@ export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-const [activeArticleIndex, setActiveArticleIndex] = useState(0);
+  const [activeArticleIndex, setActiveArticleIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const scores = useMemo(() => calculateWellbeingScores(goals), [goals]);
+  const monthStart = useMemo(() => getStartOfMonth(new Date()), []);
+  const from = useMemo(() => toDateKey(monthStart), [monthStart]);
+  const to = useMemo(() => toDateKey(getEndOfMonth(monthStart)), [monthStart]);
+  const { liveScores } = useLiveScores(userId, from, to);
+
+  const scores = useMemo(() => ({
+    physical: liveScores?.physical ?? 0,
+    mental: liveScores?.mental ?? 0,
+    social: liveScores?.social ?? 0,
+    balance: liveScores?.balance ?? 0,
+  }), [liveScores]);
 
   const loadHomeData = useCallback(async () => {
     try {

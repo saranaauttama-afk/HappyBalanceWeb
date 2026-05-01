@@ -16,37 +16,11 @@ import WellbeingRadarChart from "../../components/charts/WellbeingRadarChart";
 import MobileShell from "../../components/layout/MobileShell";
 import InfoCard from "../../components/ui/InfoCard";
 import { goalsService } from "../../services/goals.service";
-import { logsService } from "../../services/logs.service";
 import type { Goal } from "../../types/models";
 import { getCurrentUserId } from "../../utils/authSession";
 import { settingsService, type CategoryEnabled } from "../../services/settings.service";
 import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, toMonthKey, addMonths } from '../../utils/weekPeriod';
-import {
-  getLogTimestamp as getMentalLogTimestamp,
-  parsePositiveThinkingTaskNote,
-} from "./task-detail/positiveThinkingTaskShared";
-import { parseStressTaskNote } from "./task-detail/stressTaskShared";
-import {
-  getLogTimestamp as getSocialLogTimestamp,
-  parseSocialTaskNote,
-} from "./task-detail/socialTaskShared";
-import {
-  getLogTimestamp as getBalanceLogTimestamp,
-  parseBalanceTaskNote,
-} from "./task-detail/balanceTaskShared";
-import {
-  getLogTimestamp as getScaffoldedLogTimestamp,
-  parseScaffoldedTaskNote,
-} from "./task-detail/scaffoldedTaskShared";
-import { FAMILY_SOCIAL_BALANCE_TASKS } from "./tasks/familySocialBalanceTasks";
-import { FAMILY_RELATIONSHIP_TASKS } from "./tasks/familyRelationshipTasks";
-import { PERSONAL_LIFE_BALANCE_TASKS } from "./tasks/personalLifeBalanceTasks";
-import { POSITIVE_THINKING_TASKS } from "./tasks/positiveThinkingTasks";
-import { REST_TASKS } from "./tasks/restTasks";
-import { getScaffoldedActivityConfig } from "./tasks/scaffoldedActivityTasks";
-import { STRESS_TASKS } from "./tasks/stressTasks";
-import { WORK_BALANCE_TASKS } from "./tasks/workBalanceTasks";
-import { WORKPLACE_RELATIONSHIP_TASKS } from "./tasks/workplaceRelationshipTasks";
+import { useLiveScores } from "../../hooks/useLiveScores";
 
 type CategoryKey = "physical" | "mental" | "social" | "balance";
 
@@ -112,8 +86,6 @@ type CategorySummary = {
   chipStyle: string;
 };
 
-type CategoryLiveScore = Record<CategoryKey, number>;
-
 function getStatusText(score: number) {
   if (score >= 80) return "ดีมาก";
   if (score >= 60) return "ดี";
@@ -122,64 +94,6 @@ function getStatusText(score: number) {
   return "ยังไม่มีข้อมูล";
 }
 
-
-function parseRestTaskScore(note: string) {
-  if (!note) return null;
-
-  try {
-    const parsed = JSON.parse(note) as {
-      entry_type?: string;
-      category?: string;
-      activity?: string;
-      task?: string;
-      score?: number;
-    };
-
-    if (parsed.entry_type !== "rest_task") return null;
-    if (parsed.category !== "physical") return null;
-    if (parsed.activity !== "rest") return null;
-    if (!parsed.task) return null;
-
-    const score = Number(parsed.score);
-    if (!Number.isFinite(score)) return null;
-
-    return {
-      task: parsed.task,
-      score: Math.max(0, Math.min(100, Math.round(score))),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function parsePhysicalTaskActivity(note: string) {
-  if (!note) return null;
-
-  try {
-    const parsed = JSON.parse(note) as {
-      entry_type?: string;
-      category?: string;
-      activity?: string;
-      task?: string;
-      score?: number;
-    };
-
-    if (parsed.entry_type !== "physical_task") return null;
-    if (parsed.category !== "physical") return null;
-    if (!parsed.activity || !parsed.task) return null;
-
-    const score = Number(parsed.score);
-    if (!Number.isFinite(score)) return null;
-
-    return {
-      activity: parsed.activity,
-      task: parsed.task,
-      score: Math.max(0, Math.min(100, Math.round(score))),
-    };
-  } catch {
-    return null;
-  }
-}
 
 export default function GoalsPage() {
   const userId = getCurrentUserId();
@@ -197,8 +111,7 @@ export default function GoalsPage() {
     sessionStorage.setItem("goals-month", monthKey);
   }, [weekStartKey]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [liveScores, setLiveScores] = useState<CategoryLiveScore | null>(null);
-  const [liveScoresLoading, setLiveScoresLoading] = useState(true);
+  const { liveScores, loading: liveScoresLoading } = useLiveScores(userId, weekStartKey, toDateKey(weekEndDate));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryEnabled, setCategoryEnabled] = useState<CategoryEnabled>({
@@ -233,262 +146,6 @@ export default function GoalsPage() {
   useEffect(() => {
     void loadGoals();
   }, [loadGoals]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadLiveScores() {
-      try {
-        if (!cancelled) {
-          setLiveScoresLoading(true);
-        }
-
-        const [restResponse, physicalResponse, mentalResponse, socialResponse, balanceResponse] =
-          await Promise.all([
-            logsService.listRestTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-              from: weekStartKey,
-              to: toDateKey(weekEndDate),
-            }),
-            logsService.listDailyLogs(userId ?? undefined, {
-              entry_type: "physical_task",
-              category: "physical",
-              from: weekStartKey,
-              to: toDateKey(weekEndDate),
-              limit: 480,
-              forceRefresh: true,
-            }),
-            logsService.listMentalTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-              from: weekStartKey,
-              to: toDateKey(weekEndDate),
-            }),
-            logsService.listSocialTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-              from: weekStartKey,
-              to: toDateKey(weekEndDate),
-            }),
-            logsService.listBalanceTaskLogs(userId ?? undefined, {
-              limit: 480,
-              forceRefresh: true,
-              from: weekStartKey,
-              to: toDateKey(weekEndDate),
-            }),
-          ]);
-
-        if (
-          !restResponse.success ||
-          !physicalResponse.success ||
-          !mentalResponse.success ||
-          !socialResponse.success ||
-          !balanceResponse.success
-        ) {
-          if (!cancelled) {
-            setLiveScores(null);
-          }
-          return;
-        }
-
-        const restLatestByTask = new Map<string, number>();
-        [...(restResponse.data || [])]
-          .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseRestTaskScore(String(log.note));
-            if (!parsed || restLatestByTask.has(parsed.task)) return;
-            restLatestByTask.set(parsed.task, parsed.score);
-          });
-
-        const physicalActivityKeys = ["food-intake", "exercise", "body-hygiene"] as const;
-        const physicalTaskCounts = Object.fromEntries(
-          physicalActivityKeys.map((activityKey) => [
-            activityKey,
-            getScaffoldedActivityConfig("physical", activityKey)?.tasks.length ?? 0,
-          ])
-        ) as Record<(typeof physicalActivityKeys)[number], number>;
-
-        const physicalLatestByActivity = new Map<string, Map<string, number>>();
-        [...(physicalResponse.data || [])]
-          .sort((a, b) => getScaffoldedLogTimestamp(b) - getScaffoldedLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parsePhysicalTaskActivity(String(log.note));
-            const activityKey = String(parsed?.activity || "");
-            if (!physicalActivityKeys.includes(activityKey as (typeof physicalActivityKeys)[number])) {
-              return;
-            }
-
-            const latestByTask = physicalLatestByActivity.get(activityKey) ?? new Map<string, number>();
-            if (!parsed || latestByTask.has(parsed.task)) return;
-            latestByTask.set(parsed.task, parsed.score);
-            physicalLatestByActivity.set(activityKey, latestByTask);
-          });
-
-        const physicalActivityScores = [
-          Math.round(
-            Array.from(restLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
-              Math.max(REST_TASKS.length, 1)
-          ),
-          ...physicalActivityKeys.map((activityKey) =>
-            Math.round(
-              Array.from(physicalLatestByActivity.get(activityKey)?.values() || []).reduce(
-                (sum, score) => sum + score,
-                0
-              ) / Math.max(physicalTaskCounts[activityKey], 1)
-            )
-          ),
-        ];
-
-        const positiveLatestByTask = new Map<string, number>();
-        const stressLatestByTask = new Map<string, number>();
-        const scaffoldedMentalActivityKeys = ["life-satisfaction", "self-worth"] as const;
-        const scaffoldedMentalTaskCounts = Object.fromEntries(
-          scaffoldedMentalActivityKeys.map((activityKey) => [
-            activityKey,
-            getScaffoldedActivityConfig("mental", activityKey)?.tasks.length ?? 0,
-          ])
-        ) as Record<(typeof scaffoldedMentalActivityKeys)[number], number>;
-        const scaffoldedMentalLatestByActivity = new Map<string, Map<string, number>>();
-
-        [...(mentalResponse.data || [])]
-          .sort((a, b) => getMentalLogTimestamp(b) - getMentalLogTimestamp(a))
-          .forEach((log) => {
-            const positiveEntry = parsePositiveThinkingTaskNote(String(log.note));
-            if (positiveEntry && !positiveLatestByTask.has(positiveEntry.task)) {
-              positiveLatestByTask.set(positiveEntry.task, positiveEntry.score);
-              return;
-            }
-
-            const stressEntry = parseStressTaskNote(String(log.note));
-            if (stressEntry && !stressLatestByTask.has(stressEntry.task)) {
-              stressLatestByTask.set(stressEntry.task, stressEntry.score);
-              return;
-            }
-
-            for (const activityKey of scaffoldedMentalActivityKeys) {
-              const parsed = parseScaffoldedTaskNote(String(log.note), "mental", activityKey);
-              if (!parsed) continue;
-              const latestByTask =
-                scaffoldedMentalLatestByActivity.get(activityKey) ?? new Map<string, number>();
-              if (!latestByTask.has(parsed.task)) {
-                latestByTask.set(parsed.task, parsed.score);
-              }
-              scaffoldedMentalLatestByActivity.set(activityKey, latestByTask);
-              break;
-            }
-          });
-
-        const mentalActivityScores = [
-          Math.round(
-            Array.from(positiveLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
-              Math.max(POSITIVE_THINKING_TASKS.length, 1)
-          ),
-          Math.round(
-            Array.from(stressLatestByTask.values()).reduce((sum, score) => sum + score, 0) /
-              Math.max(STRESS_TASKS.length, 1)
-          ),
-          ...scaffoldedMentalActivityKeys.map((activityKey) =>
-            Math.round(
-              Array.from(scaffoldedMentalLatestByActivity.get(activityKey)?.values() || []).reduce(
-                (sum, score) => sum + score,
-                0
-              ) / Math.max(scaffoldedMentalTaskCounts[activityKey], 1)
-            )
-          ),
-        ];
-
-        const socialActivityTaskCount: Record<string, number> = {
-          "family-relationship": FAMILY_RELATIONSHIP_TASKS.length,
-          "community-participation": 1,
-          "workplace-relationship": WORKPLACE_RELATIONSHIP_TASKS.length,
-        };
-        const socialLatestByActivity = new Map<string, Map<string, number>>();
-        [...(socialResponse.data || [])]
-          .sort((a, b) => getSocialLogTimestamp(b) - getSocialLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseSocialTaskNote(String(log.note));
-            if (!parsed) return;
-            const latestByTask = socialLatestByActivity.get(parsed.activity) ?? new Map<string, number>();
-            if (!latestByTask.has(parsed.task)) {
-              latestByTask.set(parsed.task, parsed.score);
-            }
-            socialLatestByActivity.set(parsed.activity, latestByTask);
-          });
-
-        const socialActivityScores = Object.entries(socialActivityTaskCount).map(
-          ([activityKey, totalTaskCount]) =>
-            Math.round(
-              Array.from(socialLatestByActivity.get(activityKey)?.values() || []).reduce(
-                (sum, score) => sum + score,
-                0
-              ) / Math.max(totalTaskCount, 1)
-            )
-        );
-
-        const balanceActivityTaskCount: Record<string, number> = {
-          "family-social-balance": FAMILY_SOCIAL_BALANCE_TASKS.length,
-          "work-balance": WORK_BALANCE_TASKS.length,
-          "personal-life-balance": PERSONAL_LIFE_BALANCE_TASKS.length,
-        };
-        const balanceLatestByActivity = new Map<string, Map<string, number>>();
-        [...(balanceResponse.data || [])]
-          .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
-          .forEach((log) => {
-            const parsed = parseBalanceTaskNote(String(log.note));
-            if (!parsed) return;
-            const latestByTask = balanceLatestByActivity.get(parsed.activity) ?? new Map<string, number>();
-            if (!latestByTask.has(parsed.task)) {
-              latestByTask.set(parsed.task, parsed.score);
-            }
-            balanceLatestByActivity.set(parsed.activity, latestByTask);
-          });
-
-        const balanceActivityScores = Object.entries(balanceActivityTaskCount).map(
-          ([activityKey, totalTaskCount]) =>
-            Math.round(
-              Array.from(balanceLatestByActivity.get(activityKey)?.values() || []).reduce(
-                (sum, score) => sum + score,
-                0
-              ) / Math.max(totalTaskCount, 1)
-            )
-        );
-
-        const nextScores: CategoryLiveScore = {
-          physical: Math.round(
-            physicalActivityScores.reduce((sum, score) => sum + score, 0) / physicalActivityScores.length
-          ),
-          mental: Math.round(
-            mentalActivityScores.reduce((sum, score) => sum + score, 0) / mentalActivityScores.length
-          ),
-          social: Math.round(
-            socialActivityScores.reduce((sum, score) => sum + score, 0) / socialActivityScores.length
-          ),
-          balance: Math.round(
-            balanceActivityScores.reduce((sum, score) => sum + score, 0) / balanceActivityScores.length
-          ),
-        };
-
-        if (!cancelled) {
-          setLiveScores(nextScores);
-        }
-      } catch {
-        if (!cancelled) {
-          setLiveScores(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLiveScoresLoading(false);
-        }
-      }
-    }
-
-    void loadLiveScores();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [weekStartKey, userId]);
 
   const summaries = useMemo<CategorySummary[]>(() => {
     return categoryConfig.map((category) => {
