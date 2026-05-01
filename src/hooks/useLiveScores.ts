@@ -19,6 +19,7 @@ import {
 } from "../features/goals/task-detail/balanceTaskShared";
 import { FAMILY_RELATIONSHIP_TASKS } from "../features/goals/tasks/familyRelationshipTasks";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../features/goals/tasks/familySocialBalanceTasks";
+import { PERSONAL_LIFE_BALANCE_TASKS } from "../features/goals/tasks/personalLifeBalanceTasks";
 import { POSITIVE_THINKING_TASKS } from "../features/goals/tasks/positiveThinkingTasks";
 import { REST_TASKS } from "../features/goals/tasks/restTasks";
 import { STRESS_TASKS } from "../features/goals/tasks/stressTasks";
