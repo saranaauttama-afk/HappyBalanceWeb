@@ -248,13 +248,13 @@ export default function HomePage() {
 
                 <div className="mt-4 rounded-2xl border border-white/80 bg-white/75 p-3">
                   <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
-                    <span>ความคืบหน้าเป้าหมายรวม</span>
-                    <span className="font-semibold text-slate-900">{goalSummary.completionRate}%</span>
+                    <span>ความคืบหน้าโดยรวม</span>
+                    <span className="font-semibold text-slate-900">{wellbeingAverage}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-200">
                     <div
                       className="h-2 rounded-full bg-gradient-to-r from-[#7fc3a0] via-[#8cc2db] to-[#d88d80]"
-                      style={{ width: `${goalSummary.completionRate}%` }}
+                      style={{ width: `${wellbeingAverage}%` }}
                     />
                   </div>
                 </div>
