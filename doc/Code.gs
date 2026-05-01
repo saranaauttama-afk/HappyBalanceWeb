@@ -1445,13 +1445,25 @@ function getAdminDashboard_(adminEmail) {
     activityScoreMap[aKey] = Math.round(actSumByKey[aKey] / total);
   });
 
-  // detail panel: one entry per (user, category, activity)
-  var activitiesByUser = {};
+  // Collect which users have any activity data this month
+  var usersWithData = {};
   Object.keys(activityScoreMap).forEach(function (aKey) {
-    var parts = aKey.split("|");
-    var uid = parts[0], cat = parts[1], act = parts[2];
-    if (!activitiesByUser[uid]) activitiesByUser[uid] = [];
-    activitiesByUser[uid].push({ category: cat, activity: act, score: activityScoreMap[aKey] });
+    var uid = aKey.split("|")[0];
+    usersWithData[uid] = true;
+  });
+
+  // detail panel: all activities for every user with data; unlogged activities get score 0
+  // so the panel is self-consistent with the category scores shown in the main list
+  var activitiesByUser = {};
+  Object.keys(usersWithData).forEach(function (uid) {
+    var list = [];
+    Object.keys(CATEGORY_ACTIVITIES).forEach(function (cat) {
+      CATEGORY_ACTIVITIES[cat].forEach(function (act) {
+        var v = activityScoreMap[uid + "|" + cat + "|" + act];
+        list.push({ category: cat, activity: act, score: v !== undefined ? v : 0 });
+      });
+    });
+    activitiesByUser[uid] = list;
   });
 
   // category score = sum(activity scores) / all activities in category
