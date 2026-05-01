@@ -1377,9 +1377,16 @@ function getAdminDashboard_(adminEmail) {
     return String(u.status || "active") === "active";
   });
 
+  var todayDate = new Date();
+  var firstOfMonthKey = formatDateKey_(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
+  var lastOfMonthKey  = formatDateKey_(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0));
+
   var dailyLogs = getAllObjectsIfSheetExists_(SHEET_NAMES.dailyLogs);
   var logCountByUser = {};
   var lastActiveByUser = {};
+  // uid|cat|act|task -> { score, ts } — latest log for each task this month
+  var latestTaskByKey = {};
+
   dailyLogs.forEach(function (log) {
     var uid = String(log.user_id || "");
     if (!uid) return;
@@ -1388,18 +1395,30 @@ function getAdminDashboard_(adminEmail) {
     if (logDate && (!lastActiveByUser[uid] || logDate > lastActiveByUser[uid])) {
       lastActiveByUser[uid] = logDate;
     }
+    // Task scoring: current month only
+    if (!logDate || logDate < firstOfMonthKey || logDate > lastOfMonthKey) return;
+    var parsed = parseTaskNotePayload_(log.note);
+    if (!parsed || !isTaskEntryType_(parsed.entry_type)) return;
+    if (!parsed.category || !parsed.activity || !parsed.task) return;
+    var score = Number(parsed.score);
+    if (!Number.isFinite(score)) return;
+    var ts = getLogTimestampMs_(log);
+    var tKey = uid + "|" + parsed.category + "|" + parsed.activity + "|" + parsed.task;
+    var existing = latestTaskByKey[tKey];
+    if (!existing || ts > existing.ts) {
+      latestTaskByKey[tKey] = {
+        score: score,
+        ts: ts,
+        category: String(parsed.category),
+        activity: String(parsed.activity),
+      };
+    }
   });
 
   var nowPrefix = nowIso_().slice(0, 7);
   var activeThisMonth = 0;
 
-  var activityScoreRows = getAllObjectsIfSheetExists_(SHEET_NAMES.weeklyActivityScores);
-
-  var todayDate = new Date();
-  var firstOfMonth = new Date(todayDate.getFullYear(), todayDate.getMonth(), 1);
-  var monthCutoff = formatDateKey_(firstOfMonth);
-
-  // All activities per category — same order as GoalsPage so the denominator matches.
+  // All activities per category — same order/count as GoalsPage.
   var CATEGORY_ACTIVITIES = {
     "physical": ["rest", "food-intake", "exercise", "body-hygiene"],
     "mental":   ["positive-thinking", "stress-level", "life-satisfaction", "self-worth"],
@@ -1407,51 +1426,44 @@ function getAdminDashboard_(adminEmail) {
     "balance":  ["family-social-balance", "work-balance", "personal-life-balance"],
   };
 
-  // uid|cat|act -> { weekStart, score, row } — latest week within the month window
-  var latestByActKey = {};
-
-  activityScoreRows.forEach(function (row) {
-    var uid = String(row.user_id || "");
-    if (!uid) return;
-    var weekStart = String(row.week_start_date || "");
-    if (weekStart < monthCutoff) return;
-
-    var cat = String(row.category || "");
-    var act = String(row.activity || "");
-    var score = Number(row.score);
-    if (!Number.isFinite(score) || !cat) return;
-
-    var key = uid + "|" + cat + "|" + act;
-    var existing = latestByActKey[key];
-    if (!existing || weekStart > existing.weekStart) {
-      latestByActKey[key] = { weekStart: weekStart, score: score, row: row };
-    }
+  // Sum latest task scores per (uid, category, activity)
+  var actSumByKey = {}; // uid|cat|act -> running sum
+  Object.keys(latestTaskByKey).forEach(function (tKey) {
+    var entry = latestTaskByKey[tKey];
+    var uid = tKey.split("|")[0];
+    var aKey = uid + "|" + entry.category + "|" + entry.activity;
+    if (!actSumByKey[aKey]) actSumByKey[aKey] = 0;
+    actSumByKey[aKey] += entry.score;
   });
 
-  // Build per-user activity list for detail panel (uses same latest-per-act data).
+  // activity score = sum / total_task_count (same denominator as GoalsPage)
+  var activityScoreMap = {}; // uid|cat|act -> 0-100
+  Object.keys(actSumByKey).forEach(function (aKey) {
+    var parts = aKey.split("|");
+    var cat = parts[1], act = parts[2];
+    var total = getWeeklyActivityTotalCount_(cat, act) || 1;
+    activityScoreMap[aKey] = Math.round(actSumByKey[aKey] / total);
+  });
+
+  // detail panel: one entry per (user, category, activity)
   var activitiesByUser = {};
-  Object.keys(latestByActKey).forEach(function (key) {
-    var entry = latestByActKey[key];
-    var row = entry.row;
-    var uid = String(row.user_id || "");
+  Object.keys(activityScoreMap).forEach(function (aKey) {
+    var parts = aKey.split("|");
+    var uid = parts[0], cat = parts[1], act = parts[2];
     if (!activitiesByUser[uid]) activitiesByUser[uid] = [];
-    activitiesByUser[uid].push({
-      category: String(row.category || ""),
-      activity: String(row.activity || ""),
-      score: Math.round(entry.score),
-    });
+    activitiesByUser[uid].push({ category: cat, activity: act, score: activityScoreMap[aKey] });
   });
 
-  // Category score = sum(latest activity scores) / total activities in category.
-  // Activities with no data contribute 0 — same denominator as GoalsPage.
+  // category score = sum(activity scores) / all activities in category
+  // unlogged activities contribute 0 — same denominator as GoalsPage
   function monthCatAvg(uid, cat) {
     var acts = CATEGORY_ACTIVITIES[cat];
     if (!acts || acts.length === 0) return null;
     var hasAny = false;
     var sum = 0;
     acts.forEach(function (act) {
-      var entry = latestByActKey[uid + "|" + cat + "|" + act];
-      if (entry) { hasAny = true; sum += entry.score; }
+      var v = activityScoreMap[uid + "|" + cat + "|" + act];
+      if (v !== undefined) { hasAny = true; sum += v; }
     });
     if (!hasAny) return null;
     return Math.round(sum / acts.length);
