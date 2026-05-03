@@ -94,7 +94,7 @@ export default function ThanksSorryTaskPage() {
 
       const nextHistory = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
 
       setHistory(nextHistory);
 
@@ -323,10 +323,10 @@ export default function ThanksSorryTaskPage() {
             </button>
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+              <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
                 <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  รวม {monthlyPoints} คะแนน
+                  เดือนนี้ได้ {monthlyPoints} คะแนน
                 </span>
               </div>
 

@@ -150,7 +150,7 @@ export default function ScaffoldedTaskPage() {
 
       // Build history — dedup by month
       if (historyResponse.success) {
-        const byMonth = new Map<string, ScaffoldedHistoryItem>();
+        const byDay = new Map<string, ScaffoldedHistoryItem>();
         [...(historyResponse.data || [])]
           .sort((a, b) => getLogTimestamp(b) - getLogTimestamp(a))
           .forEach((log) => {
@@ -159,13 +159,13 @@ export default function ScaffoldedTaskPage() {
             if (!parsed || parsed.task !== task) return;
             const logDate = new Date(log.log_date + "T00:00:00");
             if (Number.isNaN(logDate.getTime())) return;
-            const mk = toMonthKey(logDate);
-            if (byMonth.has(mk)) return;
+            const dk = String(log.log_date).slice(0, 10); // "2026-05-03"
+            if (byDay.has(dk)) return;
 
             const isDone = getBoolean(parsed.payload.done, parsed.score > 0);
-            byMonth.set(mk, {
+            byDay.set(dk, {
               id: log.id,
-              date: mk,
+              date: dk,
               done: isDone,
               score: parsed.score,
               point: isDone ? 1 : 0,
@@ -173,9 +173,9 @@ export default function ScaffoldedTaskPage() {
           });
 
         setHistory(
-          Array.from(byMonth.values())
+          Array.from(byDay.values())
             .sort((a, b) => b.date.localeCompare(a.date))
-            .slice(0, 12)
+            .slice(0, 31)
         );
       }
     } catch (err) {
@@ -355,10 +355,9 @@ export default function ScaffoldedTaskPage() {
           )}
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-slate-900">ประวัติรายเดือน</h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                <AlarmClockCheck size={13} />
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+              <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                 เดือนนี้ได้ {monthlyPoints} คะแนน
               </span>
             </div>

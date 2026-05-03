@@ -92,28 +92,28 @@ export default function SocialTaskPage() {
       }
 
       // Build weekly history — dedup by week start
-      const byMonth = new Map<string, HistoryItem>();
+      const byDay = new Map<string, HistoryItem>();
       sorted.forEach((log) => {
         if (!log.log_date) return;
         const parsed = parseSocialTaskNote(String(log.note));
         if (!parsed || parsed.activity !== activity || parsed.task !== taskKey) return;
         const logDate = new Date(String(log.log_date).slice(0, 10) + "T00:00:00");
         if (Number.isNaN(logDate.getTime())) return;
-        const mk = toMonthKey(logDate);
-        if (byMonth.has(mk)) return;
+        const dk = String(log.log_date).slice(0, 10); // "2026-05-03"
+        if (byDay.has(dk)) return;
         const isDone = getBoolean(parsed.payload.done, parsed.score > 0);
-        byMonth.set(mk, {
+        byDay.set(dk, {
           id: String(log.id),
-          date: mk,
+          date: dk,
           done: isDone,
           point: isDone ? 1 : 0,
         });
       });
 
       setHistory(
-        Array.from(byMonth.values())
+        Array.from(byDay.values())
           .sort((a, b) => b.date.localeCompare(a.date))
-          .slice(0, 14)
+          .slice(0, 31)
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ");
@@ -290,11 +290,10 @@ export default function SocialTaskPage() {
           </div>
 
           <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-slate-900">ประวัติรายเดือน</h3>
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                <AlarmClockCheck size={13} />
-                รวม {monthlyPoints} คะแนน
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+              <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
+                เดือนนี้ได้ {monthlyPoints} คะแนน
               </span>
             </div>
             {historyLoading ? (
@@ -306,27 +305,28 @@ export default function SocialTaskPage() {
                 {history.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white/70 px-3 py-2.5"
+                    className={`rounded-2xl border px-3 py-3 ${
+                      item.done
+                        ? "border-emerald-200 bg-emerald-50/70"
+                        : "border-rose-200 bg-rose-50/70"
+                    }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex h-6 w-6 items-center justify-center rounded-full ${
-                          item.done ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-500"
-                        }`}
-                      >
-                        {item.done ? <CircleCheckBig size={13} /> : <CircleX size={13} />}
-                      </span>
-                      <span className="text-sm text-slate-700">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-slate-900">
                         {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",
                         })}
+                      </p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.done ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                        }`}
+                      >
+                        {item.done ? `+${item.point} คะแนน` : "0 คะแนน"}
                       </span>
                     </div>
-                    <span className={`text-xs font-semibold ${item.done ? "text-emerald-600" : "text-slate-400"}`}>
-                      {item.done ? "+1 คะแนน" : "ไม่ผ่าน"}
-                    </span>
                   </div>
                 ))}
               </div>

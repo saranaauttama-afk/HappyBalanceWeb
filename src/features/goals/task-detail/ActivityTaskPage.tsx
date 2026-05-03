@@ -539,7 +539,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
 
       setSleepHistory(history);
 
@@ -609,7 +609,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
       setWaterHistory(history);
 
       if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey) {
@@ -662,7 +662,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
       setSleepOnTimeHistory(history);
 
       if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].onTime) {
@@ -720,7 +720,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
       setAvoidWaterBeforeBedHistory(history);
 
       if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].avoidedLargeWater) {
@@ -775,7 +775,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
       setNoLongLateNapHistory(history);
 
       if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].noLongLateNap) {
@@ -885,7 +885,7 @@ export default function ActivityTaskPage() {
 
       const history = Array.from(byDate.values())
         .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 14);
+        .slice(0, 31);
       setScreenTimeHistory(history);
 
       if (history.length > 0 && history[0].date >= weekStartKey && history[0].date <= weekEndKey && history[0].limitedScreenTime) {
@@ -1890,10 +1890,9 @@ export default function ActivityTaskPage() {
             </button>
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  <AlarmClockCheck size={13} />
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   เดือนนี้ได้ {monthlySleepOnTimePoints} คะแนน
                 </span>
               </div>
@@ -2024,10 +2023,9 @@ export default function ActivityTaskPage() {
             </button>
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  <AlarmClockCheck size={13} />
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   เดือนนี้ได้ {monthlyAvoidWaterBeforeBedPoints} คะแนน
                 </span>
               </div>
@@ -2156,10 +2154,9 @@ export default function ActivityTaskPage() {
             </button>
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  <AlarmClockCheck size={13} />
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   เดือนนี้ได้ {monthlyNoLongLateNapPoints} คะแนน
                 </span>
               </div>
@@ -2290,10 +2287,9 @@ export default function ActivityTaskPage() {
             </button>
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  <AlarmClockCheck size={13} />
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   เดือนนี้ได้ {monthlyNoFood4HoursBeforeBedPoints} คะแนน
                 </span>
               </div>
@@ -2428,10 +2424,9 @@ export default function ActivityTaskPage() {
             )}
 
             <section className="rounded-3xl border border-white/70 bg-white/80 p-4 shadow-[0_18px_40px_rgba(31,47,61,0.1)] backdrop-blur">
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-base font-semibold text-slate-900">ประวัติรายวัน</h3>
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
-                  <AlarmClockCheck size={13} />
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">ประวัติการบันทึกย้อนหลัง</h3>
+                <span className="rounded-full bg-[#eef8f2] px-2.5 py-1 text-xs font-medium text-[#2f7b56]">
                   เดือนนี้ได้ {monthlyScreenTimePoints} คะแนน
                 </span>
               </div>
