@@ -1,6 +1,5 @@
 import {
   Activity,
-  AlarmClockCheck,
   BadgeHelp,
   CircleCheckBig,
   CircleX,

@@ -1,5 +1,4 @@
 import {
-  AlarmClockCheck,
   BellOff,
   BookOpenText,
   CircleCheckBig,
