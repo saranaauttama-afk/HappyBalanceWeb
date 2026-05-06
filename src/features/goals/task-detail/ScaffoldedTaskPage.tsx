@@ -377,7 +377,7 @@ export default function ScaffoldedTaskPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-slate-900">{new Date(item.date + "-01T00:00:00").toLocaleDateString("th-TH", { month: "long", year: "numeric" })}</p>
+                      <p className="text-sm font-medium text-slate-900">{new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}</p>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           item.done ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
