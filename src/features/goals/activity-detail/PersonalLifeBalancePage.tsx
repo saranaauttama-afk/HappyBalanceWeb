@@ -6,7 +6,7 @@ import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import type { DailyLog } from "../../../types/models";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, addDays } from '../../../utils/weekPeriod';
+import { toDateKey, getStartOfMonth, getEndOfMonth, isCurrentMonth, addDays, addMonths } from '../../../utils/weekPeriod';
 import {
   getLogTimestamp,
   parsePersonalBalanceDailyNote,
@@ -89,10 +89,23 @@ export default function PersonalLifeBalancePage() {
   const weekEndDate = getEndOfMonth(weekStartDate);
   const isViewingCurrentWeek = isCurrentMonth(weekStartKey.slice(0, 7));
 
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStartDate, i)),
-    [weekStartDate]
-  );
+  const monthDays = useMemo(() => {
+    const today = new Date();
+    const todayDateKey = toDateKey(today);
+    const daysInMonth = weekEndDate.getDate();
+
+    // สร้าง array ของทุกวันในเดือน
+    const allDays = Array.from({ length: daysInMonth }, (_, i) => addDays(weekStartDate, i));
+
+    // ถ้าดูเดือนปัจจุบัน แสดงเฉพาะวันที่ผ่านมาแล้ว (ถึงวันนี้)
+    // ถ้าดูเดือนอื่น แสดงทั้งเดือน
+    const filteredDays = isViewingCurrentWeek
+      ? allDays.filter((d) => toDateKey(d) <= todayDateKey)
+      : allDays;
+
+    // เรียงจากมากไปน้อย (วันล่าสุดก่อน)
+    return filteredDays.reverse();
+  }, [weekStartDate, weekEndDate, isViewingCurrentWeek]);
 
   const minWeekKey = toDateKey(
     getStartOfMonth(new Date(new Date().getFullYear(), 3, 1))
@@ -121,15 +134,15 @@ export default function PersonalLifeBalancePage() {
       setLoading(true);
       setError(null);
       try {
+        const startKey = toDateKey(weekStartDate);
+        const endKey = toDateKey(weekEndDate);
         const res = await logsService.listBalanceTaskLogs(
           userId ?? undefined,
-          { activity: "personal-life-balance", limit: 500, forceRefresh }
+          { activity: "personal-life-balance", limit: 500, forceRefresh, from: startKey, to: endKey }
         );
         if (!res.success)
           throw new Error(res.error || "โหลดข้อมูลไม่ได้");
 
-        const startKey = toDateKey(weekStartDate);
-        const endKey = toDateKey(weekEndDate);
         const data = processLogs(res.data ?? [], startKey, endKey);
         setWeekData(data);
 
@@ -240,10 +253,10 @@ export default function PersonalLifeBalancePage() {
         <WeekNavBar
           monthDate={weekStartDate} isCurrentMonth={isViewingCurrentWeek}
           isPrevDisabled={weekStartKey <= minWeekKey}
-          onPrev={() => setWeekStartDate((prev) => addDays(prev, -7))}
+          onPrev={() => setWeekStartDate((prev) => addMonths(prev, -1))}
           onNext={() => {
             if (!isViewingCurrentWeek)
-              setWeekStartDate((prev) => addDays(prev, 7));
+              setWeekStartDate((prev) => addMonths(prev, 1));
           }}
         />
 
@@ -433,17 +446,17 @@ export default function PersonalLifeBalancePage() {
           <section className="overflow-hidden rounded-3xl border border-white/80 bg-white/90 shadow-[0_14px_32px_rgba(31,47,61,0.08)] backdrop-blur">
             <div className="border-b border-slate-100 px-4 py-3">
               <p className="text-xs font-semibold text-slate-500">
-                {isViewingCurrentWeek ? "สัปดาห์นี้" : "สัปดาห์ที่เลือก"}
+                {isViewingCurrentWeek ? "เดือนนี้" : "เดือนที่เลือก"}
               </p>
               {(() => {
-                const logged = weekDays.filter(
+                const logged = monthDays.filter(
                   (d) => weekData[toDateKey(d)]
                 ).length;
                 const avgScore =
                   logged === 0
                     ? 0
                     : Math.round(
-                        weekDays
+                        monthDays
                           .filter((d) => weekData[toDateKey(d)])
                           .reduce(
                             (sum, d) =>
@@ -464,7 +477,7 @@ export default function PersonalLifeBalancePage() {
             </div>
 
             <div className="divide-y divide-slate-50">
-              {weekDays.map((day) => {
+              {monthDays.map((day) => {
                 const dayKey = toDateKey(day);
                 const isToday = dayKey === todayKey;
                 const isPast = dayKey < todayKey;

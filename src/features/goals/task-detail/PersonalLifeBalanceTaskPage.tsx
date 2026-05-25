@@ -15,7 +15,7 @@ import MobileShell from "../../../components/layout/MobileShell";
 import WeekNavBar from "../../../components/ui/WeekNavBar";
 import { logsService } from "../../../services/logs.service";
 import { getCurrentUserId } from "../../../utils/authSession";
-import { getStartOfMonth, isCurrentMonth, toMonthKey } from '../../../utils/weekPeriod';
+import { getStartOfMonth, getEndOfMonth, isCurrentMonth, toMonthKey, toDateKey } from '../../../utils/weekPeriod';
 import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import {
   formatThaiDate,
@@ -70,6 +70,7 @@ export default function PersonalLifeBalanceTaskPage() {
     return saved ?? toMonthKey(new Date());
   });
   const weekStartDate = getStartOfMonth(new Date(weekStartKey + "-01T00:00:00"));
+  const weekEndDate = getEndOfMonth(weekStartDate);
   const isViewingCurrentWeek = isCurrentMonth(weekStartKey);
 
   const [done, setDone] = useState<boolean | null>(null);
@@ -116,6 +117,8 @@ export default function PersonalLifeBalanceTaskPage() {
         task,
         limit: 240,
         forceRefresh,
+        from: toDateKey(weekStartDate),
+        to: toDateKey(weekEndDate),
       });
       if (!response.success) {
         throw new Error(response.error || "ไม่สามารถโหลดข้อมูลบันทึกได้");
@@ -211,7 +214,7 @@ export default function PersonalLifeBalanceTaskPage() {
       setLoading(false);
       setHistoryLoading(false);
     }
-  }, [config, task, userId]);
+  }, [config, task, userId, weekStartDate, weekEndDate]);
 
   useEffect(() => {
     void loadTaskState();
