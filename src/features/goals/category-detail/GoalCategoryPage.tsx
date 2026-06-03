@@ -23,6 +23,7 @@ import {
 import {
   getLogTimestamp as getBalanceLogTimestamp,
   parseBalanceTaskNote,
+  parsePersonalBalanceDailyNote,
 } from "../task-detail/balanceTaskShared";
 import {
   getLogTimestamp as getScaffoldedLogTimestamp,
@@ -589,15 +590,28 @@ export default function GoalCategoryPage() {
         const activityTaskCount: Record<string, number> = {
           "family-social-balance": FAMILY_SOCIAL_BALANCE_TASKS.length,
           "work-balance": WORK_BALANCE_TASKS.length,
-          "personal-life-balance": PERSONAL_LIFE_BALANCE_TASKS.length,
         };
         const latestByActivity = new Map<string, Map<string, number>>();
+
+        // สำหรับ personal-life-balance: เก็บ score รายวัน (daily-checkin)
+        const personalLifeScoreByDate = new Map<string, number>();
 
         [...(response.data || [])]
           .sort((a, b) => getBalanceLogTimestamp(b) - getBalanceLogTimestamp(a))
           .forEach((log) => {
+            // ลอง parse เป็น daily-checkin ของ personal-life-balance ก่อน
+            const dailyNote = parsePersonalBalanceDailyNote(String(log.note));
+            if (dailyNote) {
+              const dateKey = String(log.log_date ?? "").slice(0, 10);
+              if (dateKey && !personalLifeScoreByDate.has(dateKey)) {
+                personalLifeScoreByDate.set(dateKey, dailyNote.score);
+              }
+              return;
+            }
+
+            // สำหรับ activity อื่นๆ ใช้ logic เดิม
             const parsed = parseBalanceTaskNote(String(log.note));
-            if (!parsed) return;
+            if (!parsed || parsed.activity === "personal-life-balance") return;
 
             const latestByTask = latestByActivity.get(parsed.activity) ?? new Map<string, number>();
             if (!latestByTask.has(parsed.task)) {
@@ -606,21 +620,36 @@ export default function GoalCategoryPage() {
             latestByActivity.set(parsed.activity, latestByTask);
           });
 
-        const nextProgress = Object.fromEntries(
-          Object.entries(activityTaskCount).map(([activityKey, totalTaskCount]) => {
-            const totalScore = Array.from(latestByActivity.get(activityKey)?.values() || []).reduce(
-              (sum, score) => sum + score,
-              0
-            );
-            return [
-              activityKey,
-              {
-                currentValue: Math.round(totalScore / Math.max(totalTaskCount, 1)),
-                targetValue: 100,
-              },
-            ];
-          })
-        ) as Record<string, ActivityProgress>;
+        // คำนวณ personal-life-balance: เฉลี่ยจาก score รายวัน
+        const personalLifeAvgScore =
+          personalLifeScoreByDate.size === 0
+            ? 0
+            : Math.round(
+                Array.from(personalLifeScoreByDate.values()).reduce((sum, score) => sum + score, 0) /
+                  personalLifeScoreByDate.size
+              );
+
+        const nextProgress = {
+          ...Object.fromEntries(
+            Object.entries(activityTaskCount).map(([activityKey, totalTaskCount]) => {
+              const totalScore = Array.from(latestByActivity.get(activityKey)?.values() || []).reduce(
+                (sum, score) => sum + score,
+                0
+              );
+              return [
+                activityKey,
+                {
+                  currentValue: Math.round(totalScore / Math.max(totalTaskCount, 1)),
+                  targetValue: 100,
+                },
+              ];
+            })
+          ),
+          "personal-life-balance": {
+            currentValue: personalLifeAvgScore,
+            targetValue: 100,
+          },
+        } as Record<string, ActivityProgress>;
 
         if (!cancelled) {
           setLiveActivityProgress(nextProgress);
