@@ -22,10 +22,13 @@ import ScreenTimeGoalPage from "../../features/goals/task-detail/ScreenTimeGoalP
 import SettingsPage from "../../features/profile/settings/SettingsPage";
 import SleepGoalSettingsPage from "../../features/profile/settings/SleepGoalSettingsPage";
 import WaterGoalSettingsPage from "../../features/profile/settings/WaterGoalSettingsPage";
+import NotificationSettingsPage from "../../features/profile/settings/NotificationSettingsPage";
+import AppearanceSettingsPage from "../../features/profile/settings/AppearanceSettingsPage";
 import PersonalInfoPage from "../../features/profile/personal-info/PersonalInfoPage";
 import CounselingRecordPage from "../../features/profile/counseling-record/CounselingRecordPage";
 import EvaluationResultPage from "../../features/profile/evaluation-result/EvaluationResultPage";
 import HelpPage from "../../features/profile/help/HelpPage";
+import LogHistoryPage from "../../features/profile/log-history/LogHistoryPage";
 import MentalTaskPage from "../../features/goals/task-detail/MentalTaskPage";
 import PositiveThinkingTaskPage from "../../features/goals/task-detail/PositiveThinkingTaskPage";
 import SmileTaskPage from "../../features/goals/task-detail/SmileTaskPage";
@@ -84,6 +87,7 @@ export default function AppRoutes() {
         <Route path="/profile/counseling-record" element={<CounselingRecordPage />} />
         <Route path="/profile/evaluation-result" element={<EvaluationResultPage />} />
         <Route path="/profile/help" element={<HelpPage />} />
+        <Route path="/profile/log-history" element={<LogHistoryPage />} />
         <Route path="/daily-log" element={<DailyLogPage />} />
         <Route path="/articles/:articleId" element={<ArticleDetailPage />} />
         <Route path="/admin" element={<AdminPage />} />
@@ -102,6 +106,14 @@ export default function AppRoutes() {
           element={<ScreenTimeGoalPage />}
         />
         <Route path="/profile/settings" element={<SettingsPage />} />
+        <Route
+          path="/profile/settings/notifications"
+          element={<NotificationSettingsPage />}
+        />
+        <Route
+          path="/profile/settings/appearance"
+          element={<AppearanceSettingsPage />}
+        />
         <Route
           path="/profile/settings/sleep-goal"
           element={<SleepGoalSettingsPage />}

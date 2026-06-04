@@ -1,10 +1,28 @@
-﻿import { ChevronRight, Droplets, MoonStar, Smartphone } from "lucide-react";
+﻿import { Bell, ChevronRight, Droplets, MoonStar, Palette, Settings2, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppHeader from "../../../components/layout/AppHeader";
 import MobileShell from "../../../components/layout/MobileShell";
 import InfoCard from "../../../components/ui/InfoCard";
 
 const settingMenus = [
+  {
+    label: "การแจ้งเตือน",
+    description: "กำหนดการแจ้งเตือนและการแจ้งเตือนต่างๆ",
+    to: "/profile/settings/notifications",
+    Icon: Bell,
+    accent: "from-[#ffe8d1] via-[#fff5e8] to-white",
+    iconBg: "bg-[#fff8ed]",
+    iconColor: "text-[#d88d5c]",
+  },
+  {
+    label: "รูปแบบการแสดงผล",
+    description: "เลือกธีมและชุดสีของแอป",
+    to: "/profile/settings/appearance",
+    Icon: Palette,
+    accent: "from-[#f3e8ff] via-[#faf5ff] to-white",
+    iconBg: "bg-[#f9f5ff]",
+    iconColor: "text-[#9333ea]",
+  },
   {
     label: "เป้าหมายการนอนหลับ",
     description: "กำหนดจำนวนชั่วโมงการนอนหลับต่อวัน",
@@ -56,49 +74,107 @@ export default function SettingsPage() {
 
         <main className="relative z-10 space-y-4 px-4 py-6">
           <InfoCard className={`${cardClassName} rounded-3xl`}>
-            <div className="space-y-2">
-              <p className="inline-flex rounded-full bg-[#e7f6f0] px-3 py-1 text-xs font-semibold tracking-[0.12em] text-[#1f6658]">
-                DAILY SETTINGS
-              </p>
-              <h2 className="text-lg font-semibold text-slate-900">
-                ปรับเป้าหมายให้เหมาะกับไลฟ์สไตล์ของคุณ
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-200">
+                  <Settings2 size={20} />
+                </div>
+                <p className="inline-flex rounded-full bg-[#e7f6f0] px-3 py-1 text-xs font-semibold tracking-[0.12em] text-[#1f6658]">
+                  SETTINGS
+                </p>
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">
+                ปรับแต่งให้เหมาะกับคุณ
               </h2>
               <p className="text-sm leading-6 text-slate-500">
-                ตั้งค่าเป้าหมายการนอน การดื่มน้ำ และเวลาหน้าจอก่อนนอน เพื่อช่วยติดตามสุขสมดุลในทุกวันได้ง่ายขึ้น
+                กำหนดการแจ้งเตือน รูปแบบการแสดงผล และเป้าหมายประจำวัน เพื่อประสบการณ์ที่ดีที่สุด
               </p>
+
+              <div className="mt-4 grid grid-cols-3 gap-3 rounded-2xl bg-gradient-to-br from-slate-50 to-white p-3">
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">การตั้งค่า</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{settingMenus.length}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">แอป</p>
+                  <p className="mt-1 text-lg font-bold text-emerald-600">2</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">เป้าหมาย</p>
+                  <p className="mt-1 text-lg font-bold text-sky-600">3</p>
+                </div>
+              </div>
             </div>
           </InfoCard>
 
-          <div className="space-y-3">
-            {settingMenus.map((item) => (
-              <Link key={item.to} to={item.to} className="group block">
-                <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl`}>
-                  <div
-                    className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`}
-                  />
-
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div
-                        className={`mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${item.iconBg} ${item.iconColor}`}
-                      >
-                        <item.Icon size={18} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-base font-semibold text-slate-900">{item.label}</h2>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
-                      </div>
-                    </div>
-
-                    <ChevronRight
-                      size={18}
-                      className="text-slate-400 transition group-hover:translate-x-0.5"
+          <div className="space-y-2">
+            <h3 className="px-1 text-sm font-semibold text-slate-700">การตั้งค่าแอป</h3>
+            <div className="space-y-3">
+              {settingMenus.slice(0, 2).map((item) => (
+                <Link key={item.to} to={item.to} className="group block">
+                  <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl transition hover:shadow-xl hover:-translate-y-0.5`}>
+                    <div
+                      className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`}
                     />
-                  </div>
-                </InfoCard>
-              </Link>
-            ))}
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div
+                          className={`mt-0.5 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${item.iconBg} ${item.iconColor}`}
+                        >
+                          <item.Icon size={20} />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-base font-semibold text-slate-900">{item.label}</h2>
+                          <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                        </div>
+                      </div>
+
+                      <ChevronRight
+                        size={18}
+                        className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-600"
+                      />
+                    </div>
+                  </InfoCard>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="px-1 text-sm font-semibold text-slate-700">เป้าหมายประจำวัน</h3>
+            <div className="space-y-3">
+              {settingMenus.slice(2).map((item) => (
+                <Link key={item.to} to={item.to} className="group block">
+                  <InfoCard className={`${cardClassName} relative overflow-hidden rounded-3xl transition hover:shadow-xl hover:-translate-y-0.5`}>
+                    <div
+                      className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.accent}`}
+                    />
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div
+                          className={`mt-0.5 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-sm ${item.iconBg} ${item.iconColor}`}
+                        >
+                          <item.Icon size={20} />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h2 className="text-base font-semibold text-slate-900">{item.label}</h2>
+                          <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                        </div>
+                      </div>
+
+                      <ChevronRight
+                        size={18}
+                        className="text-slate-400 transition group-hover:translate-x-1 group-hover:text-slate-600"
+                      />
+                    </div>
+                  </InfoCard>
+                </Link>
+              ))}
+            </div>
           </div>
         </main>
       </div>

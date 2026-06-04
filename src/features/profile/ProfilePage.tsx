@@ -2,6 +2,7 @@ import {
   Camera,
   ChevronRight,
   CircleHelp,
+  History,
   LayoutDashboard,
   LogOut,
   NotebookPen,
@@ -33,6 +34,15 @@ const menuItems = [
     accent: "from-[#f2dbc7] via-[#f9ecd9] to-[#f4f8ff]",
     iconBg: "bg-[#fff3e7]",
     iconColor: "text-[#b9774e]",
+  },
+  {
+    label: "ประวัติกิจกรรม",
+    subtitle: "ดูประวัติและความก้าวหน้าของกิจกรรมทั้งหมด",
+    to: "/profile/log-history",
+    Icon: History,
+    accent: "from-[#d4f1e8] via-[#e8f8f3] to-[#f5fcfa]",
+    iconBg: "bg-[#e7f6f0]",
+    iconColor: "text-[#1f6658]",
   },
   {
     label: "บันทึกการให้การปรึกษา",
