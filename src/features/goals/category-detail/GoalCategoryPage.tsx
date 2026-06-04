@@ -31,7 +31,6 @@ import {
 } from "../task-detail/scaffoldedTaskShared";
 import { FAMILY_SOCIAL_BALANCE_TASKS } from "../tasks/familySocialBalanceTasks";
 import { FAMILY_RELATIONSHIP_TASKS } from "../tasks/familyRelationshipTasks";
-import { PERSONAL_LIFE_BALANCE_TASKS } from "../tasks/personalLifeBalanceTasks";
 import { POSITIVE_THINKING_TASKS } from "../tasks/positiveThinkingTasks";
 import { REST_TASKS } from "../tasks/restTasks";
 import { getScaffoldedActivityConfig } from "../tasks/scaffoldedActivityTasks";
